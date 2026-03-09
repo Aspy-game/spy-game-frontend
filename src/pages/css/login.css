@@ -1,0 +1,173 @@
+@import url('https://fonts.googleapis.com/css2?family=Jaini+Purva&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Baloo+Bhaijaan+2:wght@400;600&display=swap');
+
+.page-login {
+  width: 1440px;
+  height: 1024px;
+  margin: 0 auto;
+  position: relative;
+}
+
+.login-title {
+  position: absolute;
+  left: 528px;
+  top: 220px;
+  width: 383px;
+  height: 131px;
+  font-family: 'Baloo Bhaijaan 2', 'Be Vietnam Pro', 'Noto Sans', 'Segoe UI', Tahoma, sans-serif;
+  font-size: 70px;
+  line-height: 1.314em;
+  text-align: center;
+  color: #FFFFFF;
+  text-shadow: 0 4px 4px rgba(0,0,0,0.25);
+  z-index: 6;
+  border: 0;
+}
+
+.login-panel {
+  position: absolute;
+  left: 365px;
+  top: 232px;
+  width: 710px;
+  height: 561px;
+  background: rgba(167, 114, 83, 0.75);
+  border: 10px solid #FFFFFF;
+  border-radius: 75px;
+  box-shadow: 0 4px 4px rgba(0,0,0,0.25);
+  z-index: 5;
+}
+
+/* Close button */
+.login-panel .close {
+  position: absolute;
+  top: 22px;
+  right: 28px;
+  background: rgba(255, 255, 255, 0.15);
+  border: 2px solid #FFFFFF;
+  border-radius: 8px;
+  width: 38px;
+  height: 38px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #FFFFFF;
+  font-size: 22px;
+  cursor: pointer;
+  opacity: 0.8;
+  transition: opacity 150ms;
+  z-index: 10;
+}
+.login-panel .close:hover { opacity: 1; }
+
+.login-field {
+  position: absolute;
+  left: 63px;
+  transform: none;
+  width: 564px;
+  height: 80px;
+}
+
+.login-input {
+  width: 100%;
+  height: 100%;
+  background: #FFFFFF;
+  border: 5px solid #FFFFFF;
+  border-radius: 50px;
+  box-shadow: 0 4px 4px rgba(0,0,0,0.25) inset;
+  font-family: 'Inter', sans-serif;
+  font-size: 40px;
+  padding: 0 5px 0 20px;
+  color: rgba(0,0,0,0.75);
+  outline: none;
+}
+.login-input::placeholder { color: rgba(0,0,0,0.25); }
+.login-input:focus {
+  box-shadow: 0 4px 4px rgba(0,0,0,0.25) inset, 0 0 0 3px rgba(255,255,255,0.5);
+}
+
+.eye-btn {
+  position: absolute;
+  right: 24px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 40px;
+  height: 40px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  background: transparent;
+  color: rgba(0,0,0,0.55);
+  cursor: pointer;
+}
+.eye-btn i { font-size: 22px; }
+.eye-btn:hover { color: rgba(0,0,0,0.75); }
+
+/* Error message inside panel */
+.login-error {
+  position: absolute;
+  left: 73px;
+  top: 370px;
+  width: 564px;
+  font-family: 'Inter', sans-serif;
+  font-size: 22px;
+  color: #ffe0d0;
+  font-weight: 600;
+  text-align: center;
+}
+
+.login-button {
+  position: absolute;
+  left: 205px;
+  top: 409px;
+  width: 300px;
+  height: 80px;
+  border-radius: 50px;
+  background: #A77253;
+  border: 10px solid #FFFFFF;
+  box-shadow: 0 4px 4px rgba(0,0,0,0.25);
+  color: #FFFFFF;
+  font-family: 'Baloo Bhaijaan 2', 'Be Vietnam Pro', 'Inter', sans-serif;
+  font-size: 45px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  line-height: normal;
+  cursor: pointer;
+  transition: filter 200ms;
+}
+.login-button:hover:not(:disabled) { filter: brightness(1.08); }
+.login-button:disabled { opacity: 0.6; cursor: default; }
+
+.forgot-link {
+  position: absolute;
+  left: 611px;
+  top: 820px;
+  font-family: 'Inter', sans-serif;
+  font-size: 30px;
+  color: #FFFFFF;
+  font-weight: 600;
+  text-decoration: none;
+  text-shadow: 0 2px 2px rgba(0,0,0,0.25);
+  white-space: nowrap;
+  z-index: 7;
+}
+.forgot-link:hover { text-decoration: underline; }
+
+.login-switch {
+  position: absolute;
+  left: 50%;
+  top: 870px;
+  transform: translateX(-50%);
+  font-family: 'Inter', sans-serif;
+  font-size: 26px;
+  color: #FFFFFF;
+  font-weight: 600;
+  text-shadow: 0 2px 2px rgba(0,0,0,0.2);
+  white-space: nowrap;
+  z-index: 7;
+}
+.login-switch a { color: #fff4e0; text-decoration: underline; }
+.login-switch a:hover { filter: brightness(1.2); }
