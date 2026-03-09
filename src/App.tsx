@@ -1,158 +1,149 @@
-import { BrowserRouter as Router, Routes, Route, Navigate, Link } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate, Link, useNavigate } from 'react-router-dom';
+import { useEffect, useState } from 'react';
 import useAuthStore from './store/authStore';
-import { useState } from 'react';
 import { useAuth } from './hooks/useAuth';
+import Login from './pages/tsx/Login';
+import Register from './pages/tsx/Register';
+import bg from '../img/185eff45-e478-44e3-ae2c-26ed58d907e5.jpg';
+import './pages/css/home.css';
 
-// UI Components
-const Login = () => {
-  const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('');
-  const { login, loading, error } = useAuth();
+// ─── SCALE HOOK ──────────────────────────────────────────────────────────────
+// Co toàn bộ trang 1440×1024 vừa khít màn hình bằng transform: scale
+const PAGE_W = 1440;
+const PAGE_H = 1024;
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    await login(username, password);
-  };
+function usePageScale() {
+  const [scale, setScale] = useState(1);
 
-  return (
-    <div className="max-w-md mx-auto mt-10 p-6 bg-slate-800 rounded-xl shadow-xl border border-slate-700">
-      <h2 className="text-3xl font-bold text-center mb-6">Đăng Nhập</h2>
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <div>
-          <label className="block text-sm font-medium mb-1">Tên đăng nhập</label>
-          <input
-            type="text"
-            className="w-full p-2 bg-slate-900 border border-slate-700 rounded focus:ring-2 focus:ring-blue-500 outline-none"
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
-            required
-          />
-        </div>
-        <div>
-          <label className="block text-sm font-medium mb-1">Mật khẩu</label>
-          <input
-            type="password"
-            className="w-full p-2 bg-slate-900 border border-slate-700 rounded focus:ring-2 focus:ring-blue-500 outline-none"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-          />
-        </div>
-        {error && <p className="text-red-500 text-sm">{error}</p>}
-        <button
-          type="submit"
-          disabled={loading}
-          className="w-full py-2 bg-blue-600 hover:bg-blue-700 rounded font-bold transition-colors disabled:opacity-50"
-        >
-          {loading ? 'Đang xử lý...' : 'Đăng Nhập'}
-        </button>
-      </form>
-      <p className="mt-4 text-center text-sm text-slate-400">
-        Chưa có tài khoản? <Link to="/register" className="text-blue-400 hover:underline">Đăng ký ngay</Link>
-      </p>
-    </div>
-  );
-};
+  useEffect(() => {
+    function update() {
+      const scaleX = window.innerWidth / PAGE_W;
+      const scaleY = window.innerHeight / PAGE_H;
+      setScale(Math.min(scaleX, scaleY));
+    }
+    update();
+    window.addEventListener('resize', update);
+    return () => window.removeEventListener('resize', update);
+  }, []);
 
-const Register = () => {
-  const [formData, setFormData] = useState({
-    username: '',
-    email: '',
-    password: '',
-    display_name: ''
-  });
-  const { register, loading, error } = useAuth();
+  return scale;
+}
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    await register(formData);
-  };
+// ─── SCALED PAGE WRAPPER ─────────────────────────────────────────────────────
+function ScaledPage({ children }: { children: React.ReactNode }) {
+  const scale = usePageScale();
 
   return (
-    <div className="max-w-md mx-auto mt-10 p-6 bg-slate-800 rounded-xl shadow-xl border border-slate-700">
-      <h2 className="text-3xl font-bold text-center mb-6">Đăng Ký</h2>
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <div>
-          <label className="block text-sm font-medium mb-1">Tên hiển thị</label>
-          <input
-            type="text"
-            className="w-full p-2 bg-slate-900 border border-slate-700 rounded focus:ring-2 focus:ring-blue-500 outline-none"
-            value={formData.display_name}
-            onChange={(e) => setFormData({ ...formData, display_name: e.target.value })}
-            required
-          />
-        </div>
-        <div>
-          <label className="block text-sm font-medium mb-1">Tên đăng nhập</label>
-          <input
-            type="text"
-            className="w-full p-2 bg-slate-900 border border-slate-700 rounded focus:ring-2 focus:ring-blue-500 outline-none"
-            value={formData.username}
-            onChange={(e) => setFormData({ ...formData, username: e.target.value })}
-            required
-          />
-        </div>
-        <div>
-          <label className="block text-sm font-medium mb-1">Email</label>
-          <input
-            type="email"
-            className="w-full p-2 bg-slate-900 border border-slate-700 rounded focus:ring-2 focus:ring-blue-500 outline-none"
-            value={formData.email}
-            onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-            required
-          />
-        </div>
-        <div>
-          <label className="block text-sm font-medium mb-1">Mật khẩu</label>
-          <input
-            type="password"
-            className="w-full p-2 bg-slate-900 border border-slate-700 rounded focus:ring-2 focus:ring-blue-500 outline-none"
-            value={formData.password}
-            onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-            required
-          />
-        </div>
-        {error && <p className="text-red-500 text-sm">{error}</p>}
-        <button
-          type="submit"
-          disabled={loading}
-          className="w-full py-2 bg-green-600 hover:bg-green-700 rounded font-bold transition-colors disabled:opacity-50"
-        >
-          {loading ? 'Đang xử lý...' : 'Đăng Ký'}
-        </button>
-      </form>
-      <p className="mt-4 text-center text-sm text-slate-400">
-        Đã có tài khoản? <Link to="/login" className="text-blue-400 hover:underline">Đăng nhập</Link>
-      </p>
+    <div
+      style={{
+        width: '100vw',
+        height: '100vh',
+        overflow: 'hidden',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        background: '#ffffff',
+      }}
+    >
+      <div
+        style={{
+          width: PAGE_W,
+          height: PAGE_H,
+          transform: `scale(${scale})`,
+          transformOrigin: 'center center',
+          flexShrink: 0,
+          position: 'relative',
+        }}
+      >
+        {children}
+      </div>
     </div>
   );
-};
+}
 
+// ─── HOME ────────────────────────────────────────────────────────────────────
+const Home = () => (
+  <ScaledPage>
+    <div
+      className="page page-home"
+      style={{
+        backgroundImage: `url(${bg})`,
+        backgroundRepeat: 'no-repeat',
+        backgroundSize: '100% 100%',
+      }}
+    >
+      <div className="title-floating">
+        <div className="title-back">
+          <span className="luckiest back">KHÔNG PHAI TÔI</span>
+          <span className="luckiest back comma">,</span>
+        </div>
+        <div className="title-front">
+          <span className="luckiest front">KHÔNG PHAI TÔI</span>
+          <span className="luckiest front comma">,</span>
+        </div>
+      </div>
+
+      <div className="home-actions">
+        <Link to="/login" className="action-text">Đăng nhập</Link>
+        <Link to="/register" className="action-text">Đăng ký</Link>
+      </div>
+
+      <div className="home-help">
+        <div className="help-box">?</div>
+      </div>
+    </div>
+  </ScaledPage>
+);
+
+// ─── LOBBY ───────────────────────────────────────────────────────────────────
 const Lobby = () => {
   const { user } = useAuthStore();
   const { logout, loading } = useAuth();
-  
+
   return (
-    <div className="p-10 text-center">
-      <h1 className="text-4xl font-black mb-4">Chào mừng, {user?.display_name}!</h1>
-      <p className="text-slate-400 mb-8">Bạn đã sẵn sàng để bắt đầu trò chơi chưa?</p>
-      <div className="flex justify-center gap-4">
-        <button className="px-6 py-2 bg-blue-600 rounded-lg font-bold hover:bg-blue-700 transition-colors">Tạo phòng</button>
-        <button className="px-6 py-2 bg-slate-700 rounded-lg font-bold hover:bg-slate-600 transition-colors">Vào phòng</button>
-      </div>
-      <button 
-        onClick={logout}
-        disabled={loading}
-        className="mt-12 text-sm text-red-400 hover:text-red-300 underline"
+    <ScaledPage>
+      <div
+        className="page page-home"
+        style={{
+          backgroundImage: `url(${bg})`,
+          backgroundRepeat: 'no-repeat',
+          backgroundSize: '100% 100%',
+        }}
       >
-        {loading ? 'Đang đăng xuất...' : 'Đăng xuất'}
-      </button>
-    </div>
+        <div className="lobby-center">
+          <h1 className="lobby-greeting">Chào mừng, {user?.display_name}!</h1>
+          <p className="lobby-sub">Bạn đã sẵn sàng để bắt đầu trò chơi chưa?</p>
+          <div className="lobby-actions">
+            <button className="lobby-btn">Tạo phòng</button>
+            <button className="lobby-btn secondary">Vào phòng</button>
+          </div>
+          <button onClick={logout} disabled={loading} className="lobby-logout">
+            {loading ? 'Đang đăng xuất...' : 'Đăng xuất'}
+          </button>
+        </div>
+      </div>
+    </ScaledPage>
   );
 };
-const Room = () => <div className="p-10 text-center"><h1 className="text-3xl font-bold">Phòng chờ</h1></div>;
-const Game = () => <div className="p-10 text-center"><h1 className="text-3xl font-bold">Trong ván chơi</h1></div>;
 
+// ─── PLACEHOLDER PAGES ───────────────────────────────────────────────────────
+const Room = () => (
+  <ScaledPage>
+    <div className="page page-home" style={{ backgroundImage: `url(${bg})`, backgroundRepeat: 'no-repeat', backgroundSize: '100% 100%' }}>
+      <div className="lobby-center"><h1 className="lobby-greeting">Phòng chờ</h1></div>
+    </div>
+  </ScaledPage>
+);
+
+const Game = () => (
+  <ScaledPage>
+    <div className="page page-home" style={{ backgroundImage: `url(${bg})`, backgroundRepeat: 'no-repeat', backgroundSize: '100% 100%' }}>
+      <div className="lobby-center"><h1 className="lobby-greeting">Trong ván chơi</h1></div>
+    </div>
+  </ScaledPage>
+);
+
+// ─── ROUTE GUARDS ────────────────────────────────────────────────────────────
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const { isAuthenticated } = useAuthStore();
   return isAuthenticated ? <>{children}</> : <Navigate to="/login" />;
@@ -160,55 +151,21 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
 
 const AuthRoute = ({ children }: { children: React.ReactNode }) => {
   const { isAuthenticated } = useAuthStore();
-  return isAuthenticated ? <Navigate to="/lobby" /> : <>{children}</> ;
+  return isAuthenticated ? <Navigate to="/lobby" /> : <>{children}</>;
 };
 
+// ─── APP ─────────────────────────────────────────────────────────────────────
 function App() {
   return (
     <Router>
-      <div className="min-h-screen bg-slate-900 text-white">
-        <header className="p-4 bg-slate-800 border-b border-slate-700 flex justify-between items-center">
-          <Link to="/" className="text-2xl font-black text-blue-500">KEYWORD SPY</Link>
-          <nav className="space-x-4">
-            {/* Nav items here */}
-          </nav>
-        </header>
-
-        <main className="container mx-auto px-4 py-8">
-          <Routes>
-            <Route path="/login" element={
-              <AuthRoute>
-                <Login />
-              </AuthRoute>
-            } />
-            <Route path="/register" element={
-              <AuthRoute>
-                <Register />
-              </AuthRoute>
-            } />
-            
-            <Route path="/lobby" element={
-              <ProtectedRoute>
-                <Lobby />
-              </ProtectedRoute>
-            } />
-            
-            <Route path="/room/:code" element={
-              <ProtectedRoute>
-                <Room />
-              </ProtectedRoute>
-            } />
-            
-            <Route path="/game/:id" element={
-              <ProtectedRoute>
-                <Game />
-              </ProtectedRoute>
-            } />
-            
-            <Route path="/" element={<Navigate to="/lobby" />} />
-          </Routes>
-        </main>
-      </div>
+      <Routes>
+        <Route path="/"           element={<Home />} />
+        <Route path="/login"      element={<AuthRoute><ScaledPage><Login /></ScaledPage></AuthRoute>} />
+        <Route path="/register"   element={<AuthRoute><ScaledPage><Register /></ScaledPage></AuthRoute>} />
+        <Route path="/lobby"      element={<ProtectedRoute><Lobby /></ProtectedRoute>} />
+        <Route path="/room/:code" element={<ProtectedRoute><Room /></ProtectedRoute>} />
+        <Route path="/game/:id"   element={<ProtectedRoute><Game /></ProtectedRoute>} />
+      </Routes>
     </Router>
   );
 }
