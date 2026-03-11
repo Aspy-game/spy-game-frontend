@@ -1,10 +1,12 @@
-import { BrowserRouter as Router, Routes, Route, Navigate, Link, useNavigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate, Link } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import useAuthStore from './store/authStore';
 import { useAuth } from './hooks/useAuth';
 import Login from './pages/tsx/Login';
 import Register from './pages/tsx/Register';
 import Rules from './pages/tsx/Rules';
+import Forgot from './pages/tsx/Forgot';
+import Reset from './pages/tsx/Reset';
 import bg from '../img/185eff45-e478-44e3-ae2c-26ed58d907e5.jpg';
 import './pages/css/home.css';
 import './pages/css/rules.css';
@@ -181,6 +183,8 @@ function App() {
         <Route path="/"           element={<Home />} />
         <Route path="/login"      element={<AuthRoute><ScaledPage><Login /></ScaledPage></AuthRoute>} />
         <Route path="/register"   element={<AuthRoute><ScaledPage><Register /></ScaledPage></AuthRoute>} />
+        <Route path="/forgot"     element={<AuthRoute><ScaledPage><Forgot /></ScaledPage></AuthRoute>} />
+        <Route path="/reset"      element={<AuthRoute><ScaledPage><Reset /></ScaledPage></AuthRoute>} />
         <Route path="/rules"      element={<ScaledPage><Rules /></ScaledPage>} />
         <Route path="/lobby"      element={<ProtectedRoute><Lobby /></ProtectedRoute>} />
         <Route path="/room/:code" element={<ProtectedRoute><Room /></ProtectedRoute>} />
