@@ -1,10 +1,14 @@
-import React from 'react';
+import React, { useState } from 'react';
 import useAuthStore from '../../store/authStore';
+import { useAuth } from '../../hooks/useAuth';
 import bg from '../../../img/Gemini_Generated_Image_4oqsgs4oqsgs4oqs.png';
 import '../css/lobby.css';
+import Profile from './Profile';
 
 const Lobby: React.FC = () => {
   const { user } = useAuthStore();
+  // const { logout, loading } = useAuth();
+  const [showProfile, setShowProfile] = useState(false);
 
   const rooms = [
     { id: 'CK001', name: 'Phòng: CK001', players: '1/6' },
@@ -23,11 +27,15 @@ const Lobby: React.FC = () => {
       }}
     >
       {/* ─── TOP LEFT USER ─── */}
-      <div className="lobby-user-top-left">
+      <div className="lobby-user-top-left" onClick={() => setShowProfile(true)} style={{ cursor: 'pointer' }}>
         <div className="lobby-user-avatar">
-          <span className="avatar-placeholder">
-            {user?.display_name?.charAt(0) || 'C'}
-          </span>
+          {user?.avatar_url ? (
+            <img src={user.avatar_url} alt="User Avatar" />
+          ) : (
+            <span className="avatar-placeholder">
+              {user?.display_name?.charAt(0) || 'C'}
+            </span>
+          )}
         </div>
         <span className="lobby-user-name">{user?.display_name || 'Cáo'}</span>
       </div>
@@ -97,6 +105,9 @@ const Lobby: React.FC = () => {
           ))}
         </div>
       </div>
+ 
+      {/* ─── PROFILE MODAL ─── */}
+      {showProfile && <Profile onClose={() => setShowProfile(false)} />}
     </div>
   );
 };
