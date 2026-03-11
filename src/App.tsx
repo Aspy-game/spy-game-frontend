@@ -4,13 +4,15 @@ import useAuthStore from './store/authStore';
 import { useAuth } from './hooks/useAuth';
 import Login from './pages/tsx/Login';
 import Register from './pages/tsx/Register';
+import Lobby from './pages/tsx/Lobby';
 import bg from '../img/185eff45-e478-44e3-ae2c-26ed58d907e5.jpg';
 import './pages/css/home.css';
 
+
 // ─── SCALE HOOK ──────────────────────────────────────────────────────────────
-// Co toàn bộ trang 1440×1024 vừa khít màn hình bằng transform: scale
+// Co toàn bộ trang 1440×1080 (Tỷ lệ 4:3) vừa khít màn hình bằng transform: scale
 const PAGE_W = 1440;
-const PAGE_H = 1024;
+const PAGE_H = 1080;
 
 function usePageScale() {
   const [scale, setScale] = useState(1);
@@ -95,37 +97,6 @@ const Home = () => (
   </ScaledPage>
 );
 
-// ─── LOBBY ───────────────────────────────────────────────────────────────────
-const Lobby = () => {
-  const { user } = useAuthStore();
-  const { logout, loading } = useAuth();
-
-  return (
-    <ScaledPage>
-      <div
-        className="page page-home"
-        style={{
-          backgroundImage: `url(${bg})`,
-          backgroundRepeat: 'no-repeat',
-          backgroundSize: '100% 100%',
-        }}
-      >
-        <div className="lobby-center">
-          <h1 className="lobby-greeting">Chào mừng, {user?.display_name}!</h1>
-          <p className="lobby-sub">Bạn đã sẵn sàng để bắt đầu trò chơi chưa?</p>
-          <div className="lobby-actions">
-            <button className="lobby-btn">Tạo phòng</button>
-            <button className="lobby-btn secondary">Vào phòng</button>
-          </div>
-          <button onClick={logout} disabled={loading} className="lobby-logout">
-            {loading ? 'Đang đăng xuất...' : 'Đăng xuất'}
-          </button>
-        </div>
-      </div>
-    </ScaledPage>
-  );
-};
-
 // ─── PLACEHOLDER PAGES ───────────────────────────────────────────────────────
 const Room = () => (
   <ScaledPage>
@@ -162,7 +133,7 @@ function App() {
         <Route path="/"           element={<Home />} />
         <Route path="/login"      element={<AuthRoute><ScaledPage><Login /></ScaledPage></AuthRoute>} />
         <Route path="/register"   element={<AuthRoute><ScaledPage><Register /></ScaledPage></AuthRoute>} />
-        <Route path="/lobby"      element={<ProtectedRoute><Lobby /></ProtectedRoute>} />
+        <Route path="/lobby"      element={<ProtectedRoute><ScaledPage><Lobby /></ScaledPage></ProtectedRoute>} />
         <Route path="/room/:code" element={<ProtectedRoute><Room /></ProtectedRoute>} />
         <Route path="/game/:id"   element={<ProtectedRoute><Game /></ProtectedRoute>} />
       </Routes>
