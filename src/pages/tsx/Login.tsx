@@ -71,7 +71,7 @@ export default function Login() {
           </form>
         </div>
 
-        <a className="forgot-link" href="#">Quên mật khẩu?</a>
+        <Link className="forgot-link" to="/forgot">Quên mật khẩu?</Link>
 
         <p className="login-switch">
           Chưa có tài khoản? <Link to="/register">Đăng ký ngay</Link>

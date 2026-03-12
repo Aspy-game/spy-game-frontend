@@ -5,7 +5,9 @@ import { useAuth } from './hooks/useAuth';
 import Login from './pages/tsx/Login';
 import Register from './pages/tsx/Register';
 
+
 import Lobby from './pages/tsx/Lobby';
+
 
 import bg from '../img/185eff45-e478-44e3-ae2c-26ed58d907e5.jpg';
 import './pages/css/home.css';
@@ -161,6 +163,7 @@ function App() {
 
 {/* ── Protected ── */}
 <Route path="/lobby" element={<ProtectedRoute><ScaledPage><Lobby /></ScaledPage></ProtectedRoute>} />
+
 
         <Route path="/room/:code" element={<ProtectedRoute><Room /></ProtectedRoute>} />
         <Route path="/game/:id"   element={<ProtectedRoute><Game /></ProtectedRoute>} />

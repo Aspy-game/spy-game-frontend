@@ -1,0 +1,127 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Baloo+Bhaijaan+2:wght@400;600&display=swap');
+
+.page-reset {
+  width: 1440px;
+  height: 1024px;
+  margin: 0 auto;
+  position: relative;
+}
+
+.reset-title {
+  position: absolute;
+  left: 50%;
+  top: 157px;
+  transform: translateX(-50%);
+  font-family: 'Baloo Bhaijaan 2', 'Be Vietnam Pro', 'Segoe UI', Tahoma, sans-serif;
+  font-size: 80px;
+  color: #FFFFFF;
+  text-align: center;
+  text-shadow: 0 4px 4px rgba(0,0,0,0.25);
+  white-space: nowrap;
+  z-index: 6;
+}
+
+.reset-panel {
+  position: absolute;
+  left: 314px;
+  top: 140px;
+  width: 811px;
+  height: 756px;
+  background: rgba(167, 114, 83, 0.75);
+  border: 10px solid #FFFFFF;
+  border-radius: 75px;
+  box-shadow: 0 4px 4px rgba(0,0,0,0.25);
+  z-index: 5;
+}
+
+.reset-panel .close {
+  position: absolute;
+  top: 22px;
+  right: 28px;
+  background: rgba(255, 255, 255, 0.15);
+  border: 2px solid #FFFFFF;
+  border-radius: 8px;
+  width: 38px;
+  height: 38px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #FFFFFF;
+  font-size: 22px;
+  cursor: pointer;
+  opacity: 0.8;
+  transition: opacity 150ms;
+  z-index: 10;
+}
+.reset-panel .close:hover { opacity: 1; }
+
+.reset-field {
+  position: absolute;
+  left: calc(50% - 282px);
+  width: 564px;
+  height: 80px;
+}
+.reset-input {
+  width: 100%;
+  height: 100%;
+  box-sizing: border-box;
+  background: #FFFFFF;
+  border: 5px solid #FFFFFF;
+  border-radius: 50px;
+  box-shadow: 0 4px 4px rgba(0,0,0,0.25) inset;
+  font-family: 'Inter', sans-serif;
+  font-size: 40px;
+  padding: 0 70px 0 20px;
+  color: rgba(0,0,0,0.75);
+  outline: none;
+}
+.reset-input::placeholder { color: rgba(0,0,0,0.25); }
+.reset-input:focus {
+  box-shadow: 0 4px 4px rgba(0,0,0,0.25) inset, 0 0 0 3px rgba(255,255,255,0.5);
+}
+
+.eye-btn {
+  position: absolute;
+  right: 20px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 32px;
+  height: 32px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  background: transparent;
+  color: rgba(0,0,0,0.55);
+  cursor: pointer;
+  z-index: 2;
+}
+.eye-btn i { font-size: 20px; }
+.eye-btn:hover { color: rgba(0,0,0,0.75); }
+
+.reset-button {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  top: 520px;
+  width: 300px;
+  height: 80px;
+  border-radius: 50px;
+  background: #A77253;
+  border: 10px solid #FFFFFF;
+  box-shadow: 0 6px 12px rgba(0,0,0,0.25);
+  color: #FFFFFF;
+  font-family: 'Baloo Bhaijaan 2', 'Be Vietnam Pro', 'Inter', sans-serif;
+  font-size: 45px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  line-height: normal;
+  cursor: pointer;
+  transition: filter 200ms;
+  z-index: 11;
+}
+.reset-button:hover:not(:disabled) { filter: brightness(1.08); }
+.reset-button:disabled { opacity: 1; filter: none; cursor: not-allowed; }
