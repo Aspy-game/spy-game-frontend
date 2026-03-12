@@ -4,17 +4,23 @@ import useAuthStore from './store/authStore';
 import { useAuth } from './hooks/useAuth';
 import Login from './pages/tsx/Login';
 import Register from './pages/tsx/Register';
-import Rules from './pages/tsx/Rules';
-import Forgot from './pages/tsx/Forgot';
-import Reset from './pages/tsx/Reset';
+
+
+import Lobby from './pages/tsx/Lobby';
+
+
 import bg from '../img/185eff45-e478-44e3-ae2c-26ed58d907e5.jpg';
 import './pages/css/home.css';
 import './pages/css/rules.css';
 
-// ─── SCALE HOOK ──────────────────────────────────────────────────────────────
-// Co toàn bộ trang 1440×1024 vừa khít màn hình bằng transform: scale
+// ── Room screens ──────────────────────────────────────────────────────────────
+import Round1Enter from './pages/tsx/room/Round1Enter';
+// import DescribeNotify      from './pages/tsx/room/DescribeNotify';      // TODO
+// import DescribeStart       from './pages/tsx/room/DescribeStart';       // TODO
+// ... thêm dần các màn hình khác vào đây
+
 const PAGE_W = 1440;
-const PAGE_H = 1024;
+const PAGE_H = 1080;
 
 function usePageScale() {
   const [scale, setScale] = useState(1);
@@ -116,37 +122,6 @@ const Home = () => {
   );
 };
 
-// ─── LOBBY ───────────────────────────────────────────────────────────────────
-const Lobby = () => {
-  const { user } = useAuthStore();
-  const { logout, loading } = useAuth();
-
-  return (
-    <ScaledPage>
-      <div
-        className="page page-home"
-        style={{
-          backgroundImage: `url(${bg})`,
-          backgroundRepeat: 'no-repeat',
-          backgroundSize: '100% 100%',
-        }}
-      >
-        <div className="lobby-center">
-          <h1 className="lobby-greeting">Chào mừng, {user?.display_name}!</h1>
-          <p className="lobby-sub">Bạn đã sẵn sàng để bắt đầu trò chơi chưa?</p>
-          <div className="lobby-actions">
-            <button className="lobby-btn">Tạo phòng</button>
-            <button className="lobby-btn secondary">Vào phòng</button>
-          </div>
-          <button onClick={logout} disabled={loading} className="lobby-logout">
-            {loading ? 'Đang đăng xuất...' : 'Đăng xuất'}
-          </button>
-        </div>
-      </div>
-    </ScaledPage>
-  );
-};
-
 // ─── PLACEHOLDER PAGES ───────────────────────────────────────────────────────
 const Room = () => (
   <ScaledPage>
@@ -180,15 +155,68 @@ function App() {
   return (
     <Router>
       <Routes>
-        <Route path="/"           element={<Home />} />
-        <Route path="/login"      element={<AuthRoute><ScaledPage><Login /></ScaledPage></AuthRoute>} />
-        <Route path="/register"   element={<AuthRoute><ScaledPage><Register /></ScaledPage></AuthRoute>} />
-        <Route path="/forgot"     element={<AuthRoute><ScaledPage><Forgot /></ScaledPage></AuthRoute>} />
-        <Route path="/reset"      element={<AuthRoute><ScaledPage><Reset /></ScaledPage></AuthRoute>} />
-        <Route path="/rules"      element={<ScaledPage><Rules /></ScaledPage>} />
-        <Route path="/lobby"      element={<ProtectedRoute><Lobby /></ProtectedRoute>} />
+
+{/* ── Public ── */}
+<Route path="/" element={<Home />} />
+<Route path="/login" element={<AuthRoute><ScaledPage><Login /></ScaledPage></AuthRoute>} />
+<Route path="/register" element={<AuthRoute><ScaledPage><Register /></ScaledPage></AuthRoute>} />
+
+{/* ── Protected ── */}
+<Route path="/lobby" element={<ProtectedRoute><ScaledPage><Lobby /></ScaledPage></ProtectedRoute>} />
+
+
         <Route path="/room/:code" element={<ProtectedRoute><Room /></ProtectedRoute>} />
         <Route path="/game/:id"   element={<ProtectedRoute><Game /></ProtectedRoute>} />
+
+        {/* ── Room game screens  ── */}
+        <Route path="/dev/round1" element={<ScaledPage><Round1Enter /></ScaledPage>} />
+        {/*
+          Tất cả màn hình trong game đều nằm dưới /game/:roomId/...
+          Được bảo vệ bởi ProtectedRoute
+        */}
+        <Route
+          path="/game/:roomId/round1"
+          element={
+            <ProtectedRoute>
+              <ScaledPage>
+                <Round1Enter />
+              </ScaledPage>
+            </ProtectedRoute>
+          }
+        />
+
+        {/*
+          Thêm dần các màn hình khác vào đây theo đúng thứ tự:
+
+          <Route path="/game/:roomId/describe/notify"   element={<ProtectedRoute><ScaledPage><DescribeNotify /></ScaledPage></ProtectedRoute>} />
+          <Route path="/game/:roomId/describe/start"    element={<ProtectedRoute><ScaledPage><DescribeStart /></ScaledPage></ProtectedRoute>} />
+          <Route path="/game/:roomId/describe/sent"     element={<ProtectedRoute><ScaledPage><DescribeSent /></ScaledPage></ProtectedRoute>} />
+          <Route path="/game/:roomId/describe/end"      element={<ProtectedRoute><ScaledPage><DescribeEnd /></ScaledPage></ProtectedRoute>} />
+          <Route path="/game/:roomId/describe/view-all" element={<ProtectedRoute><ScaledPage><DescribeViewAll /></ScaledPage></ProtectedRoute>} />
+
+          <Route path="/game/:roomId/vote/notify"   element={<ProtectedRoute><ScaledPage><VoteNotify /></ScaledPage></ProtectedRoute>} />
+          <Route path="/game/:roomId/vote/select"   element={<ProtectedRoute><ScaledPage><VoteSelect /></ScaledPage></ProtectedRoute>} />
+          <Route path="/game/:roomId/vote/sent"     element={<ProtectedRoute><ScaledPage><VoteSent /></ScaledPage></ProtectedRoute>} />
+          <Route path="/game/:roomId/vote/timeout"  element={<ProtectedRoute><ScaledPage><VoteTimeout /></ScaledPage></ProtectedRoute>} />
+
+          <Route path="/game/:roomId/discuss/describe" element={<ProtectedRoute><ScaledPage><DiscussDescribe /></ScaledPage></ProtectedRoute>} />
+          <Route path="/game/:roomId/discuss/notify"   element={<ProtectedRoute><ScaledPage><DiscussNotify /></ScaledPage></ProtectedRoute>} />
+          <Route path="/game/:roomId/discuss/chat"     element={<ProtectedRoute><ScaledPage><DiscussChat /></ScaledPage></ProtectedRoute>} />
+          <Route path="/game/:roomId/discuss/end"      element={<ProtectedRoute><ScaledPage><DiscussEnd /></ScaledPage></ProtectedRoute>} />
+
+          <Route path="/game/:roomId/result/vote"       element={<ProtectedRoute><ScaledPage><ResultVote /></ScaledPage></ProtectedRoute>} />
+          <Route path="/game/:roomId/result/most-voted" element={<ProtectedRoute><ScaledPage><ResultMostVoted /></ScaledPage></ProtectedRoute>} />
+          <Route path="/game/:roomId/result/spy-safe"   element={<ProtectedRoute><ScaledPage><ResultSpySafe /></ScaledPage></ProtectedRoute>} />
+
+          <Route path="/game/:roomId/round2"                  element={<ProtectedRoute><ScaledPage><Round2Enter /></ScaledPage></ProtectedRoute>} />
+          <Route path="/game/:roomId/round2/rolecheck"        element={<ProtectedRoute><ScaledPage><Round2RoleCheck /></ScaledPage></ProtectedRoute>} />
+          <Route path="/game/:roomId/round2/role-correct"     element={<ProtectedRoute><ScaledPage><Round2RoleCorrect /></ScaledPage></ProtectedRoute>} />
+          <Route path="/game/:roomId/round2/manipulate"       element={<ProtectedRoute><ScaledPage><Round2Manipulate /></ScaledPage></ProtectedRoute>} />
+          <Route path="/game/:roomId/round2/ghost-chat"       element={<ProtectedRoute><ScaledPage><Round2GhostChat /></ScaledPage></ProtectedRoute>} />
+          <Route path="/game/:roomId/round2/ghost-chat-input" element={<ProtectedRoute><ScaledPage><Round2GhostChatInput /></ScaledPage></ProtectedRoute>} />
+          <Route path="/game/:roomId/round2/typing"           element={<ProtectedRoute><ScaledPage><Round2Typing /></ScaledPage></ProtectedRoute>} />
+          <Route path="/game/:roomId/round2/after-r1"         element={<ProtectedRoute><ScaledPage><Round2AfterR1 /></ScaledPage></ProtectedRoute>} />
+        */}
       </Routes>
     </Router>
   );
