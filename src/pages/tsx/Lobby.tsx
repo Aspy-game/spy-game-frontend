@@ -4,16 +4,25 @@ import bg from '../../../img/Gemini_Generated_Image_4oqsgs4oqsgs4oqs.png';
 import '../css/lobby.css';
 import Profile from './Profile';
 import DailyAttendance from './DailyAttendance';
+import Settings from './Settings';
+import ChangePassword from './ChangePassword';
 
 const Lobby: React.FC = () => {
   const { user } = useAuthStore();
+  const logoutStore = useAuthStore((state) => state.logout);
   // const { logout, loading } = useAuth();
   const [showProfile, setShowProfile] = useState(false);
   const [showAttendance, setShowAttendance] = useState(true);
+  const [showSettings, setShowSettings] = useState(false);
+  const [showChangePassword, setShowChangePassword] = useState(false);
   const [isReceived, setIsReceived] = useState(false);
 
   const handleReceiveAttendance = () => {
     setIsReceived(true);
+  };
+
+  const handleLogout = () => {
+    logoutStore();
   };
 
   const rooms = [
@@ -21,6 +30,8 @@ const Lobby: React.FC = () => {
     { id: 'CK028', name: 'Phòng: CK028', players: '5/6' },
     { id: 'RT163', name: 'Phòng: RT163', players: '2/6' },
   ];
+
+  const isModalOpen = showSettings || showChangePassword || showAttendance || showProfile;
 
   return (
     <div
@@ -59,58 +70,62 @@ const Lobby: React.FC = () => {
           <span className="coin-amount">100</span>
           <span className="coin-plus">+</span>
         </div>
-        <div className="nav-icon-btn">
+        <div className="nav-icon-btn" onClick={() => setShowSettings(true)} style={{ cursor: 'pointer' }}>
           <i className="fa-solid fa-gear"></i>
         </div>
       </div>
 
-      {/* ─── SIDEBAR LEFT (LEADERBOARD) ─── */}
-      <aside className="lobby-sidebar-left-new">
-        {[1, 2, 3, 4, 5].map((rank) => (
-          <div key={rank} className="rank-item">
-            <div className="rank-avatar">
-              {/* Avatar placeholder */}
-            </div>
-            {rank <= 3 && (
-              <span className={`rank-num rank-${rank}-text`}>{rank}</span>
-            )}
-          </div>
-        ))}
-      </aside>
-
-      {/* ─── MAIN CONTENT AREA ─── */}
-      <div className="lobby-main-content">
-        {/* SEARCH BAR */}
-        <div className="lobby-search-bar-new">
-          <span className="search-label-new">Tìm phòng:</span>
-          <input 
-            type="text" 
-            className="search-input-new" 
-            placeholder="Nhập mã phòng..."
-          />
-          <i className="fa-solid fa-magnifying-glass search-icon-new"></i>
-        </div>
-
-        {/* CREATE ROOM BUTTON */}
-        <button className="lobby-create-btn-new">
-          <span className="create-text-new">Tạo phòng</span>
-        </button>
-
-        {/* ROOM LIST BOX */}
-        <div className="lobby-room-box-new">
-          {rooms.map((room) => (
-            <div key={room.id} className="room-item-new">
-              <span className="room-name-new">{room.name}</span>
-              <div className="room-right-new">
-                <span className="room-players-new">{room.players}</span>
-                <span className="room-join-btn-new">
-                  <i className="fa-solid fa-arrow-right-from-bracket"></i>
-                </span>
+      {!isModalOpen && (
+        <>
+          {/* ─── SIDEBAR LEFT (LEADERBOARD) ─── */}
+          <aside className="lobby-sidebar-left-new">
+            {[1, 2, 3, 4, 5].map((rank) => (
+              <div key={rank} className="rank-item">
+                <div className="rank-avatar">
+                  {/* Avatar placeholder */}
+                </div>
+                {rank <= 3 && (
+                  <span className={`rank-num rank-${rank}-text`}>{rank}</span>
+                )}
               </div>
+            ))}
+          </aside>
+
+          {/* ─── MAIN CONTENT AREA ─── */}
+          <div className="lobby-main-content">
+            {/* SEARCH BAR */}
+            <div className="lobby-search-bar-new">
+              <span className="search-label-new">Tìm phòng:</span>
+              <input 
+                type="text" 
+                className="search-input-new" 
+                placeholder="Nhập mã phòng..."
+              />
+              <i className="fa-solid fa-magnifying-glass search-icon-new"></i>
             </div>
-          ))}
-        </div>
-      </div>
+
+            {/* CREATE ROOM BUTTON */}
+            <button className="lobby-create-btn-new">
+              <span className="create-text-new">Tạo phòng</span>
+            </button>
+
+            {/* ROOM LIST BOX */}
+            <div className="lobby-room-box-new">
+              {rooms.map((room) => (
+                <div key={room.id} className="room-item-new">
+                  <span className="room-name-new">{room.name}</span>
+                  <div className="room-right-new">
+                    <span className="room-players-new">{room.players}</span>
+                    <span className="room-join-btn-new">
+                      <i className="fa-solid fa-arrow-right-from-bracket"></i>
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </>
+      )}
  
       {/* ─── PROFILE MODAL ─── */}
       {showProfile && <Profile onClose={() => setShowProfile(false)} />}
@@ -119,6 +134,25 @@ const Lobby: React.FC = () => {
           onClose={() => setShowAttendance(false)} 
           isReceived={isReceived}
           onReceive={handleReceiveAttendance}
+        />
+      )}
+      {showSettings && (
+        <Settings 
+          onClose={() => setShowSettings(false)} 
+          onLogout={handleLogout}
+          onChangePassword={() => {
+            setShowSettings(false);
+            setShowChangePassword(true);
+          }} 
+        />
+      )}
+      {showChangePassword && (
+        <ChangePassword 
+          onClose={() => setShowChangePassword(false)}
+          onSubmit={(oldP, newP) => {
+            console.log('Change password:', oldP, newP);
+            setShowChangePassword(false);
+          }}
         />
       )}
     </div>

@@ -19,7 +19,7 @@
   top: 202px;  /* (1080 - 675) / 2 */
   width: 1115px;
   height: 675px;
-  background: rgba(167, 114, 83, 0.95);
+  background: rgba(167, 114, 83, 0.3);
   border: 5px solid #66413B;
   border-radius: 75px;
   box-shadow: 0px 4px 4px rgba(0, 0, 0, 0.25);
@@ -27,6 +27,7 @@
   display: flex;
   flex-direction: column;
   color: white;
+  backdrop-filter: blur(5px);
 }
 
 .profile-header-title {
