@@ -1,14 +1,20 @@
 import React, { useState } from 'react';
 import useAuthStore from '../../store/authStore';
-import { useAuth } from '../../hooks/useAuth';
 import bg from '../../../img/Gemini_Generated_Image_4oqsgs4oqsgs4oqs.png';
 import '../css/lobby.css';
 import Profile from './Profile';
+import DailyAttendance from './DailyAttendance';
 
 const Lobby: React.FC = () => {
   const { user } = useAuthStore();
   // const { logout, loading } = useAuth();
   const [showProfile, setShowProfile] = useState(false);
+  const [showAttendance, setShowAttendance] = useState(true);
+  const [isReceived, setIsReceived] = useState(false);
+
+  const handleReceiveAttendance = () => {
+    setIsReceived(true);
+  };
 
   const rooms = [
     { id: 'CK001', name: 'Phòng: CK001', players: '1/6' },
@@ -45,7 +51,7 @@ const Lobby: React.FC = () => {
         <div className="nav-icon-btn">
           <i className="fa-solid fa-user-group"></i>
         </div>
-        <div className="nav-icon-btn">
+        <div className="nav-icon-btn" onClick={() => setShowAttendance(true)} style={{ cursor: 'pointer' }}>
           <i className="fa-regular fa-calendar-days"></i>
         </div>
         <div className="coin-box-lobby">
@@ -108,6 +114,13 @@ const Lobby: React.FC = () => {
  
       {/* ─── PROFILE MODAL ─── */}
       {showProfile && <Profile onClose={() => setShowProfile(false)} />}
+      {showAttendance && (
+        <DailyAttendance 
+          onClose={() => setShowAttendance(false)} 
+          isReceived={isReceived}
+          onReceive={handleReceiveAttendance}
+        />
+      )}
     </div>
   );
 };

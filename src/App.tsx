@@ -1,9 +1,10 @@
 import { BrowserRouter as Router, Routes, Route, Navigate, Link } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import useAuthStore from './store/authStore';
-import { useAuth } from './hooks/useAuth';
 import Login from './pages/tsx/Login';
 import Register from './pages/tsx/Register';
+import Forgot from './pages/tsx/Forgot';
+import Reset from './pages/tsx/Reset';
 
 
 import Lobby from './pages/tsx/Lobby';
@@ -160,6 +161,8 @@ function App() {
 <Route path="/" element={<Home />} />
 <Route path="/login" element={<AuthRoute><ScaledPage><Login /></ScaledPage></AuthRoute>} />
 <Route path="/register" element={<AuthRoute><ScaledPage><Register /></ScaledPage></AuthRoute>} />
+<Route path="/forgot" element={<AuthRoute><ScaledPage><Forgot /></ScaledPage></AuthRoute>} />
+<Route path="/reset" element={<AuthRoute><ScaledPage><Reset /></ScaledPage></AuthRoute>} />
 
 {/* ── Protected ── */}
 <Route path="/lobby" element={<ProtectedRoute><ScaledPage><Lobby /></ScaledPage></ProtectedRoute>} />
