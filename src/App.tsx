@@ -9,11 +9,10 @@ import Reset from './pages/tsx/Reset';
 
 import Lobby from './pages/tsx/Lobby';
 
-
 import bg from '../img/185eff45-e478-44e3-ae2c-26ed58d907e5.jpg';
 import './pages/css/home.css';
 import './pages/css/rules.css';
-
+// import "./App.css"
 // ── Room screens ──────────────────────────────────────────────────────────────
 import Round1Enter from './pages/tsx/room/Round1Enter';
 // import DescribeNotify      from './pages/tsx/room/DescribeNotify';      // TODO
