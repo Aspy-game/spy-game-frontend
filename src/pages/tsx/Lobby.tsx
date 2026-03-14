@@ -6,6 +6,7 @@ import Profile from './Profile';
 import DailyAttendance from './DailyAttendance';
 import Settings from './Settings';
 import ChangePassword from './ChangePassword';
+import Friends from './Friends';
 
 const Lobby: React.FC = () => {
   const { user } = useAuthStore();
@@ -15,6 +16,7 @@ const Lobby: React.FC = () => {
   const [showAttendance, setShowAttendance] = useState(true);
   const [showSettings, setShowSettings] = useState(false);
   const [showChangePassword, setShowChangePassword] = useState(false);
+  const [showFriends, setShowFriends] = useState(false);
   const [isReceived, setIsReceived] = useState(false);
 
   const handleReceiveAttendance = () => {
@@ -31,7 +33,7 @@ const Lobby: React.FC = () => {
     { id: 'RT163', name: 'Phòng: RT163', players: '2/6' },
   ];
 
-  const isModalOpen = showSettings || showChangePassword || showAttendance || showProfile;
+  const isModalOpen = showSettings || showChangePassword || showAttendance || showProfile || showFriends;
 
   return (
     <div
@@ -59,7 +61,7 @@ const Lobby: React.FC = () => {
 
       {/* ─── TOP RIGHT NAV ─── */}
       <div className="lobby-nav-top-right">
-        <div className="nav-icon-btn">
+        <div className="nav-icon-btn" onClick={() => setShowFriends(true)} style={{ cursor: 'pointer' }}>
           <i className="fa-solid fa-user-group"></i>
         </div>
         <div className="nav-icon-btn" onClick={() => setShowAttendance(true)} style={{ cursor: 'pointer' }}>
@@ -154,6 +156,9 @@ const Lobby: React.FC = () => {
             setShowChangePassword(false);
           }}
         />
+      )}
+      {showFriends && (
+        <Friends onClose={() => setShowFriends(false)} />
       )}
     </div>
   );
