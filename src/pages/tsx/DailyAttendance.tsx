@@ -4,19 +4,23 @@ import '../css/attendance.css';
 interface AttendanceProps {
   onClose: () => void;
   isReceived: boolean;
-  onReceive: () => void;
+  onReceive: (amount: number, event: React.MouseEvent) => void;
 }
 
 const DailyAttendance: React.FC<AttendanceProps> = ({ onClose, isReceived, onReceive }) => {
   const rewards = [
-    { day: 1, amount: '10 xu' },
-    { day: 2, amount: '10 xu' },
-    { day: 3, amount: '10 xu' },
-    { day: 4, amount: '10 xu' },
-    { day: 5, amount: '20 xu' },
-    { day: 6, amount: '20 xu' },
-    { day: 7, amount: '30 xu' },
+    { day: 1, amount: '10 xu', value: 10 },
+    { day: 2, amount: '10 xu', value: 10 },
+    { day: 3, amount: '10 xu', value: 10 },
+    { day: 4, amount: '10 xu', value: 10 },
+    { day: 5, amount: '20 xu', value: 20 },
+    { day: 6, amount: '20 xu', value: 20 },
+    { day: 7, amount: '30 xu', value: 30 },
   ];
+
+  const handleReceive = (e: React.MouseEvent) => {
+    onReceive(rewards[0].value, e);
+  };
 
   return (
     <div className="attendance-panel">
@@ -39,7 +43,7 @@ const DailyAttendance: React.FC<AttendanceProps> = ({ onClose, isReceived, onRec
 
       <button 
         className={`attendance-receive-btn ${isReceived ? 'received' : ''}`} 
-        onClick={onReceive}
+        onClick={handleReceive}
         disabled={isReceived}
       >
         {isReceived ? 'Đã nhận' : 'Nhận'}

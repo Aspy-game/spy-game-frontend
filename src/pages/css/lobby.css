@@ -113,7 +113,7 @@
     transform: translateY(-40%);
     width: 110px;
     height: auto;
-    background: rgba(102, 65, 59, 0.9);
+    background: rgba(102, 65, 59, 0.5);
     border-top-right-radius: 30px;
     border-bottom-right-radius: 30px;
     display: flex;
@@ -230,7 +230,7 @@
     top: 0;
     width: 450px;
     height: 400px;
-    background: rgba(207, 147, 37, 0.9);
+    background: rgba(207, 147, 37, 0.5);
     border: 6px solid #fff;
     border-radius: 30px;
     padding: 20px;
@@ -241,6 +241,42 @@
 /* Custom Scrollbar */
 .lobby-room-box-new::-webkit-scrollbar { width: 8px; }
 .lobby-room-box-new::-webkit-scrollbar-thumb { background: #fff; border-radius: 10px; }
+
+/* ─── COIN ANIMATION ─── */
+.flying-coin {
+    position: fixed;
+    z-index: 9999;
+    color: #FFCC00;
+    font-size: 30px;
+    pointer-events: none;
+    text-shadow: 0 0 5px rgba(0,0,0,0.5);
+    animation: fly-to-coinbox 1s cubic-bezier(0.42, 0, 0.58, 1) forwards;
+}
+
+@keyframes fly-to-coinbox {
+    0% {
+        transform: translate(0, 0) scale(1) rotate(0deg);
+        opacity: 1;
+    }
+    20% {
+        transform: translate(var(--mid-x), var(--mid-y)) scale(1.5) rotate(90deg);
+    }
+    100% {
+        transform: translate(var(--end-x), var(--end-y)) scale(0.5) rotate(360deg);
+        opacity: 0.5;
+    }
+}
+
+.coin-box-lobby.shake {
+    animation: shake-coinbox 0.3s ease-in-out;
+}
+
+@keyframes shake-coinbox {
+    0%, 100% { transform: scale(1); }
+    25% { transform: scale(1.1) rotate(2deg); }
+    50% { transform: scale(1.1) rotate(-2deg); }
+    75% { transform: scale(1.1) rotate(1deg); }
+}
 
 .room-item-new {
     display: flex;
