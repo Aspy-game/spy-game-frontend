@@ -1,0 +1,216 @@
+@import url('https://fonts.googleapis.com/css2?family=Baloo+Bhaijaan+2:wght@400;600;700;800&display=swap');
+
+.profile-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 1440px;
+  height: 1080px;
+  background: rgba(0, 0, 0, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.profile-modal {
+  position: absolute;
+  left: 162px; /* (1440 - 1115) / 2 */
+  top: 202px;  /* (1080 - 675) / 2 */
+  width: 1115px;
+  height: 675px;
+  background: rgba(167, 114, 83, 0.3);
+  border: 5px solid #66413B;
+  border-radius: 75px;
+  box-shadow: 0px 4px 4px rgba(0, 0, 0, 0.25);
+  padding: 40px;
+  display: flex;
+  flex-direction: column;
+  color: white;
+  backdrop-filter: blur(5px);
+}
+
+.profile-header-title {
+  font-family: 'Baloo Bhaijaan 2', cursive;
+  font-size: 60px;
+  font-weight: 700;
+  text-align: center;
+  margin-bottom: 20px;
+  text-shadow: 0px 4px 4px rgba(0, 0, 0, 0.25);
+}
+
+.profile-content {
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  padding: 0 20px;
+}
+
+.profile-details {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.profile-field {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  font-family: 'Baloo Bhaijaan 2', cursive;
+}
+
+.field-label {
+  font-size: 36px;
+  color: white;
+  min-width: 120px;
+}
+
+.field-value {
+  font-size: 36px;
+  color: white;
+  font-weight: 600;
+}
+
+.name-display-group {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.edit-icon {
+  font-size: 24px;
+  color: white;
+  cursor: pointer;
+  transition: transform 0.2s;
+}
+
+.edit-icon:hover {
+  transform: scale(1.2);
+}
+
+.edit-name-container {
+  width: 250px;
+  height: 60px;
+  background: white;
+  border-radius: 30px;
+  display: flex;
+  align-items: center;
+  padding: 0 20px;
+  box-shadow: 0px 4px 4px rgba(0, 0, 0, 0.25);
+}
+
+.edit-name-input {
+  width: 100%;
+  border: none;
+  background: transparent;
+  outline: none;
+  font-family: 'Baloo Bhaijaan 2', cursive;
+  font-size: 30px;
+  color: #A77253;
+  font-weight: 600;
+}
+
+.profile-avatar-large {
+  width: 280px;
+  height: 280px;
+  border-radius: 50%;
+  background: #D9D9D9;
+  border: 5px solid white;
+  box-shadow: 0px 4px 4px rgba(0, 0, 0, 0.25);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.profile-avatar-large img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.profile-avatar-placeholder {
+  font-size: 150px;
+  color: #66413B;
+  font-weight: bold;
+}
+
+.profile-avatar-large.clickable {
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.profile-avatar-large.clickable:hover {
+  transform: scale(1.05);
+  box-shadow: 0px 8px 15px rgba(0, 0, 0, 0.3);
+}
+
+.avatar-selection-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 30px;
+  padding: 20px 50px;
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.avatar-item-option {
+  width: 150px;
+  height: 150px;
+  border-radius: 50%;
+  background: #D9D9D9;
+  border: 5px solid white;
+  cursor: pointer;
+  overflow: hidden;
+  transition: transform 0.2s, border-color 0.2s;
+  box-shadow: 0px 4px 4px rgba(0, 0, 0, 0.25);
+  flex-shrink: 0;
+}
+
+.avatar-item-option img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.avatar-item-option:hover {
+  transform: scale(1.1);
+}
+
+.avatar-item-option.selected {
+  border-color: #FFCC00;
+  box-shadow: 0px 0px 15px #FFCC00;
+}
+
+.profile-actions {
+  margin-top: auto;
+  display: flex;
+  justify-content: center;
+}
+
+.btn-confirm-profile {
+  width: 305px;
+  height: 75px;
+  background: #66413B;
+  border: none;
+  border-radius: 30px;
+  color: white;
+  font-family: 'Baloo Bhaijaan 2', cursive;
+  font-size: 40px;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0px 4px 4px rgba(0, 0, 0, 0.25);
+  transition: transform 0.2s, background 0.2s;
+}
+
+.btn-confirm-profile:hover {
+  transform: scale(1.05);
+  background: #7a5249;
+}
+
+.btn-confirm-profile:active {
+  transform: scale(0.95);
+}

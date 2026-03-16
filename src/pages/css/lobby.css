@@ -1,0 +1,321 @@
+@import url('https://fonts.googleapis.com/css2?family=Luckiest+Guy&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Baloo+Bhaijaan+2:wght@400;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Jaini+Purva&display=swap');
+
+.page-lobby {
+    width: 1440px;
+    height: 1080px;
+    margin: 0;
+    position: relative;
+    overflow: hidden;
+    color: white;
+}
+
+/* ─── TOP LEFT USER ─── */
+.lobby-user-top-left {
+    position: absolute;
+    left: 30px;
+    top: 25px;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    z-index: 100;
+}
+
+.lobby-user-avatar {
+    width: 90px;
+    height: 90px;
+    border-radius: 50%;
+    background: #D9D9D9;
+    border: 3px solid white;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.lobby-user-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+.lobby-user-name {
+    font-family: 'Jaini Purva', cursive;
+    font-size: 40px;
+    color: white;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+    white-space: nowrap;
+}
+
+/* ─── TOP RIGHT NAV ─── */
+.lobby-nav-top-right {
+    position: absolute;
+    right: 30px;
+    top: 25px;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    z-index: 100;
+}
+
+.nav-icon-btn {
+    width: 70px;
+    height: 70px;
+    background: rgba(102, 65, 59, 0.85);
+    border-radius: 15px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    border: 3px solid #A57153;
+    font-size: 28px;
+    transition: all 0.2s ease-in-out;
+}
+
+.nav-icon-btn:hover {
+    background: #A57153;
+    transform: translateY(-3px);
+}
+
+.coin-box-lobby {
+    background: rgba(102, 65, 59, 0.9);
+    height: 70px;
+    padding: 0 25px;
+    border-radius: 15px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    border: 3px solid #A57153;
+}
+
+.coin-amount {
+    font-family: 'Luckiest Guy', cursive;
+    font-size: 36px;
+    color: #fff;
+}
+
+.coin-plus {
+    color: #FFCC00;
+    font-size: 30px;
+    font-weight: bold;
+    cursor: pointer;
+    margin-left: 5px;
+}
+
+/* ─── SIDEBAR LEFT ─── */
+.lobby-sidebar-left-new {
+    position: absolute;
+    left: 0;
+    top: 50%;
+    transform: translateY(-40%);
+    width: 110px;
+    height: auto;
+    background: rgba(102, 65, 59, 0.5);
+    border-top-right-radius: 30px;
+    border-bottom-right-radius: 30px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 25px 0;
+    gap: 20px;
+    border: 2px solid #A57153;
+    border-left: none;
+}
+
+.rank-item {
+    position: relative;
+    width: 80px;
+    height: 80px;
+}
+
+.rank-avatar {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    background: #444;
+    border: 2px solid #fff;
+}
+
+.rank-num {
+    position: absolute;
+    bottom: -8px;
+    right: -8px;
+    font-family: 'Luckiest Guy', cursive;
+    font-size: 32px;
+    -webkit-text-stroke: 1.5px #000;
+}
+
+.rank-1-text { color: #FFD700; }
+.rank-2-text { color: #C0C0C0; }
+.rank-3-text { color: #CD7F32; }
+
+/* ─── MAIN CONTENT ─── */
+.lobby-main-content {
+    position: absolute;
+    left: 200px;
+    top: 250px;
+    right: 50px;
+    bottom: 50px;
+}
+
+.lobby-search-bar-new {
+    width: 500px;
+    height: 70px;
+    background: white;
+    border: 4px solid #A57153;
+    border-radius: 35px;
+    display: flex;
+    align-items: center;
+    padding: 0 25px;
+    box-shadow: 0 8px 0px rgba(0,0,0,0.1);
+    margin-bottom: 40px;
+}
+
+.search-label-new {
+    font-family: 'Baloo Bhaijaan 2', cursive;
+    font-size: 32px;
+    color: #A47152;
+    font-weight: 800;
+    margin-right: 15px;
+    white-space: nowrap;
+}
+
+.search-input-new {
+    flex: 1;
+    border: none;
+    outline: none;
+    font-family: 'Baloo Bhaijaan 2', cursive;
+    font-size: 24px;
+    color: #333;
+}
+
+.search-icon-new {
+    font-size: 28px;
+    color: #A47152;
+    cursor: pointer;
+}
+
+.lobby-create-btn-new {
+    width: 500px;
+    height: 110px;
+    background: linear-gradient(180deg, #A57153 0%, #66413B 100%);
+    border: 4px solid #fff;
+    border-radius: 25px;
+    cursor: pointer;
+    box-shadow: 0 10px 0px rgba(0,0,0,0.2);
+    transition: all 0.1s;
+    margin-bottom: 30px;
+}
+
+.lobby-create-btn-new:active {
+    transform: translateY(5px);
+    box-shadow: 0 5px 0px rgba(0,0,0,0.2);
+}
+
+.create-text-new {
+    font-family: 'Baloo Bhaijaan 2', 'Be Vietnam Pro', 'Noto Sans', 'Segoe UI', Tahoma, sans-serif; 
+    font-size: 70px;
+    font-weight: 800;
+    color: white;
+    text-shadow: 2px 2px 0px #000;
+}
+
+/* ─── ROOM BOX ─── */
+.lobby-room-box-new {
+    position: absolute;
+    right: 50px;
+    top: 0;
+    width: 450px;
+    height: 400px;
+    background: rgba(207, 147, 37, 0.5);
+    border: 6px solid #fff;
+    border-radius: 30px;
+    padding: 20px;
+    box-shadow: 0 10px 20px rgba(0,0,0,0.3);
+    overflow-y: auto;
+}
+
+/* Custom Scrollbar */
+.lobby-room-box-new::-webkit-scrollbar { width: 8px; }
+.lobby-room-box-new::-webkit-scrollbar-thumb { background: #fff; border-radius: 10px; }
+
+/* ─── COIN ANIMATION ─── */
+.flying-coin {
+    position: fixed;
+    z-index: 9999;
+    color: #FFCC00;
+    font-size: 30px;
+    pointer-events: none;
+    text-shadow: 0 0 5px rgba(0,0,0,0.5);
+    animation: fly-to-coinbox 1s cubic-bezier(0.42, 0, 0.58, 1) forwards;
+}
+
+@keyframes fly-to-coinbox {
+    0% {
+        transform: translate(0, 0) scale(1) rotate(0deg);
+        opacity: 1;
+    }
+    20% {
+        transform: translate(var(--mid-x), var(--mid-y)) scale(1.5) rotate(90deg);
+    }
+    100% {
+        transform: translate(var(--end-x), var(--end-y)) scale(0.5) rotate(360deg);
+        opacity: 0.5;
+    }
+}
+
+.coin-box-lobby.shake {
+    animation: shake-coinbox 0.3s ease-in-out;
+}
+
+@keyframes shake-coinbox {
+    0%, 100% { transform: scale(1); }
+    25% { transform: scale(1.1) rotate(2deg); }
+    50% { transform: scale(1.1) rotate(-2deg); }
+    75% { transform: scale(1.1) rotate(1deg); }
+}
+
+.room-item-new {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px;
+    background: rgba(255,255,255,0.1);
+    border-radius: 15px;
+    margin-bottom: 10px;
+    transition: background 0.2s;
+}
+
+.room-item-new:hover { background: rgba(255,255,255,0.2); }
+
+.room-name-new {
+    font-family: 'Baloo Bhaijaan 2', cursive;
+    font-size: 28px;
+    font-weight: 800;
+}
+
+.room-right-new {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.room-players-new {
+    font-family: 'Luckiest Guy', cursive;
+    font-size: 24px;
+}
+
+.room-join-btn-new {
+    font-size: 28px;
+    color: #fff;
+    cursor: pointer;
+    transition: transform 0.2s;
+}
+
+.room-join-btn-new:hover {
+    transform: translateX(5px) scale(1.2);
+    color: #FFCC00;
+}

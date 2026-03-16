@@ -1,0 +1,188 @@
+.create-room-panel {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 1100px;
+    height: 785px;
+    background: rgba(167, 114, 83, 0.3);
+    border: 3px solid #66413B;
+    backdrop-filter: blur(5px);
+    border-radius: 75px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding-top: 60px;
+    z-index: 2000;
+}
+
+.create-room-back {
+    position: absolute;
+    top: 40px;
+    left: 50px;
+    background: none;
+    border: none;
+    color: white;
+    font-size: 36px;
+    cursor: pointer;
+    transition: transform 0.2s;
+}
+
+.create-room-back:hover {
+    transform: scale(1.1);
+}
+
+.create-room-title {
+    font-family: 'Baloo Bhaijaan 2', cursive;
+    font-size: 128px;
+    color: white;
+    margin: 0;
+    line-height: 1.1;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.create-room-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 40px;
+    margin-top: 50px;
+}
+
+.room-info-box {
+    width: 369px;
+    height: 67px;
+    background: rgba(167, 114, 83, 0.85);
+    border-radius: 30px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    box-shadow: 0px 4px 4px rgba(0, 0, 0, 0.25);
+}
+
+.room-code-label {
+    font-family: 'Baloo Bhaijaan', cursive;
+    font-size: 32px;
+    color: white;
+}
+
+.room-settings {
+    width: 369px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    box-sizing: border-box;
+}
+
+.password-input-container {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    width: 100%;
+}
+
+.password-label {
+    font-family: 'Baloo Bhaijaan 2', cursive;
+    font-size: 32px;
+    color: white;
+    font-weight: 600;
+}
+
+.password-input-wrapper {
+    position: relative;
+    width: 100%;
+    height: 64px;
+}
+
+.room-password-input {
+    width: 100%;
+    height: 100%;
+    background: rgba(167, 114, 83, 0.85);
+    border: none;
+    border-radius: 30px;
+    padding: 0 60px 0 30px;
+    color: white;
+    font-family: 'Baloo Bhaijaan 2', cursive;
+    font-size: 24px;
+    box-sizing: border-box;
+    box-shadow: 0px 4px 4px rgba(0, 0, 0, 0.25);
+    outline: none;
+}
+
+.room-password-input::placeholder {
+    color: rgba(255, 255, 255, 0.6);
+}
+
+.password-toggle-icon {
+    position: absolute;
+    right: 20px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: white;
+    font-size: 20px;
+    cursor: pointer;
+    opacity: 0.8;
+    transition: opacity 0.2s;
+}
+
+.password-toggle-icon:hover {
+    opacity: 1;
+}
+
+.setting-dropdown {
+    position: relative;
+    width: 100%;
+    height: 64px;
+    background: rgba(167, 114, 83, 0.85);
+    border-radius: 30px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 0 30px;
+    cursor: pointer;
+    box-shadow: 0px 4px 4px rgba(0, 0, 0, 0.25);
+    box-sizing: border-box;
+}
+
+.setting-value {
+    font-family: 'Baloo Bhaijaan', cursive;
+    font-size: 32px;
+    color: white;
+    white-space: nowrap;
+}
+
+.dropdown-icon {
+    position: absolute;
+    right: 30px;
+    color: white;
+    font-size: 24px;
+    width: 24px;
+    display: flex;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.create-room-confirm-btn {
+    margin-top: 40px;
+    width: 300px;
+    height: 90px;
+    background: #66413B;
+    border: 4px solid #66413B;
+    border-radius: 30px;
+    font-family: 'Baloo Bhaijaan 2', cursive;
+    font-size: 40px;
+    font-weight: 800;
+    color: white;
+    cursor: pointer;
+    box-shadow: 0px 4px 4px rgba(0, 0, 0, 0.25);
+    transition: all 0.2s;
+}
+
+.create-room-confirm-btn:hover {
+    transform: translateY(-5px);
+    box-shadow: 0px 8px 12px rgba(0, 0, 0, 0.3);
+}
+
+.create-room-confirm-btn:active {
+    transform: translateY(0);
+}
