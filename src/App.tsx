@@ -10,10 +10,7 @@ import './pages/css/home.css';
 // ── Room screens ──────────────────────────────────────────────────────────────
 import Round1Enter    from './pages/tsx/room/Round1Enter';
 import DescribeNotify from './pages/tsx/room/DescribeNotify';
-import VoteNotify     from './pages/tsx/room/VoteNotify';
-import VoteSelect     from './pages/tsx/room/VoteSelect';
-import VoteSent       from './pages/tsx/room/VoteSent';
-import VoteTimeout    from './pages/tsx/room/VoteTimeout';
+import VoteFlow       from './pages/tsx/room/VoteFlow';
 import ResultVote     from './pages/tsx/room/ResultVote';
 import ResultMostVoted from './pages/tsx/room/ResultMostVoted';
 import ResultSpySafe  from './pages/tsx/room/ResultSpySafe';
@@ -179,10 +176,7 @@ function App() {
         {/* ── DEV ONLY — xóa trước khi nộp ── */}
         <Route path="/dev/round1"          element={<ScaledPage><Round1Enter /></ScaledPage>} />
         <Route path="/dev/describe-notify" element={<ScaledPage><DescribeNotify /></ScaledPage>} />
-        <Route path="/dev/vote-notify"     element={<ScaledPage><VoteNotify /></ScaledPage>} />
-        <Route path="/dev/vote-select"     element={<ScaledPage><VoteSelect /></ScaledPage>} />
-        <Route path="/dev/vote-sent"       element={<ScaledPage><VoteSent /></ScaledPage>} />
-        <Route path="/dev/vote-timeout"    element={<ScaledPage><VoteTimeout /></ScaledPage>} />
+        <Route path="/dev/vote"            element={<ScaledPage><VoteFlow /></ScaledPage>} />
         <Route path="/dev/result-vote"     element={<ScaledPage><ResultVote /></ScaledPage>} />
         <Route path="/dev/result-most-voted" element={<ScaledPage><ResultMostVoted /></ScaledPage>} />
         <Route path="/dev/result-spy-safe" element={<ScaledPage><ResultSpySafe /></ScaledPage>} />
@@ -195,15 +189,7 @@ function App() {
           element={<ProtectedRoute><ScaledPage><DescribeNotify /></ScaledPage></ProtectedRoute>}
         />
 
-        {/* TODO: uncomment khi làm xong từng màn hình
-        <Route path="/game/:roomId/describe/start"    element={<ProtectedRoute><ScaledPage><DescribeStart /></ScaledPage></ProtectedRoute>} />
-        <Route path="/game/:roomId/describe/sent"     element={<ProtectedRoute><ScaledPage><DescribeSent /></ScaledPage></ProtectedRoute>} />
-        <Route path="/game/:roomId/describe/end"      element={<ProtectedRoute><ScaledPage><DescribeEnd /></ScaledPage></ProtectedRoute>} />
-        <Route path="/game/:roomId/describe/view-all" element={<ProtectedRoute><ScaledPage><DescribeNotify /></ScaledPage></ProtectedRoute>} />
-        <Route path="/game/:roomId/vote/notify"       element={<ProtectedRoute><ScaledPage><VoteNotify /></ScaledPage></ProtectedRoute>} />
-        <Route path="/game/:roomId/vote/select"       element={<ProtectedRoute><ScaledPage><VoteSelect /></ScaledPage></ProtectedRoute>} />
-        <Route path="/game/:roomId/vote/sent"         element={<ProtectedRoute><ScaledPage><VoteSent /></ScaledPage></ProtectedRoute>} />
-        <Route path="/game/:roomId/vote/timeout"      element={<ProtectedRoute><ScaledPage><VoteTimeout /></ScaledPage></ProtectedRoute>} />
+        {/* <Route path="/game/:roomId/vote"            element={<ProtectedRoute><ScaledPage><VoteFlow /></ScaledPage></ProtectedRoute>} />
         <Route path="/game/:roomId/result/vote"       element={<ProtectedRoute><ScaledPage><ResultVote /></ScaledPage></ProtectedRoute>} />
         <Route path="/game/:roomId/result/most-voted" element={<ProtectedRoute><ScaledPage><ResultMostVoted /></ScaledPage></ProtectedRoute>} />
         <Route path="/game/:roomId/result/spy-safe"   element={<ProtectedRoute><ScaledPage><ResultSpySafe /></ScaledPage></ProtectedRoute>} />
@@ -214,8 +200,7 @@ function App() {
         <Route path="/game/:roomId/round2/ghost-chat"       element={<ProtectedRoute><ScaledPage><Round2GhostChat /></ScaledPage></ProtectedRoute>} />
         <Route path="/game/:roomId/round2/ghost-chat-input" element={<ProtectedRoute><ScaledPage><Round2GhostChatInput /></ScaledPage></ProtectedRoute>} />
         <Route path="/game/:roomId/round2/typing"           element={<ProtectedRoute><ScaledPage><Round2Typing /></ScaledPage></ProtectedRoute>} />
-        <Route path="/game/:roomId/round2/after-r1"         element={<ProtectedRoute><ScaledPage><Round2AfterR1 /></ScaledPage></ProtectedRoute>} />
-        */}
+        <Route path="/game/:roomId/round2/after-r1"         element={<ProtectedRoute><ScaledPage><Round2AfterR1 /></ScaledPage></ProtectedRoute>} /> */}
       </Routes>
     </Router>
   );
