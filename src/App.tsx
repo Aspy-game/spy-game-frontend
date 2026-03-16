@@ -8,12 +8,12 @@ import Reset from './pages/tsx/Reset';
 
 
 import Lobby from './pages/tsx/Lobby';
-
+import RoomLobby from './pages/tsx/RoomLobby';
 
 import bg from '../img/185eff45-e478-44e3-ae2c-26ed58d907e5.jpg';
 import './pages/css/home.css';
 import './pages/css/rules.css';
-
+// import "./App.css"
 // ── Room screens ──────────────────────────────────────────────────────────────
 import Round1Enter from './pages/tsx/room/Round1Enter';
 // import DescribeNotify      from './pages/tsx/room/DescribeNotify';      // TODO
@@ -168,7 +168,7 @@ function App() {
 <Route path="/lobby" element={<ProtectedRoute><ScaledPage><Lobby /></ScaledPage></ProtectedRoute>} />
 
 
-        <Route path="/room/:code" element={<ProtectedRoute><Room /></ProtectedRoute>} />
+        <Route path="/room/:roomId" element={<ProtectedRoute><ScaledPage><RoomLobby /></ScaledPage></ProtectedRoute>} />
         <Route path="/game/:id"   element={<ProtectedRoute><Game /></ProtectedRoute>} />
 
         {/* ── Room game screens  ── */}

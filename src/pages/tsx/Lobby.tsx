@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import useAuthStore from '../../store/authStore';
 import bg from '../../../img/Gemini_Generated_Image_4oqsgs4oqsgs4oqs.png';
 import '../css/lobby.css';
@@ -6,7 +6,19 @@ import Profile from './Profile';
 import DailyAttendance from './DailyAttendance';
 import Settings from './Settings';
 import ChangePassword from './ChangePassword';
-import Friends from './Friends';
+import CreateRoom from './CreateRoom';
+
+interface FlyingCoin {
+  id: number;
+  startX: number;
+  startY: number;
+  endX: number;
+  endY: number;
+  midX: number;
+  midY: number;
+  delay: number;
+}
+
 
 const Lobby: React.FC = () => {
   const { user } = useAuthStore();
@@ -16,11 +28,45 @@ const Lobby: React.FC = () => {
   const [showAttendance, setShowAttendance] = useState(true);
   const [showSettings, setShowSettings] = useState(false);
   const [showChangePassword, setShowChangePassword] = useState(false);
-  const [showFriends, setShowFriends] = useState(false);
-  const [isReceived, setIsReceived] = useState(false);
+  const [showCreateRoom, setShowCreateRoom] = useState(false);
 
-  const handleReceiveAttendance = () => {
+  const [isReceived, setIsReceived] = useState(false);
+  const [coins, setCoins] = useState(100);
+  const [flyingCoins, setFlyingCoins] = useState<FlyingCoin[]>([]);
+  const [isShaking, setIsShaking] = useState(false);
+  
+  const coinBoxRef = useRef<HTMLDivElement>(null);
+
+  const handleReceiveAttendance = (amount: number, event: React.MouseEvent) => {
+    if (!coinBoxRef.current) return;
+
+    const boxRect = coinBoxRef.current.getBoundingClientRect();
+    const startX = event.clientX;
+    const startY = event.clientY;
+    const endX = boxRect.left + boxRect.width / 2 - startX;
+    const endY = boxRect.top + boxRect.height / 2 - startY;
+
+    const newCoins: FlyingCoin[] = Array.from({ length: 8 }).map((_, i) => ({
+      id: Date.now() + i,
+      startX,
+      startY,
+      endX,
+      endY,
+      midX: endX / 2 + (Math.random() - 0.5) * 200,
+      midY: endY / 2 - 100 - Math.random() * 100,
+      delay: i * 0.1,
+    }));
+
+    setFlyingCoins(newCoins);
     setIsReceived(true);
+
+    // Delay the coin addition and shake until animation finishes
+    setTimeout(() => {
+      setCoins(prev => prev + amount);
+      setIsShaking(true);
+      setTimeout(() => setIsShaking(false), 500);
+      setFlyingCoins([]);
+    }, 1200);
   };
 
   const handleLogout = () => {
@@ -33,7 +79,8 @@ const Lobby: React.FC = () => {
     { id: 'RT163', name: 'Phòng: RT163', players: '2/6' },
   ];
 
-  const isModalOpen = showSettings || showChangePassword || showAttendance || showProfile || showFriends;
+  const isModalOpen = showSettings || showChangePassword || showAttendance || showProfile || showCreateRoom;
+
 
   return (
     <div
@@ -67,9 +114,9 @@ const Lobby: React.FC = () => {
         <div className="nav-icon-btn" onClick={() => setShowAttendance(true)} style={{ cursor: 'pointer' }}>
           <i className="fa-regular fa-calendar-days"></i>
         </div>
-        <div className="coin-box-lobby">
+        <div className={`coin-box-lobby ${isShaking ? 'shake' : ''}`} ref={coinBoxRef}>
           <i className="fa-solid fa-coins" style={{ color: '#FFCC00', fontSize: '30px' }}></i>
-          <span className="coin-amount">100</span>
+          <span className="coin-amount">{coins}</span>
           <span className="coin-plus">+</span>
         </div>
         <div className="nav-icon-btn" onClick={() => setShowSettings(true)} style={{ cursor: 'pointer' }}>
@@ -107,7 +154,7 @@ const Lobby: React.FC = () => {
             </div>
 
             {/* CREATE ROOM BUTTON */}
-            <button className="lobby-create-btn-new">
+            <button className="lobby-create-btn-new" onClick={() => setShowCreateRoom(true)}>
               <span className="create-text-new">Tạo phòng</span>
             </button>
 
@@ -157,9 +204,33 @@ const Lobby: React.FC = () => {
           }}
         />
       )}
-      {showFriends && (
-        <Friends onClose={() => setShowFriends(false)} />
+      {showCreateRoom && (
+        <CreateRoom 
+          onClose={() => setShowCreateRoom(false)}
+          onConfirm={(data) => {
+            console.log('Create room with:', data);
+            setShowCreateRoom(false);
+          }}
+        />
       )}
+
+      {/* ─── FLYING COINS ─── */}
+      {flyingCoins.map((coin) => (
+        <i
+          key={coin.id}
+          className="fa-solid fa-coins flying-coin"
+          style={{
+            left: coin.startX,
+            top: coin.startY,
+            '--end-x': `${coin.endX}px`,
+            '--end-y': `${coin.endY}px`,
+            '--mid-x': `${coin.midX}px`,
+            '--mid-y': `${coin.midY}px`,
+            animationDelay: `${coin.delay}s`,
+          } as React.CSSProperties}
+        />
+      ))}
+
     </div>
   );
 };
