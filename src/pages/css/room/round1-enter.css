@@ -1,40 +1,31 @@
 /* =============================================
    round1-enter.css
-   Màn hình vào vòng 1 
+   Màn hình vào vòng 1
    Figma: 1440×1024
    ============================================= */
 
 @import url('https://fonts.googleapis.com/css2?family=Baloo+Bhaijaan+2:wght@400;600&family=Baloo+Bhaijaan&family=Jaini+Purva&display=swap');
 
-/* ---------- Root tokens (lấy từ Figma) ---------- */
+/* ---------- Root tokens ---------- */
 :root {
-  --r1-room-badge-bg   : rgba(207, 147, 37, 0.86);
-  --r1-chat-bg         : rgba(255, 255, 255, 0.5);
-  --r1-vong1-bg        : rgba(167, 114, 83, 0.7);
-  --r1-shadow          : 0px 4px 4px 0px rgba(0, 0, 0, 0.25);
-  --r1-border          : 1px solid #000000;
-  --r1-white           : #ffffff;
-
-  /* Chat name colours */
-  --r1-cu   : #FF0004;
-  --r1-toi  : #FF8D28;
-  --r1-cho  : #FFCC00;
-  --r1-meo  : #34C759;
+  --r1-room-badge-bg : rgba(207, 147, 37, 0.86);
+  --r1-vong1-bg      : rgba(167, 114, 83, 0.7);
+  --r1-shadow        : 0px 4px 4px 0px rgba(0, 0, 0, 0.25);
+  --r1-white         : #ffffff;
 }
 
 /* ---------- Screen wrapper ---------- */
-
 .r1-screen {
   width: 1440px;
   height: 1024px;
   position: relative;
   overflow: hidden;
   background-color: #1c4a08;
-  background-image: url('../../assets/room/bg.jpg');
   background-size: cover;
   background-position: center;
   font-family: 'Baloo Bhaijaan 2', sans-serif;
 }
+
 /* ---------- Header ---------- */
 .r1-header {
   position: relative;
@@ -43,19 +34,10 @@
   align-items: flex-start;
   justify-content: space-between;
   padding: 30px 32px 0 32px;
+  animation: r1-fadeDown 0.55s ease both;
 }
 
-/* "Tôi" – Jaini Purva 64px, white */
-.r1-header__title {
-  font-family: 'Jaini Purva', cursive;
-  font-size: 64px;
-  font-weight: 400;
-  line-height: 1.314;
-  color: var(--r1-white);
-  text-shadow: 0 2px 8px rgba(0,0,0,0.3);
-}
 
-/* "Phòng: 12345" badge */
 .r1-room-badge {
   background: var(--r1-room-badge-bg);
   border-radius: 30px;
@@ -65,7 +47,6 @@
   align-items: center;
   min-height: 79px;
 }
-
 .r1-room-badge__text {
   font-family: 'Jaini Purva', cursive;
   font-size: 60px;
@@ -75,36 +56,15 @@
   white-space: nowrap;
 }
 
-/* ---------- Body (avatars | vong1 | chat) ---------- */
-.r1-body {
-  position: relative;
-  z-index: 5;
-  display: flex;
-  align-items: flex-start;
-  gap: 0;
-  padding: 0;
-  /* Figma: avatar grid starts at y=110, width=740 */
-}
-
-/* ---------- Avatar grid (Group 21) ---------- */
+/* ---------- Avatar grid (Figma: x=345, y=110, w=740, h=802) ---------- */
 .r1-avatars {
-  /* Figma: x=345, y=110, w=740, h=802 */
   position: absolute;
   left: 345px;
   top: 110px;
   width: 740px;
   height: 802px;
-  display: grid;
-  grid-template-columns: repeat(2, 148px);
-  grid-template-rows: repeat(4, 146px);
-  column-gap: 444px; /* (740 - 148*2) / 1 ≈ 444 gap between col 1 right edge & col 2 left edge → actually positions are: col1 x=0, col2 x=572 → gap = 572-148=424px */
-  /* Use exact positions instead: */
-  grid-template-columns: 148px 148px;
-}
-
-/* Re-do with absolute children for pixel-perfect Figma positions */
-.r1-avatars {
-  display: block; /* override grid, use absolute children */
+  display: block;
+  animation: r1-fadeLeft 0.65s 0.1s ease both;
 }
 
 .r1-avatar {
@@ -112,7 +72,7 @@
   width: 148px;
   height: 146px;
   border-radius: 16px;
-  overflow: hidden;
+  overflow: visible;
   box-shadow: var(--r1-shadow);
   background: rgba(0,0,0,0.25);
   display: flex;
@@ -124,24 +84,43 @@
   width: 100%;
   height: 100%;
   object-fit: cover;
+  border-radius: 16px;
 }
 
-/* Figma exact positions relative to Group 21 (x=345,y=110):
-   Row 0 y=0    : col A x=303, col B x=572
-   Row 1 y=192  : col A x=0,   col B x=572
-   Row 2 y=481  : col A x=0,   col B x=592
-   Row 3 y=656  : col A x=303, col B — (only 1 listed)
-   (Group 21 has 6 avatar images in Figma but shown as IMAGE-SVG group)
-*/
-.r1-avatar--a0 { left: 303px; top: 0px; }
+/* Figma exact positions relative to .r1-avatars */
+.r1-avatar--a0 { left: 303px; top: 0px;   }
 .r1-avatar--a1 { left: 572px; top: 192px; }
 .r1-avatar--a2 { left: 592px; top: 481px; }
 .r1-avatar--a3 { left: 303px; top: 656px; }
 .r1-avatar--a4 { left: 0px;   top: 481px; }
 .r1-avatar--a5 { left: 0px;   top: 192px; }
 
-/* ---------- "Vòng 1" center panel ---------- */
-/* Figma: Rectangle 30 x=359 y=338 w=726 h=348 */
+/* ---------- Name tag dưới avatar ---------- */
+.r1-name-tag {
+  position: absolute;
+  bottom: -36px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0, 0, 0, 0.72);
+  border: 1px solid rgba(255,255,255,0.18);
+  border-radius: 12px;
+  padding: 2px 14px;
+  white-space: nowrap;
+  font-family: 'Baloo Bhaijaan 2', sans-serif;
+  font-size: 20px;
+  font-weight: 600;
+  color: rgba(255,255,255,0.92);
+  line-height: 1.5;
+  pointer-events: none;
+  z-index: 25;
+}
+.r1-name-tag--me {
+  background: rgba(207, 147, 37, 0.88);
+  border-color: rgba(255, 220, 80, 0.45);
+  color: #ffffff;
+}
+
+/* ---------- "Vòng 1" center panel (Figma: x=359, y=338, w=726, h=348) ---------- */
 .r1-vong1-box {
   position: absolute;
   left: 359px;
@@ -155,10 +134,9 @@
   align-items: center;
   justify-content: center;
   z-index: 6;
+  animation: r1-fadeUp 0.65s 0.15s ease both,
+             r1-pulse  3.5s  1s    ease-in-out infinite;
 }
-
-/* "Vòng 1" text: Baloo Bhaijaan 128px */
-/* Figma: x=534 y=416 inside parent → relative offset from box: 534-359=175, 416-338=78 */
 .r1-vong1-text {
   font-family: 'Baloo Bhaijaan', sans-serif;
   font-size: 128px;
@@ -169,139 +147,12 @@
   user-select: none;
 }
 
-/* ---------- Chat panel (Group 20) ---------- */
-/* Figma: x=0 y=745 w=465 h=279.3 */
-.r1-chat {
-  position: absolute;
-  left: 0;
-  top: 745px;
-  width: 465px;
-  z-index: 10;
-}
-
-/* Chat messages box – Rectangle 29: w=465 h=276, rgba(255,255,255,0.5), border 1px black */
-.r1-chat__messages {
-  position: relative;
-  width: 465px;
-  height: 230px;
-  background: var(--r1-chat-bg);
-  border: var(--r1-border);
-  border-radius: 30px;
-  box-shadow: var(--r1-shadow);
-  padding: 13px 21px 10px;
-  max-height: 230px;
-  overflow-y: auto;
-  
-    /* Làm đẹp thanh scroll */
-  scrollbar-width: thin;
-  scrollbar-color: rgba(255,255,255,0.4) transparent;
-}
-/* Webkit scroll (Chrome, Edge) */
-.r1-chat__messages::-webkit-scrollbar {
-  width: 4px;
-}
-.r1-chat__messages::-webkit-scrollbar-track {
-  background: transparent;
-}
-.r1-chat__messages::-webkit-scrollbar-thumb {
-  background: rgba(255,255,255,0.4);
-  border-radius: 4px;
-}
-/* Chat rows */
-.r1-chat-row {
-  display: flex;
-  align-items: baseline;
-  gap: 8px;
-  line-height: 1.712;
-}
-
-.r1-chat-name {
-  font-size: 32px;
-  font-weight: 600;
-  white-space: nowrap;
-  line-height: 1.712;
-}
-.r1-chat-name--cu   { color: var(--r1-cu); }
-.r1-chat-name--toi  { color: var(--r1-toi); }
-.r1-chat-name--cho  { color: var(--r1-cho); }
-.r1-chat-name--meo  { color: var(--r1-meo); }
-
-.r1-chat-msg {
-  font-size: 32px;
-  font-weight: 400;
-  color: var(--r1-white);
-  line-height: 1.712;
-  word-break: break-word;  
-  white-space: normal;     
-  flex: 1;
-}
-
-/* Chat input bar – Rectangle 30: y=234 w=465 h=42 */
-.r1-chat__input-bar {
-  position: relative;
-  margin-top: 3px;
-  width: 465px;
-  height: 42px;
-  background: var(--r1-chat-bg);
-  border: var(--r1-border);
-  border-radius: 30px;
-  box-shadow: var(--r1-shadow);
-  display: flex;
-  align-items: center;
-  padding: 0 8px 0 16px;
-  gap: 4px;
-}
-
-.r1-chat__input {
-  flex: 1;
-  background: transparent;
-  border: none;
-  outline: none;
-  font-family: 'Baloo Bhaijaan 2', sans-serif;
-  font-size: 16px;
-  color: var(--r1-white);
-}
-.r1-chat__input::placeholder { color: rgba(255,255,255,0.55); }
-
-.r1-chat__btn {
-  background: none;
-  border: none;
-  cursor: pointer;
-  padding: 2px 4px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: transform 0.15s ease;
-  flex-shrink: 0;
-}
-.r1-chat__btn:hover { transform: scale(1.18); }
-.r1-chat__btn svg {
-  width: 28px;
-  height: 28px;
-}
-
 /* ---------- Animations ---------- */
 @keyframes r1-fadeDown  { from { opacity:0; transform:translateY(-18px); } to { opacity:1; transform:translateY(0); } }
 @keyframes r1-fadeUp    { from { opacity:0; transform:translateY(20px);  } to { opacity:1; transform:translateY(0); } }
 @keyframes r1-fadeLeft  { from { opacity:0; transform:translateX(-20px); } to { opacity:1; transform:translateX(0); } }
 @keyframes r1-fadeRight { from { opacity:0; transform:translateX(20px);  } to { opacity:1; transform:translateX(0); } }
 @keyframes r1-pulse     { 0%,100%{ transform:scale(1); } 50%{ transform:scale(1.03); } }
-@keyframes r1-slideIn   { from { opacity:0; transform:translateX(-12px); } to { opacity:1; transform:translateX(0); } }
-
-.r1-header  { animation: r1-fadeDown  0.55s ease both; }
-.r1-avatars { animation: r1-fadeLeft  0.65s 0.1s ease both; }
-.r1-vong1-box {
-  animation:
-    r1-fadeUp  0.65s 0.15s ease both,
-    r1-pulse   3.5s  1s    ease-in-out infinite;
-}
-.r1-chat    { animation: r1-fadeLeft  0.65s 0.2s ease both; }
-
-.r1-chat-row { animation: r1-slideIn 0.45s ease both; }
-.r1-chat-row:nth-child(1) { animation-delay: 0.35s; }
-.r1-chat-row:nth-child(2) { animation-delay: 0.55s; }
-.r1-chat-row:nth-child(3) { animation-delay: 0.75s; }
-.r1-chat-row:nth-child(4) { animation-delay: 0.95s; }
 
 /* ---------- Responsive ---------- */
 @media (max-width: 1100px) {
@@ -309,12 +160,11 @@
 }
 
 @media (max-width: 768px) {
-  .r1-header { padding: 16px; }
-  .r1-header__title { font-size: 36px; }
-  .r1-room-badge { min-height: 50px; padding: 4px 18px; }
+  .r1-header           { padding: 16px; }
+  .r1-header__title    { font-size: 36px; }
+  .r1-room-badge       { min-height: 50px; padding: 4px 18px; }
   .r1-room-badge__text { font-size: 30px; }
 
-  /* Stack layout vertically on mobile */
   .r1-screen { overflow: auto; }
 
   .r1-vong1-box {
@@ -339,18 +189,15 @@
   }
   .r1-avatar {
     position: relative !important;
-    left: auto !important; top: auto !important;
-    width: 100%; height: auto;
+    left: auto !important;
+    top: auto !important;
+    width: 100%;
+    height: auto;
     aspect-ratio: 1;
   }
-
-  .r1-chat {
-    position: relative;
-    left: auto; top: auto;
-    width: calc(100% - 32px);
-    margin: 0 16px 24px;
+  .r1-name-tag {
+    font-size: 14px;
+    padding: 1px 10px;
+    bottom: -28px;
   }
-  .r1-chat__messages { width: 100%; }
-  .r1-chat__input-bar { width: 100%; }
-  .r1-chat-name, .r1-chat-msg { font-size: 18px; }
 }
