@@ -19,6 +19,7 @@ interface FlyingCoin {
   delay: number;
 }
 
+
 const Lobby: React.FC = () => {
   const { user } = useAuthStore();
   const logoutStore = useAuthStore((state) => state.logout);
@@ -28,6 +29,7 @@ const Lobby: React.FC = () => {
   const [showSettings, setShowSettings] = useState(false);
   const [showChangePassword, setShowChangePassword] = useState(false);
   const [showCreateRoom, setShowCreateRoom] = useState(false);
+
   const [isReceived, setIsReceived] = useState(false);
   const [coins, setCoins] = useState(100);
   const [flyingCoins, setFlyingCoins] = useState<FlyingCoin[]>([]);
@@ -79,6 +81,7 @@ const Lobby: React.FC = () => {
 
   const isModalOpen = showSettings || showChangePassword || showAttendance || showProfile || showCreateRoom;
 
+
   return (
     <div
       className="page-lobby"
@@ -105,7 +108,7 @@ const Lobby: React.FC = () => {
 
       {/* ─── TOP RIGHT NAV ─── */}
       <div className="lobby-nav-top-right">
-        <div className="nav-icon-btn">
+        <div className="nav-icon-btn" onClick={() => setShowFriends(true)} style={{ cursor: 'pointer' }}>
           <i className="fa-solid fa-user-group"></i>
         </div>
         <div className="nav-icon-btn" onClick={() => setShowAttendance(true)} style={{ cursor: 'pointer' }}>
@@ -227,6 +230,7 @@ const Lobby: React.FC = () => {
           } as React.CSSProperties}
         />
       ))}
+
     </div>
   );
 };
