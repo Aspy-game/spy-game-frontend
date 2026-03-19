@@ -108,9 +108,9 @@ const Lobby: React.FC = () => {
 
       {/* ─── TOP RIGHT NAV ─── */}
       <div className="lobby-nav-top-right">
-        <div className="nav-icon-btn" onClick={() => setShowFriends(true)} style={{ cursor: 'pointer' }}>
+        {/* <div className="nav-icon-btn" onClick={() => setShowFriends(true)} style={{ cursor: 'pointer' }}>
           <i className="fa-solid fa-user-group"></i>
-        </div>
+        </div> */}
         <div className="nav-icon-btn" onClick={() => setShowAttendance(true)} style={{ cursor: 'pointer' }}>
           <i className="fa-regular fa-calendar-days"></i>
         </div>
