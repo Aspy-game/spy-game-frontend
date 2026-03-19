@@ -5,7 +5,7 @@ import Login from './pages/tsx/Login';
 import Register from './pages/tsx/Register';
 import Forgot from './pages/tsx/Forgot';
 import Reset from './pages/tsx/Reset';
-
+import Admin from './pages/tsx/Admin';
 
  import Lobby from './pages/tsx/Lobby';
 import RoomLobby from './pages/tsx/RoomLobby';
@@ -182,6 +182,11 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   return isAuthenticated ? <>{children}</> : <Navigate to="/login" />;
 };
 
+const AdminRoute = ({ children }: { children: React.ReactNode }) => {
+  const { user, isAuthenticated } = useAuthStore();
+  return isAuthenticated && user?.role === 'ROLE_ADMIN' ? <>{children}</> : <Navigate to="/lobby" />;
+};
+  
 const AuthRoute = ({ children }: { children: React.ReactNode }) => {
   const { isAuthenticated } = useAuthStore();
   return isAuthenticated ? <Navigate to="/lobby" /> : <>{children}</>;
@@ -202,6 +207,7 @@ function App() {
 
 {/* ── Protected ── */}
 <Route path="/lobby" element={<ProtectedRoute><ScaledPage><Lobby /></ScaledPage></ProtectedRoute>} />
+<Route path="/admin" element={<AdminRoute><Admin /></AdminRoute>} />
 
 
         <Route path="/room/:roomId" element={<ProtectedRoute><ScaledPage><RoomLobby /></ScaledPage></ProtectedRoute>} />
@@ -215,7 +221,7 @@ function App() {
         <Route path="/dev/result-vote"     element={<ScaledPage><ResultVote /></ScaledPage>} />
 
         <Route path="/dev/result-most-voted" element={<ScaledPage><ResultMostVoted /></ScaledPage>} />
-        <Route path="/dev/result-spy-safe" element={<ScaledPage><ResultSpySafe /></ScaledPage>} /> */}
+        <Route path="/dev/result-spy-safe" element={<ScaledPage><ResultSpySafe /></ScaledPage>} /> 
 
         {/* ── Room game screens ── */}
         <Route path="/game/:roomId/round1"

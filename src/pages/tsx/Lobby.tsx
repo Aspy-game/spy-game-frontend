@@ -1,4 +1,5 @@
 import React, { useState, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import useAuthStore from '../../store/authStore';
 import bg from '../../../img/Gemini_Generated_Image_4oqsgs4oqsgs4oqs.png';
 import '../css/lobby.css';
@@ -22,6 +23,7 @@ interface FlyingCoin {
 
 const Lobby: React.FC = () => {
   const { user } = useAuthStore();
+  const navigate = useNavigate();
   const logoutStore = useAuthStore((state) => state.logout);
   // const { logout, loading } = useAuth();
   const [showProfile, setShowProfile] = useState(false);
@@ -108,6 +110,12 @@ const Lobby: React.FC = () => {
 
       {/* ─── TOP RIGHT NAV ─── */}
       <div className="lobby-nav-top-right">
+        {user?.role === 'ROLE_ADMIN' && (
+          <div className="nav-icon-btn" onClick={() => navigate('/admin')} style={{ cursor: 'pointer', background: 'rgba(255, 204, 0, 0.2)', color: '#FFCC00' }}>
+            <i className="fa-solid fa-user-shield"></i>
+            <span style={{ fontSize: '12px', marginLeft: '5px', fontWeight: 'bold' }}>Quản lý</span>
+          </div>
+        )}
         {/* <div className="nav-icon-btn" onClick={() => setShowFriends(true)} style={{ cursor: 'pointer' }}>
           <i className="fa-solid fa-user-group"></i>
         </div> */}
