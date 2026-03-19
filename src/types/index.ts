@@ -1,9 +1,12 @@
+export type Role = 'ROLE_USER' | 'ROLE_ADMIN';
+
 export interface User {
   user_id: number;
   username: string;
   display_name: string;
   email?: string;
   avatar_url?: string;
+  role?: Role;
 }
 
 export interface RegisterResponse {
