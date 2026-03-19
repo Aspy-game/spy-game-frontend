@@ -1,36 +1,34 @@
-@import url('https://fonts.googleapis.com/css2?family=Jaini+Purva&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Baloo+Bhaijaan+2:wght@400;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Jaini+Purva&display=swap');
 
-.page-login {
+.page-forgot {
   width: 1440px;
-  height: 1080px;
+  height: 1024px;
   margin: 0 auto;
   position: relative;
 }
 
-.login-title {
+.forgot-title {
   position: absolute;
-  left: 528px;
-  top: 220px;
-  width: 383px;
-  height: 131px;
-  font-family: 'Baloo Bhaijaan 2', 'Be Vietnam Pro', 'Noto Sans', 'Segoe UI', Tahoma, sans-serif;
-  font-size: 70px;
-  line-height: 1.314em;
-  text-align: center;
+  left: 50%;
+  top: 157px;
+  transform: translateX(-50%);
+  font-family: 'Baloo Bhaijaan 2', 'Be Vietnam Pro', 'Segoe UI', Tahoma, sans-serif;
+  font-size: 80px;
   color: #FFFFFF;
+  text-align: center;
   text-shadow: 0 4px 4px rgba(0,0,0,0.25);
+  white-space: nowrap;
   z-index: 6;
-  border: 0;
 }
 
-.login-panel {
+.forgot-panel {
   position: absolute;
-  left: 365px;
-  top: 232px;
-  width: 710px;
-  height: 561px;
+  left: 314px;
+  top: 140px;
+  width: 811px;
+  height: 756px;
   background: rgba(167, 114, 83, 0.75);
   border: 10px solid #FFFFFF;
   border-radius: 75px;
@@ -38,8 +36,7 @@
   z-index: 5;
 }
 
-/* Close button */
-.login-panel .close {
+.forgot-panel .close {
   position: absolute;
   top: 22px;
   right: 28px;
@@ -58,17 +55,15 @@
   transition: opacity 150ms;
   z-index: 10;
 }
-.login-panel .close:hover { opacity: 1; }
+.forgot-panel .close:hover { opacity: 1; }
 
-.login-field {
+.forgot-field {
   position: absolute;
-  left: 63px;
-  transform: none;
+  left: 124px;
   width: 564px;
   height: 80px;
 }
-
-.login-input {
+.forgot-input {
   width: 100%;
   height: 100%;
   box-sizing: border-box;
@@ -82,17 +77,17 @@
   color: rgba(0,0,0,0.75);
   outline: none;
 }
-.login-input::placeholder { color: rgba(0,0,0,0.25); }
-.login-input:focus {
+.forgot-input::placeholder { color: rgba(0,0,0,0.25); }
+.forgot-input:focus {
   box-shadow: 0 4px 4px rgba(0,0,0,0.25) inset, 0 0 0 3px rgba(255,255,255,0.5);
 }
 
 .eye-btn {
   position: absolute;
-  right: 25px;
+  right: 20px;
   top: 50%;
   transform: translateY(-50%);
-  width: 50px;
+  width: 32px;
   height: 32px;
   display: inline-flex;
   align-items: center;
@@ -103,14 +98,27 @@
   cursor: pointer;
   z-index: 2;
 }
-.eye-btn i { font-size: 28px; }
+.eye-btn i { font-size: 20px; }
 .eye-btn:hover { color: rgba(0,0,0,0.75); }
 
-/* Error message inside panel */
-.login-error {
+.forgot-otp-link {
   position: absolute;
-  left: 73px;
-  top: 370px;
+  left: 124px;
+  top: 539px;
+  background: transparent;
+  border: none;
+  color: #FFFFFF;
+  font-family: 'Inter', sans-serif;
+  font-weight: 500;
+  font-size: 30px;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.forgot-error {
+  position: absolute;
+  left: 124px;
+  top: 570px;
   width: 564px;
   font-family: 'Inter', sans-serif;
   font-size: 22px;
@@ -119,16 +127,17 @@
   text-align: center;
 }
 
-.login-button {
+.forgot-button {
   position: absolute;
-  left: 205px;
-  top: 409px;
+  left: 50%;
+  transform: translateX(-50%);
+  top: 627px;
   width: 300px;
   height: 80px;
   border-radius: 50px;
   background: #A77253;
   border: 10px solid #FFFFFF;
-  box-shadow: 0 4px 4px rgba(0,0,0,0.25);
+  box-shadow: 0 6px 12px rgba(0,0,0,0.25);
   color: #FFFFFF;
   font-family: 'Baloo Bhaijaan 2', 'Be Vietnam Pro', 'Inter', sans-serif;
   font-size: 45px;
@@ -139,37 +148,7 @@
   line-height: normal;
   cursor: pointer;
   transition: filter 200ms;
+  z-index: 11;
 }
-.login-button:hover:not(:disabled) { filter: brightness(1.08); }
-.login-button:disabled { opacity: 0.6; cursor: default; }
-
-.forgot-link {
-  position: absolute;
-  left: 611px;
-  top: 820px;
-  font-family: 'Inter', sans-serif;
-  font-size: 30px;
-  color: #FFFFFF;
-  font-weight: 600;
-  text-decoration: none;
-  text-shadow: 0 2px 2px rgba(0,0,0,0.25);
-  white-space: nowrap;
-  z-index: 7;
-}
-.forgot-link:hover { text-decoration: underline; }
-
-.login-switch {
-  position: absolute;
-  left: 50%;
-  top: 870px;
-  transform: translateX(-50%);
-  font-family: 'Inter', sans-serif;
-  font-size: 26px;
-  color: #FFFFFF;
-  font-weight: 600;
-  text-shadow: 0 2px 2px rgba(0,0,0,0.2);
-  white-space: nowrap;
-  z-index: 7;
-}
-.login-switch a { color: #fff4e0; text-decoration: underline; }
-.login-switch a:hover { filter: brightness(1.2); }
+.forgot-button:hover:not(:disabled) { filter: brightness(1.08); }
+.forgot-button:disabled { opacity: 1; filter: none; cursor: not-allowed; }
