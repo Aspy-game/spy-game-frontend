@@ -18,9 +18,11 @@ import './pages/css/rules.css';
 import Round1Enter    from './pages/tsx/room/Round1Enter';
 import DescribeNotify from './pages/tsx/room/DescribeNotify';
 import VoteFlow       from './pages/tsx/room/VoteFlow';
-// import ResultVote     from './pages/tsx/room/ResultVote';
-// import ResultMostVoted from './pages/tsx/room/ResultMostVoted';
-// import ResultSpySafe  from './pages/tsx/room/ResultSpySafe';
+import Round2Flow     from './pages/tsx/room/Round2Flow';
+import ResultVote     from './pages/tsx/room/components/results/ResultVote';
+import ResultMostVoted from './pages/tsx/room/components/results/ResultMostVoted';
+import ResultSpySafe  from './pages/tsx/room/components/results/ResultSpySafe';
+
 // import DescribeStart  from './pages/tsx/room/DescribeStart';  // TODO
 // import DescribeSent   from './pages/tsx/room/DescribeSent';   // TODO
 
@@ -209,7 +211,9 @@ function App() {
         <Route path="/dev/round1"          element={<ScaledPage><Round1Enter /></ScaledPage>} />
         <Route path="/dev/describe-notify" element={<ScaledPage><DescribeNotify /></ScaledPage>} />
         <Route path="/dev/vote"            element={<ScaledPage><VoteFlow /></ScaledPage>} />
-        {/* <Route path="/dev/result-vote"     element={<ScaledPage><ResultVote /></ScaledPage>} />
+        <Route path="/dev/round2"          element={<ScaledPage><Round2Flow /></ScaledPage>} />
+        <Route path="/dev/result-vote"     element={<ScaledPage><ResultVote /></ScaledPage>} />
+
         <Route path="/dev/result-most-voted" element={<ScaledPage><ResultMostVoted /></ScaledPage>} />
         <Route path="/dev/result-spy-safe" element={<ScaledPage><ResultSpySafe /></ScaledPage>} /> */}
 
