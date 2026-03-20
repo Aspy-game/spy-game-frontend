@@ -5,7 +5,7 @@ import type { LoginResponse, RegisterResponse, User } from '../types';
 
 // ─────────────────────────────────────────────────────────────
 //  ĐỔI THÀNH false KHI CÓ BACKEND THẬT
-const USE_MOCK = true;
+const USE_MOCK = false;
 // ─────────────────────────────────────────────────────────────
 
 const MOCK_USERS = [
@@ -48,9 +48,9 @@ export const useAuth = () => {
         return true;
       }
 
-      const response = await axiosInstance.post<LoginResponse>('/auth/login', { username, password });
-      const { user_id, display_name, access_token, refresh_token } = response.data;
-      const user: User = { user_id, username, display_name };
+      const response = await axiosInstance.post<LoginResponse & { avatar_url?: string }>('/auth/login', { username, password });
+      const { user_id, display_name, avatar_url, access_token, refresh_token } = response.data;
+      const user: User = { user_id, username, display_name, avatar_url };
       setAuth(user, access_token, refresh_token);
       return true;
     } catch (err: any) {
@@ -75,9 +75,9 @@ export const useAuth = () => {
         return true;
       }
 
-      const response = await axiosInstance.post<RegisterResponse>('/auth/register', data);
-      const { user_id, username, display_name, access_token, refresh_token } = response.data;
-      const user: User = { user_id, username, display_name };
+      const response = await axiosInstance.post<RegisterResponse & { avatar_url?: string }>('/auth/register', data);
+      const { user_id, username, display_name, avatar_url, access_token, refresh_token } = response.data;
+      const user: User = { user_id, username, display_name, avatar_url };
       setAuth(user, access_token, refresh_token);
       return true;
     } catch (err: any) {
