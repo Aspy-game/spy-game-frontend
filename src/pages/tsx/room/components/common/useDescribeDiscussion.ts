@@ -1,6 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-
-export type GameFlowPhase = 'INTRO' | 'DESCRIBING' | 'TIMES_UP_DESC' | 'DISCUSSING' | 'TIMES_UP_DISC' | 'COMPLETED';
+import type { GameFlowPhase } from '../../../../../types/models';
 
 interface UseDescribeDiscussionProps {
   descriptionTime?: number;

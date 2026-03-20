@@ -1,5 +1,5 @@
-import { BrowserRouter as Router, Routes, Route, Navigate, Link } from 'react-router-dom';
-import { useEffect, useState } from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate, Link, useNavigate, useLocation } from 'react-router-dom';
+import React, { useEffect, useState } from 'react';
 import useAuthStore from './store/authStore';
 import Login from './pages/tsx/Login';
 import Register from './pages/tsx/Register';
@@ -22,7 +22,11 @@ import Round2Flow     from './pages/tsx/room/Round2Flow';
 import ResultVote     from './pages/tsx/room/components/results/ResultVote';
 import ResultMostVoted from './pages/tsx/room/components/results/ResultMostVoted';
 import ResultSpySafe  from './pages/tsx/room/components/results/ResultSpySafe';
+<<<<<<< Updated upstream
 
+=======
+import Round3Flow from './pages/tsx/room/Round3Flow';
+>>>>>>> Stashed changes
 // import DescribeStart  from './pages/tsx/room/DescribeStart';  // TODO
 // import DescribeSent   from './pages/tsx/room/DescribeSent';   // TODO
 
@@ -48,7 +52,9 @@ function usePageScale() {
 // ─── SCALED PAGE WRAPPER ─────────────────────────────────────────────────────
 function ScaledPage({ children }: { children: React.ReactNode }) {
   const scale = usePageScale();
-
+  const location = useLocation();
+  const navigate = useNavigate();
+  
   // transform: scale() không thu nhỏ layout space thực tế
   // → dùng margin âm để bù lại phần không gian thừa sau khi scale
   const scaledW = PAGE_W * scale;
@@ -66,6 +72,7 @@ function ScaledPage({ children }: { children: React.ReactNode }) {
         alignItems: 'center',
         justifyContent: 'center',
         background: '#000',
+        position: 'relative',
       }}
     >
       <div
@@ -84,6 +91,43 @@ function ScaledPage({ children }: { children: React.ReactNode }) {
           overflow: 'hidden',
         }}
       >
+        {/* 1. Nút Quay lại — Đặt TRƯỚC khung "Vòng" trong container scaled */}
+        {!location.pathname.endsWith('/') && location.pathname !== '/lobby' && (
+          <button
+            onClick={() => navigate('/')}
+            style={{
+              position: 'absolute',
+              top: '20px',
+              left: '21px', 
+              width: '82px',
+              height: '82px',
+              borderRadius: '50%', 
+              background: 'rgba(207, 147, 37, 0.9)', // Màu vàng đồng nhất với các badge khác
+              border: 'none',
+              cursor: 'pointer',
+              zIndex: 1000,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              transition: 'all 0.2s ease',
+              boxShadow: '0 4px 12px rgba(0,0,0,0.4)',
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.background = 'rgba(207, 147, 37, 1)';
+              e.currentTarget.style.transform = 'scale(1.05)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.background = 'rgba(207, 147, 37, 0.9)';
+              e.currentTarget.style.transform = 'scale(1)';
+            }}
+            title="Quay lại"
+          >
+            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M19 12H5"></path>
+              <polyline points="12 19 5 12 12 5"></polyline>
+            </svg>
+          </button>
+        )}
         {children}
       </div>
     </div>
@@ -221,8 +265,15 @@ function App() {
         <Route path="/dev/result-vote"     element={<ScaledPage><ResultVote /></ScaledPage>} />
 
         <Route path="/dev/result-most-voted" element={<ScaledPage><ResultMostVoted /></ScaledPage>} />
+<<<<<<< Updated upstream
         <Route path="/dev/result-spy-safe" element={<ScaledPage><ResultSpySafe /></ScaledPage>} /> 
 
+=======
+        <Route path="/dev/result-spy-safe" element={<ScaledPage><ResultSpySafe /></ScaledPage>} />
+        <Route path="/dev/round3"            element={<ScaledPage><Round3Flow /></ScaledPage>} />
+        
+        
+>>>>>>> Stashed changes
         {/* ── Room game screens ── */}
         <Route path="/game/:roomId/round1"
           element={<ProtectedRoute><ScaledPage><Round1Enter /></ScaledPage></ProtectedRoute>}
@@ -230,7 +281,25 @@ function App() {
         <Route path="/game/:roomId/describe/notify"
           element={<ProtectedRoute><ScaledPage><DescribeNotify /></ScaledPage></ProtectedRoute>}
         />
-
+{/* Vote (dùng chung mọi vòng — truyền round qua state hoặc query) */}
+        <Route path="/game/:roomId/vote/notify"
+          element={<ProtectedRoute><ScaledPage><VoteFlow /></ScaledPage></ProtectedRoute>} />
+ 
+        {/* Kết quả (dùng chung mọi vòng) */}
+        <Route path="/game/:roomId/result/vote"
+          element={<ProtectedRoute><ScaledPage><ResultVote /></ScaledPage></ProtectedRoute>} />
+        <Route path="/game/:roomId/result/most-voted"
+          element={<ProtectedRoute><ScaledPage><ResultMostVoted /></ScaledPage></ProtectedRoute>} />
+        <Route path="/game/:roomId/result/spy-safe"
+          element={<ProtectedRoute><ScaledPage><ResultSpySafe /></ScaledPage></ProtectedRoute>} />
+ 
+        {/* Vòng 2 */}
+        <Route path="/game/:roomId/round2"
+          element={<ProtectedRoute><ScaledPage><Round2Flow /></ScaledPage></ProtectedRoute>} />
+ 
+        {/* Vòng 3 */}
+        <Route path="/game/:roomId/round3"
+          element={<ProtectedRoute><ScaledPage><Round3Flow /></ScaledPage></ProtectedRoute>} />
         {/* <Route path="/game/:roomId/vote"            element={<ProtectedRoute><ScaledPage><VoteFlow /></ScaledPage></ProtectedRoute>} />
         <Route path="/game/:roomId/result/vote"       element={<ProtectedRoute><ScaledPage><ResultVote /></ScaledPage></ProtectedRoute>} />
         <Route path="/game/:roomId/result/most-voted" element={<ProtectedRoute><ScaledPage><ResultMostVoted /></ScaledPage></ProtectedRoute>} />

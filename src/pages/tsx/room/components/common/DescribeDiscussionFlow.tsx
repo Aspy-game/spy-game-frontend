@@ -5,8 +5,9 @@
 // =============================================
 
 import React, { useState, useEffect } from 'react';
+import type { GameFlowPhase } from '../../../../../types/models';
 
-export type GameFlowPhase = 'INTRO' | 'DESCRIBING' | 'TIMES_UP_DESC' | 'DISCUSSING' | 'TIMES_UP_DISC' | 'COMPLETED';
+console.log('[DescribeDiscussionFlow.tsx] Module loaded');
 
 interface Props {
   keyword: string;

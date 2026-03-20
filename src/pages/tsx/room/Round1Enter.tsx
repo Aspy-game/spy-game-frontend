@@ -4,91 +4,146 @@
 //        /dev/round1  (dev)
 // =============================================
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import bgImage from '../../../assets/room/bg.jpg';
 import '../../css/room/round1-enter.css';
 import useAuthStore from '../../../store/authStore';
-
-interface Player {
-  id: number;
-  displayName: string;
-  emoji: string;
-  bgColor: string;
-  isMe?: boolean;
-  avatarUrl?: string | null;
-}
-
-// ── Mock players khác (chưa có BE) ──
-// [BE] Thay bằng WebSocket /topic/room/{roomId}/players
-const OTHER_PLAYERS: Omit<Player, 'id'>[] = [
-  { displayName: 'Cú',   emoji: '🦉', bgColor: 'linear-gradient(135deg,#8B5E3C,#5C3A1C)' },
-  { displayName: 'Mèo',  emoji: '🐱', bgColor: 'linear-gradient(135deg,#C8A882,#9A7050)' },
-  { displayName: 'Chó',  emoji: '🐶', bgColor: 'linear-gradient(135deg,#D4956A,#A06030)' },
-  { displayName: 'Chim', emoji: '🐦', bgColor: 'linear-gradient(135deg,#7FB3D3,#4A8FAD)' },
-  { displayName: 'Cáo',  emoji: '🦊', bgColor: 'linear-gradient(135deg,#E8845C,#C4552C)' },
-];
+import { gameService } from '../../../services';
+import { useWebSocket } from '../../../hooks/useWebSocket';
+import type { Player } from '../../../types/models';
 
 // Vị trí pixel-perfect từ Figma (relative to .r1-avatars left=345, top=110)
-const AVATAR_POSITIONS = [
-  { top: 0,   left: 303 }, // a0 – top center
-  { top: 192, left: 572 }, // a1 – right top
-  { top: 481, left: 592 }, // a2 – right bot
-  { top: 656, left: 303 }, // a3 – bot center
-  { top: 481, left: 0   }, // a4 – left bot
-  { top: 192, left: 0   }, // a5 – left top (= "Tôi")
-];
+const AVATAR_POSITIONS: Record<number, { top: number; left: number }> = {
+  0: { top: 0,   left: 303 }, // a0 – top center
+  1: { top: 192, left: 572 }, // a1 – right top
+  2: { top: 481, left: 592 }, // a2 – right bot
+  3: { top: 656, left: 303 }, // a3 – bot center
+  4: { top: 481, left: 0   }, // a4 – left bot
+  5: { top: 192, left: 0   }, // a5 – left top (= "Tôi")
+};
 
 // Số thứ tự 1-6 từ trái → phải (theo x rồi y)
 const AVATAR_ORDER: Record<number, number> = {
-  5: 1, // a5 left=0,   top=192
-  4: 2, // a4 left=0,   top=481
-  0: 3, // a0 left=303, top=0
-  3: 4, // a3 left=303, top=656
-  1: 5, // a1 left=572, top=192
-  2: 6, // a2 left=592, top=481
+  5: 1, 4: 2, 0: 3, 3: 4, 1: 5, 2: 6,
 };
-
-const DEV_ROOM_ID = 'dev123';
 
 const Round1Enter: React.FC = () => {
   const { roomId: paramRoomId } = useParams<{ roomId: string }>();
   const navigate = useNavigate();
-  const roomId = paramRoomId ?? DEV_ROOM_ID;
+  const roomId = paramRoomId ?? '';
 
-  // [BE] Lấy từ authStore (user đã login)
   const { user } = useAuthStore();
-  const myDisplayName = user?.display_name ?? 'Tôi';
-  const myAvatarUrl   = user?.avatar_url   ?? null;
+  const [players, setPlayers] = useState<Player[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  // [BE] Thay bằng WebSocket /topic/room/{roomId}/players
-  const players: Player[] = [
-    ...OTHER_PLAYERS.map((p, i) => ({ ...p, id: i + 1 })),
-    {
-      id: 6,
-      displayName: myDisplayName,
-      emoji: '🐻',
-      bgColor: 'linear-gradient(135deg,#9B7B5A,#705030)',
-      isMe: true,
-      avatarUrl: myAvatarUrl,
-    },
-  ];
+  const { connect, disconnect, subscribe, connected } = useWebSocket();
 
-  // [BE] Xóa timer này, dùng WebSocket /topic/room/{roomId}/state
   useEffect(() => {
-    const timer = setTimeout(
-      () => navigate(`/game/${roomId}/describe/notify`),
-      3000
+    const fetchPlayers = async () => {
+      if (!roomId) {
+        setError('Không tìm thấy ID phòng chơi.');
+        setIsLoading(false);
+        return;
+      }
+      setIsLoading(true);
+      setError(null);
+      try {
+        const roomData = await gameService.getRoomDetail(roomId);
+        if (!roomData || !roomData.players) {
+          setError('Không có dữ liệu người chơi.');
+          return;
+        }
+
+        const mappedPlayers = roomData.players.map(p => ({
+          ...p,
+          isMe: p.id === user?.user_id || p.displayName === (user?.display_name ?? 'Tôi')
+        }));
+        setPlayers(mappedPlayers);
+      } catch (err) {
+        console.error('Failed to fetch players', err);
+        setError('Không thể tải danh sách người chơi.');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchPlayers();
+  }, [roomId, user?.user_id, user?.display_name]);
+
+  // WebSocket connection and state listener
+  useEffect(() => {
+    if (!roomId) return;
+
+    connect(() => {
+      console.log(`[WS] Connected to room ${roomId}`);
+    });
+
+    return () => {
+      disconnect();
+    };
+  }, [roomId, connect, disconnect]);
+
+  useEffect(() => {
+    if (connected && roomId) {
+      const sub = subscribe(`/topic/room/${roomId}/state`, (message: any) => {
+        console.log('[WS] Received state update:', message);
+        // Giả sử server gửi state 'DESCRIBING' để bắt đầu miêu tả
+        if (message.state === 'DESCRIBING' || message === 'DESCRIBING') {
+          navigate(`/game/${roomId}/describe/notify`);
+        }
+      });
+
+      return () => {
+        sub?.unsubscribe();
+      };
+    }
+  }, [connected, roomId, subscribe, navigate]);
+
+  if (isLoading) {
+    return (
+      <div className="r1-screen" style={{ backgroundImage: `url(${bgImage})`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <div style={{ color: '#fff', fontSize: '24px', fontFamily: "'Baloo Bhaijaan 2', cursive" }}>Đang tải dữ liệu...</div>
+      </div>
     );
-    return () => clearTimeout(timer);
-  }, [roomId, navigate]);
+  }
+
+  if (error) {
+    return (
+      <div className="r1-screen" style={{ backgroundImage: `url(${bgImage})`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <div style={{ textAlign: 'center' }}>
+          <div style={{ color: '#ff4d4d', fontSize: '24px', fontFamily: "'Baloo Bhaijaan 2', cursive", marginBottom: '20px' }}>{error}</div>
+          <button 
+            onClick={() => window.location.reload()}
+            style={{ padding: '10px 20px', borderRadius: '12px', border: 'none', background: '#CF9325', color: '#fff', cursor: 'pointer' }}
+          >
+            Thử lại
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="r1-screen" style={{ backgroundImage: `url(${bgImage})` }}>
 
       {/* ── HEADER ── */}
-      <header className="r1-header">
-        <div className="r1-room-badge">
+      <header className="r1-header" style={{ display: 'flex', justifyContent: 'flex-start', padding: '20px 21px', gap: '12px' }}>
+        <div style={{ width: '82px', height: '82px' }}></div> {/* Spacer cho nút Home từ App.tsx */}
+        <div className="r1-round-badge" style={{
+          background: 'rgba(207, 147, 37, 0.9)',
+          borderRadius: '24px',
+          padding: '4px 20px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
+          minWidth: '185px',
+          height: '82px',
+        }}>
+          <span style={{ fontFamily: "'Baloo Bhaijaan 2', cursive", fontSize: '24px', color: '#fff', fontWeight: 800 }}>Vòng 1</span>
+        </div>
+        <div className="r1-room-badge" style={{ marginLeft: 'auto' }}>
           <span className="r1-room-badge__text">Phòng: {roomId}</span>
         </div>
       </header>

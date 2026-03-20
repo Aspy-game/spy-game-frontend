@@ -18,6 +18,10 @@ import GhostChatView from './components/round2/GhostChatView';
 import AfterR1View from './components/round2/AfterR1View';
 import TypingAfterR1View from './components/round2/TypingAfterR1View';
 
+import { gameService } from '../../../services';
+import type { GameRoom, Player } from '../../../types/models';
+import useAuthStore from '../../../store/authStore';
+
 // --- Types ---
 type GameState =
   | 'SELF_GUESSING'           // Tất cả người chơi tự đoán vai trò
@@ -29,48 +33,49 @@ type GameState =
   | 'AFTER_R1'                // Màn hình sau vòng 1
   | 'TYPING_AFTER_R1';        // Màn đang nhập sau vòng 1
 
-// --- Mock game context (replace with real context/store in production) ---
-interface MockPlayer {
-  id: string;
-  name: string;
-  role: 'SPY' | 'CIVILIAN';
-  isMe: boolean;
-}
-
-interface MockRoom {
-  hasAI: boolean;           // Còn AI trong phòng hay không
-  players: MockPlayer[];
-}
-
-const MOCK_ROOM: MockRoom = {
-  hasAI: true,
-  players: [
-    { id: '1', name: 'Tôi', role: 'SPY', isMe: true },
-    { id: '2', name: 'Cú', role: 'CIVILIAN', isMe: false },
-    { id: '3', name: 'Tôi (Chó)', role: 'CIVILIAN', isMe: false },
-    { id: '4', name: 'Chó', role: 'CIVILIAN', isMe: false },
-  ],
-};
-
 // --- Main Controller Component ---
 const Round2Flow: React.FC = () => {
-  const { roomId = 'dev123' } = useParams<{ roomId: string }>();
+  const { roomId } = useParams<{ roomId: string }>();
   const navigate = useNavigate();
+  const { user } = useAuthStore();
   const [gameState, setGameState] = useState<GameState>('SELF_GUESSING');
+  const [room, setRoom] = useState<GameRoom | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchRoom = async () => {
+      if (!roomId) {
+        setError('Không tìm thấy ID phòng chơi.');
+        setIsLoading(false);
+        return;
+      }
+      setIsLoading(true);
+      setError(null);
+      try {
+        const data = await gameService.getRoomDetail(roomId);
+        setRoom(data);
+      } catch (err) {
+        console.error('Failed to fetch room detail', err);
+        setError('Không thể tải thông tin phòng chơi.');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchRoom();
+  }, [roomId]);
 
   // The current player (me)
-  const myPlayer = MOCK_ROOM.players.find((p) => p.isMe)!;
+  const myPlayer = room?.players?.find((p) => p.id === user?.user_id || p.displayName === (user?.display_name ?? 'Tôi'));
 
   /**
    * Kiểm tra điều kiện để hiển thị màn chọn điều khiển AI:
-   *  1. Người chơi có vai trò là SPY
-   *  2. Người chơi đoán đúng vai trò của mình (role === guess)
-   *  3. Trong phòng vẫn còn AI
    */
   const canControlAI = (guess: 'SPY' | 'CIVILIAN'): boolean => {
+    if (!myPlayer || !room) return false;
     const isCorrectGuess = myPlayer.role === guess;
     const isSpy = myPlayer.role === 'SPY';
-    const hasAI = MOCK_ROOM.hasAI;
+    const hasAI = room.hasAI;
     return isCorrectGuess && isSpy && hasAI;
   };
 
@@ -91,6 +96,7 @@ const Round2Flow: React.FC = () => {
   };
 
   const handleSelfGuessSubmit = (guess: 'SPY' | 'CIVILIAN') => {
+    if (!myPlayer) return;
     console.log(`[Round2Flow] Player guessed: ${guess}, actual role: ${myPlayer.role}`);
 
     const isCorrect = myPlayer.role === guess;
@@ -125,11 +131,15 @@ const Round2Flow: React.FC = () => {
 
   // --- Render Logic ---
   const renderContent = () => {
+    console.log('[Round2Flow] Rendering state:', gameState);
+    const keyword = room?.keyword || '';
+
     // Màn hình Chat Vòng 2 (Full scene)
     if (gameState === 'GHOST_CHATTING_AI') {
       return (
         <GhostChatView
           roomId={roomId}
+          keyword={keyword}
           canUseAI={true}
           initialTab="AI"
           onComplete={handleRound2Complete}
@@ -140,6 +150,7 @@ const Round2Flow: React.FC = () => {
       return (
         <GhostChatView
           roomId={roomId}
+          keyword={keyword}
           canUseAI={false}
           initialTab="MANUAL"
           onComplete={handleRound2Complete}
@@ -148,12 +159,42 @@ const Round2Flow: React.FC = () => {
     }
 
     // Các màn hình dạng Overlay
+    if (isLoading) {
     return (
-      <div className="dn-screen" style={{ backgroundImage: `url(${bgImage})` }}>
+      <div className="r2-flow-screen" style={{ backgroundImage: `url(${bgImage})`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <div style={{ color: '#fff', fontSize: '24px', fontFamily: "'Baloo Bhaijaan 2', cursive" }}>Đang tải dữ liệu...</div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="r2-flow-screen" style={{ backgroundImage: `url(${bgImage})`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <div style={{ textAlign: 'center' }}>
+          <div style={{ color: '#ff4d4d', fontSize: '24px', fontFamily: "'Baloo Bhaijaan 2', cursive", marginBottom: '20px' }}>{error}</div>
+          <button 
+            onClick={() => window.location.reload()}
+            style={{ padding: '10px 20px', borderRadius: '12px', border: 'none', background: '#CF9325', color: '#fff', cursor: 'pointer' }}
+          >
+            Thử lại
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="r2-flow-screen" style={{ backgroundImage: `url(${bgImage})` }}>
         <header className="dn-header">
           <div className="dn-round-badge">
             <span className="dn-round-badge__text">Vòng 2</span>
           </div>
+          {/* Luôn hiển thị từ khóa nếu đã bắt đầu vòng 2 */}
+          {(gameState === 'ROUND_2_STARTING' || gameState === 'AFTER_R1' || gameState === 'TYPING_AFTER_R1') && (
+            <div className="dn-keyword-badge">
+              <span className="dn-keyword-badge__text">{keyword}</span>
+            </div>
+          )}
           <div className="dn-room-badge">
             <span className="dn-room-badge__text">Phòng: {roomId}</span>
           </div>

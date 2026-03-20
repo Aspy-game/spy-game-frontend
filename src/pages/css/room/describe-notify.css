@@ -44,7 +44,7 @@ html, body, #root { width: 100%; height: 100%; overflow: hidden; }
 }
 
 .dn-round-badge {
-  position: absolute; left: 21px; top: 20px;
+  position: absolute; left: 115px; top: 20px;
   width: 185px; height: 82px;
   background: var(--dn-badge-bg); border-radius: 30px;
   box-shadow: var(--dn-shadow);
@@ -530,3 +530,18 @@ html, body, #root { width: 100%; height: 100%; overflow: hidden; }
 .dn-chat-row:nth-child(2) { animation: dn-slideIn 0.4s 0.5s ease both; }
 .dn-chat-row:nth-child(3) { animation: dn-slideIn 0.4s 0.7s ease both; }
 .dn-chat-row:nth-child(4) { animation: dn-slideIn 0.4s 0.9s ease both; }
+
+
+/* Phe thường dân — nền vàng chữ trắng (giống hình) */
+.dn-name-tag--civilian {
+  background: rgba(207, 147, 37, 0.82);
+  border-color: rgba(255, 220, 80, 0.45);
+  color: #ffffff;
+}
+
+/* Phe gián điệp — nền đỏ chữ trắng */
+.dn-name-tag--spy {
+  background: rgba(180, 0, 0, 0.88);
+  border-color: rgba(255, 59, 48, 0.55);
+  color: #ffffff;
+}

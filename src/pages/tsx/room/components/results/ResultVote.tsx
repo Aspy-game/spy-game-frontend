@@ -10,8 +10,6 @@ import bgImage from '../../../../../assets/room/bg.jpg';
 import '../../../../css/room/result-vote.css';
 import useAuthStore from '../../../../../store/authStore';
 
-const DEV_ROOM_ID = 'dev123';
-
 interface Props {
   /** Số vòng hiển thị trên header badge. Mặc định 1. */
   round?: number;
@@ -27,7 +25,7 @@ const ResultVote: React.FC<Props> = ({
   autoAdvanceMs = 4000,
 }) => {
   const { roomId: paramRoomId } = useParams<{ roomId: string }>();
-  const roomId = paramRoomId ?? DEV_ROOM_ID;
+  const roomId = paramRoomId ?? '';
 
   const { user } = useAuthStore();
   const myDisplayName = user?.display_name ?? 'Tôi';
@@ -45,6 +43,7 @@ const ResultVote: React.FC<Props> = ({
         <div className="dn-round-badge">
           <span className="dn-round-badge__text">Vòng {round}</span>
         </div>
+        <div className="dn-header__title">KẾT QUẢ</div>
         <div className="dn-room-badge">
           <span className="dn-room-badge__text">Phòng: {roomId}</span>
         </div>
