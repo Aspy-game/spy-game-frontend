@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import axiosInstance from '../../api/axiosInstance';
 import '../css/create-room.css';
 
 interface CreateRoomProps {
@@ -11,12 +12,37 @@ const CreateRoom: React.FC<CreateRoomProps> = ({ onClose, onConfirm }) => {
   const [isPrivate, setIsPrivate] = useState(false);
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  const roomCode = "CK123"; // Mock room code as seen in Figma
+  const [isLoading, setIsLoading] = useState(false);
+  const [roomCode] = useState(() => {
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+    let result = '';
+    for (let i = 0; i < 6; i++) {
+        result += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    return result;
+  });
   const navigate = useNavigate();
 
-  const handleConfirm = () => {
-    onConfirm({ isPrivate, roomCode, password });
-    navigate(`/room/${roomCode}`);
+  const handleConfirm = async () => {
+    try {
+      setIsLoading(true);
+      // Gọi API tạo phòng
+      const response = await axiosInstance.post('/rooms', {
+        is_private: isPrivate,
+        password: password,
+        room_code: roomCode
+      });
+      
+      const generatedRoomCode = response.data.room_code;
+      
+      onConfirm({ isPrivate, roomCode: generatedRoomCode, password });
+      navigate(`/room/${generatedRoomCode}`);
+    } catch (error) {
+      console.error('Lỗi khi tạo phòng:', error);
+      alert('Không thể tạo phòng. Vui lòng thử lại sau.');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -62,8 +88,9 @@ const CreateRoom: React.FC<CreateRoomProps> = ({ onClose, onConfirm }) => {
         <button 
           className="create-room-confirm-btn" 
           onClick={handleConfirm}
+          disabled={isLoading}
         >
-          Xác nhận
+          {isLoading ? 'Đang xử lý...' : 'Xác nhận'}
         </button>
       </div>
     </div>

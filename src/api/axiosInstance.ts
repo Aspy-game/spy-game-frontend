@@ -28,8 +28,8 @@ axiosInstance.interceptors.response.use(
   async (error) => {
     const originalRequest = error.config;
     
-    // Nếu lỗi 401 và không phải là request refresh token
-    if (error.response?.status === 401 && !originalRequest._retry && !originalRequest.url?.includes('/auth/refresh')) {
+    // Nếu lỗi 401 hoặc 403 và không phải là request refresh token
+    if ((error.response?.status === 401 || error.response?.status === 403) && !originalRequest._retry && !originalRequest.url?.includes('/auth/refresh')) {
       originalRequest._retry = true;
       
       const storage = localStorage.getItem('auth-storage');
