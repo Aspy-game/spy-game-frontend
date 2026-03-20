@@ -1,5 +1,5 @@
 import { BrowserRouter as Router, Routes, Route, Navigate, Link } from 'react-router-dom';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import useAuthStore from './store/authStore';
 import Login from './pages/tsx/Login';
 import Register from './pages/tsx/Register';
@@ -19,6 +19,8 @@ import Round1Enter from './pages/tsx/room/Round1Enter';
 // import DescribeNotify      from './pages/tsx/room/DescribeNotify';      // TODO
 // import DescribeStart       from './pages/tsx/room/DescribeStart';       // TODO
 // ... thêm dần các màn hình khác vào đây
+import useSettingStore from './store/settingStore';
+import bgMusic from './assets/nhacnen.mp3';
 
 const PAGE_W = 1440;
 const PAGE_H = 1080;
@@ -111,8 +113,8 @@ const Home = () => {
               <h1 className="rules-title">LUẬT CHƠI</h1>
               <div className="rules-content">
                 <p>Game “Không phải tôi” là trò chơi mang tính suy luận và tương tác nhóm, trong đó người chơi phải sử dụng khả năng quan sát, tư duy logic và kỹ năng giao tiếp để tìm ra nhân vật gián điệp đang ẩn mình trong nhóm. Trò chơi bắt đầu khi người chơi tham gia vào một phòng chơi và hệ thống tiến hành phân vai ngẫu nhiên cho từng người. Phần lớn người chơi sẽ thuộc vai trò dân thường và được cung cấp cùng một từ khóa hoặc chủ đề bí mật. Ngược lại, người giữ vai trò gián điệp sẽ không nhận được từ khóa này và phải dựa vào các thông tin được chia sẻ trong quá trình chơi để suy đoán nội dung mà những người khác đang biết.</p>
-          <p>Sau khi phân vai, trò chơi bước vào vòng thảo luận. Ở mỗi lượt, từng người chơi lần lượt mô tả hoặc đưa ra ý kiến liên quan đến từ khóa bằng những câu nói gián tiếp, tránh nói quá rõ ràng để không tiết lộ trực tiếp nội dung cho gián điệp. Trong quá trình này, gián điệp phải khéo léo đặt câu trả lời sao cho không bị nghi ngờ, đồng thời cố gắng suy luận ra từ khóa dựa trên các phát biểu của dân thường. Người chơi còn lại sẽ quan sát, so sánh và phân tích câu trả lời của nhau nhằm phát hiện ra những biểu hiện bất thường.</p>
-          <p>Sau khi kết thúc các lượt thảo luận, trò chơi tiến hành giai đoạn bỏ phiếu. Mỗi người chơi sẽ lựa chọn một người mà mình nghi ngờ là gián điệp. Người nhận được số phiếu cao nhất sẽ bị loại khỏi trò chơi. Nếu người bị loại là gián điệp, dân thường sẽ giành chiến thắng. Ngược lại, nếu dân thường bị loại hoặc gián điệp tồn tại đến cuối trò chơi, gián điệp sẽ chiến thắng. Trò chơi kết thúc khi điều kiện thắng của một trong hai phe được thỏa mãn.</p>
+                <p>Sau khi phân vai, trò chơi bước vào vòng thảo luận. Ở mỗi lượt, từng người chơi lần lượt mô tả hoặc đưa ra ý kiến liên quan đến từ khóa bằng những câu nói gián tiếp, tránh nói quá rõ ràng để không tiết lộ trực tiếp nội dung cho gián điệp. Trong quá trình này, gián điệp phải khéo léo đặt câu trả lời sao cho không bị nghi ngờ, đồng thời cố gắng suy luận ra từ khóa dựa trên các phát biểu của dân thường. Người chơi còn lại sẽ quan sát, so sánh và phân tích câu trả lời của nhau nhằm phát hiện ra những biểu hiện bất thường.</p>
+                <p>Sau khi kết thúc các lượt thảo luận, trò chơi tiến hành giai đoạn bỏ phiếu. Mỗi người chơi sẽ lựa chọn một người mà mình nghi ngờ là gián điệp. Người nhận được số phiếu cao nhất sẽ bị loại khỏi trò chơi. Nếu người bị loại là gián điệp, dân thường sẽ giành chiến thắng. Ngược lại, nếu dân thường bị loại hoặc gián điệp tồn tại đến cuối trò chơi, gián điệp sẽ chiến thắng. Trò chơi kết thúc khi điều kiện thắng của một trong hai phe được thỏa mãn.</p>
               </div>
               <button className="rules-close" onClick={() => setShowRules(false)}>×</button>
             </div>
@@ -153,23 +155,49 @@ const AuthRoute = ({ children }: { children: React.ReactNode }) => {
 
 // ─── APP ─────────────────────────────────────────────────────────────────────
 function App() {
+  const { isMusicPlaying, musicVolume } = useSettingStore();
+  const audioRef = useRef<HTMLAudioElement>(null);
+
+  // Cập nhật âm lượng ngay lập tức khi thanh gạt thay đổi
+  useEffect(() => {
+    if (audioRef.current) {
+      audioRef.current.volume = musicVolume;
+    }
+  }, [musicVolume]);
+
+  // Phát hoặc dừng khi bật tắt
+  useEffect(() => {
+    if (audioRef.current) {
+      if (isMusicPlaying) {
+        console.log("🎵 Đang thử phát nhạc...");
+        audioRef.current.play()
+          .then(() => console.log("✅ Phát nhạc thành công!"))
+          .catch(e => console.error('❌ Lỗi không thể phát nhạc (Autoplay bị chặn hoặc báo lỗi):', e));
+      } else {
+        audioRef.current.pause();
+        console.log("⏸ Đã tạm dừng nhạc.");
+      }
+    }
+  }, [isMusicPlaying]);
+
   return (
     <Router>
+      <audio ref={audioRef} src={bgMusic} loop preload="auto" />
       <Routes>
 
-{/* ── Public ── */}
-<Route path="/" element={<Home />} />
-<Route path="/login" element={<AuthRoute><ScaledPage><Login /></ScaledPage></AuthRoute>} />
-<Route path="/register" element={<AuthRoute><ScaledPage><Register /></ScaledPage></AuthRoute>} />
-<Route path="/forgot" element={<AuthRoute><ScaledPage><Forgot /></ScaledPage></AuthRoute>} />
-<Route path="/reset" element={<AuthRoute><ScaledPage><Reset /></ScaledPage></AuthRoute>} />
+        {/* ── Public ── */}
+        <Route path="/" element={<Home />} />
+        <Route path="/login" element={<AuthRoute><ScaledPage><Login /></ScaledPage></AuthRoute>} />
+        <Route path="/register" element={<AuthRoute><ScaledPage><Register /></ScaledPage></AuthRoute>} />
+        <Route path="/forgot" element={<AuthRoute><ScaledPage><Forgot /></ScaledPage></AuthRoute>} />
+        <Route path="/reset" element={<AuthRoute><ScaledPage><Reset /></ScaledPage></AuthRoute>} />
 
-{/* ── Protected ── */}
-<Route path="/lobby" element={<ProtectedRoute><ScaledPage><Lobby /></ScaledPage></ProtectedRoute>} />
+        {/* ── Protected ── */}
+        <Route path="/lobby" element={<ProtectedRoute><ScaledPage><Lobby /></ScaledPage></ProtectedRoute>} />
 
 
         <Route path="/room/:roomId" element={<ProtectedRoute><ScaledPage><RoomLobby /></ScaledPage></ProtectedRoute>} />
-        <Route path="/game/:id"   element={<ProtectedRoute><Game /></ProtectedRoute>} />
+        <Route path="/game/:id" element={<ProtectedRoute><Game /></ProtectedRoute>} />
 
         {/* ── Room game screens  ── */}
         <Route path="/dev/round1" element={<ScaledPage><Round1Enter /></ScaledPage>} />
