@@ -55,20 +55,15 @@ export const useAuth = () => {
         return true;
       }
 
-      const response = await axiosInstance.post<LoginResponse & { role: Role }>('/auth/login', { username, password });
-      const { user_id, display_name, access_token, refresh_token, role } = response.data;
-      const user: User = { user_id, username, display_name, role: role as Role };
+      const response = await axiosInstance.post<LoginResponse & { avatar_url?: string }>('/auth/login', { username, password });
+      const { user_id, display_name, avatar_url, access_token, refresh_token } = response.data;
+      const user: User = { user_id, username, display_name, avatar_url };
+
       setAuth(user, access_token, refresh_token);
       return true;
-<<<<<<< Updated upstream
     } catch (err: any) {
       const message = err.response?.data?.message || err.message || 'Đăng nhập thất bại.';
-=======
-    } catch (err: unknown) {
-      console.error('Login error:', err);
-      const error = err as { response?: { data?: { message?: string } }; message?: string };
-      const message = error.response?.data?.message || error.message || 'Đăng nhập thất bại. Vui lòng kiểm tra lại tài khoản.';
->>>>>>> Stashed changes
+
       setError(message);
       return false;
     } finally {
@@ -94,20 +89,15 @@ export const useAuth = () => {
         return true;
       }
 
-      const response = await axiosInstance.post<RegisterResponse & { role: Role }>('/auth/register', data);
-      const { user_id, username, display_name, access_token, refresh_token, role } = response.data;
-      const user: User = { user_id, username, display_name, role: role as Role };
+      const response = await axiosInstance.post<RegisterResponse & { avatar_url?: string }>('/auth/register', data);
+      const { user_id, username, display_name, avatar_url, access_token, refresh_token } = response.data;
+      const user: User = { user_id, username, display_name, avatar_url };
+
       setAuth(user, access_token, refresh_token);
       return true;
-<<<<<<< Updated upstream
     } catch (err: any) {
       const message = err.response?.data?.message || err.message || 'Đăng ký thất bại.';
-=======
-    } catch (err: unknown) {
-      console.error('Registration error:', err);
-      const error = err as { response?: { data?: { message?: string } }; message?: string };
-      const message = error.response?.data?.message || error.message || 'Đăng ký thất bại. Tên người dùng hoặc email có thể đã tồn tại.';
->>>>>>> Stashed changes
+
       setError(message);
       return false;
     } finally {

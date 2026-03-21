@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import useAuthStore from '../../store/authStore';
+import axiosInstance from '../../api/axiosInstance';
 import '../css/profile.css';
 
 // Import các hình ảnh avatar từ thư mục img
@@ -31,10 +32,15 @@ const Profile: React.FC<ProfileProps> = ({ onClose }) => {
     id: user?.user_id || '12345'
   };
 
-  const handleConfirm = () => {
+  const handleConfirm = async () => {
     if (isChoosingAvatar) {
       if (user && selectedAvatar) {
-        setUser({ ...user, avatar_url: selectedAvatar });
+        try {
+          await axiosInstance.put('/users/me', { avatar_url: selectedAvatar });
+          setUser({ ...user, avatar_url: selectedAvatar });
+        } catch (error) {
+          console.error("Lỗi cập nhật avatar:", error);
+        }
       }
       setIsChoosingAvatar(false);
       return;
@@ -42,7 +48,12 @@ const Profile: React.FC<ProfileProps> = ({ onClose }) => {
     
     if (isEditing) {
       if (user && newName) {
-        setUser({ ...user, display_name: newName });
+        try {
+          await axiosInstance.put('/users/me', { display_name: newName });
+          setUser({ ...user, display_name: newName });
+        } catch (error) {
+          console.error("Lỗi cập nhật tên:", error);
+        }
       }
       setIsEditing(false);
       return;
