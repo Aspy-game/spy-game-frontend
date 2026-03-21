@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import useAuthStore from '../../store/authStore';
 import bg from '../../../img/Gemini_Generated_Image_4oqsgs4oqsgs4oqs.png';
@@ -8,6 +8,7 @@ import DailyAttendance from './DailyAttendance';
 import Settings from './Settings';
 import ChangePassword from './ChangePassword';
 import CreateRoom from './CreateRoom';
+import axiosInstance from '../../api/axiosInstance';
 
 interface FlyingCoin {
   id: number;
@@ -37,7 +38,43 @@ const Lobby: React.FC = () => {
   const [flyingCoins, setFlyingCoins] = useState<FlyingCoin[]>([]);
   const [isShaking, setIsShaking] = useState(false);
   
+  const [rooms, setRooms] = useState<any[]>([]);
+  const [searchCode, setSearchCode] = useState('');
+  const [isLoadingRooms, setIsLoadingRooms] = useState(false);
+  
   const coinBoxRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    fetchRooms();
+  }, []);
+
+  const fetchRooms = async () => {
+    try {
+      setIsLoadingRooms(true);
+      const response = await axiosInstance.get('/rooms');
+      setRooms(response.data.rooms || []);
+    } catch (error) {
+      console.error('Lỗi khi tải danh sách phòng:', error);
+    } finally {
+      setIsLoadingRooms(false);
+    }
+  };
+
+  const handleJoinRoom = async (roomCode: string) => {
+    try {
+      const response = await axiosInstance.post(`/rooms/${roomCode}/join`);
+      const { room_id } = response.data;
+      navigate(`/room/${room_id}`);
+    } catch (error: any) {
+      const errorMsg = error.response?.data?.error || 'Không thể tham gia phòng.';
+      alert(errorMsg);
+    }
+  };
+
+  const handleSearchAndJoin = async () => {
+    if (!searchCode.trim()) return;
+    handleJoinRoom(searchCode.trim().toUpperCase());
+  };
 
   const handleReceiveAttendance = (amount: number, event: React.MouseEvent) => {
     if (!coinBoxRef.current) return;
@@ -74,12 +111,6 @@ const Lobby: React.FC = () => {
   const handleLogout = () => {
     logoutStore();
   };
-
-  const rooms = [
-    { id: 'CK001', name: 'Phòng: CK001', players: '1/6' },
-    { id: 'CK028', name: 'Phòng: CK028', players: '5/6' },
-    { id: 'RT163', name: 'Phòng: RT163', players: '2/6' },
-  ];
 
   const isModalOpen = showSettings || showChangePassword || showAttendance || showProfile || showCreateRoom;
 
@@ -157,8 +188,11 @@ const Lobby: React.FC = () => {
                 type="text" 
                 className="search-input-new" 
                 placeholder="Nhập mã phòng..."
+                value={searchCode}
+                onChange={(e) => setSearchCode(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && handleSearchAndJoin()}
               />
-              <i className="fa-solid fa-magnifying-glass search-icon-new"></i>
+              <i className="fa-solid fa-magnifying-glass search-icon-new" onClick={handleSearchAndJoin}></i>
             </div>
 
             {/* CREATE ROOM BUTTON */}
@@ -168,17 +202,23 @@ const Lobby: React.FC = () => {
 
             {/* ROOM LIST BOX */}
             <div className="lobby-room-box-new">
-              {rooms.map((room) => (
-                <div key={room.id} className="room-item-new">
-                  <span className="room-name-new">{room.name}</span>
-                  <div className="room-right-new">
-                    <span className="room-players-new">{room.players}</span>
-                    <span className="room-join-btn-new">
-                      <i className="fa-solid fa-arrow-right-from-bracket"></i>
-                    </span>
+              {isLoadingRooms ? (
+                <div style={{ color: 'white', textAlign: 'center', padding: '20px' }}>Đang tải danh sách phòng...</div>
+              ) : rooms.length === 0 ? (
+                <div style={{ color: 'white', textAlign: 'center', padding: '20px' }}>Chưa có phòng công khai nào.</div>
+              ) : (
+                rooms.map((room) => (
+                  <div key={room.room_id} className="room-item-new">
+                    <span className="room-name-new">Phòng: {room.room_code}</span>
+                    <div className="room-right-new">
+                      <span className="room-players-new">{room.current_players}/{room.max_players}</span>
+                      <span className="room-join-btn-new" onClick={() => handleJoinRoom(room.room_code)}>
+                        <i className="fa-solid fa-arrow-right-from-bracket"></i>
+                      </span>
+                    </div>
                   </div>
-                </div>
-              ))}
+                ))
+              )}
             </div>
           </div>
         </>

@@ -9,7 +9,7 @@
 
 .page-home {
   width: 1440px;
-  height: 1024px;
+  height: 1080px;
   margin: 0 auto;
 }
 
@@ -120,9 +120,96 @@
   background: rgba(167, 114, 83, 0.6);
   display: flex;
   align-items: center;
-  justify-content: center;
+  justifyContent: center;
   font-family: 'Luckiest Guy', cursive;
   font-size: 30px;
   color: #FFFFFF;
   box-shadow: 0 4px 4px rgba(0,0,0,0.25);
+  cursor: pointer;
+}
+
+/* Rules Modal */
+.rules-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+}
+
+.rules-panel {
+  background: #fef9e7;
+  width: 80%;
+  max-width: 800px;
+  max-height: 80vh;
+  border-radius: 20px;
+  padding: 40px;
+  position: relative;
+  overflow-y: auto;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+  border: 4px solid #66413B;
+}
+
+.rules-title {
+  font-family: 'Luckiest Guy', cursive;
+  color: #66413B;
+  font-size: 48px;
+  text-align: center;
+  margin-bottom: 30px;
+}
+
+.rules-content {
+  font-family: 'Be Vietnam Pro', sans-serif;
+  color: #42272C;
+  font-size: 18px;
+  line-height: 1.6;
+}
+
+.rules-content p {
+  margin-bottom: 15px;
+}
+
+.rules-close {
+  position: absolute;
+  top: 15px;
+  right: 20px;
+  font-size: 40px;
+  color: #66413B;
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+.rules-close:hover {
+  color: #ff4d4d;
+}
+
+.page {
+  width: 100vw;
+  height: 100vh;
+  position: relative;
+  overflow: hidden;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
+.lobby-center {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+}
+
+.lobby-greeting {
+  font-family: 'Luckiest Guy', cursive;
+  font-size: 60px;
+  color: #66413B;
+  text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
 }

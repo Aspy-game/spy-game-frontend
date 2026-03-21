@@ -55,9 +55,22 @@ export const useAuth = () => {
         return true;
       }
 
-      const response = await axiosInstance.post<LoginResponse & { avatar_url?: string }>('/auth/login', { username, password });
-      const { user_id, display_name, avatar_url, access_token, refresh_token } = response.data;
-      const user: User = { user_id, username, display_name, avatar_url };
+      const response = await axiosInstance.post<LoginResponse & { avatar_url?: string, role?: string }>('/auth/login', { username, password });
+      const { user_id, display_name, avatar_url, access_token, refresh_token, role } = response.data;
+      
+      // Normalize role to include ROLE_ prefix if missing
+      let normalizedRole: Role = 'ROLE_USER';
+      if (role) {
+        normalizedRole = (role.startsWith('ROLE_') ? role : `ROLE_${role}`) as Role;
+      }
+
+      const user: User = { 
+        user_id, 
+        username, 
+        display_name, 
+        avatar_url, 
+        role: normalizedRole 
+      };
 
       setAuth(user, access_token, refresh_token);
       return true;
@@ -89,9 +102,22 @@ export const useAuth = () => {
         return true;
       }
 
-      const response = await axiosInstance.post<RegisterResponse & { avatar_url?: string }>('/auth/register', data);
-      const { user_id, username, display_name, avatar_url, access_token, refresh_token } = response.data;
-      const user: User = { user_id, username, display_name, avatar_url };
+      const response = await axiosInstance.post<RegisterResponse & { avatar_url?: string, role?: string }>('/auth/register', data);
+      const { user_id, username, display_name, avatar_url, access_token, refresh_token, role: roleStr } = response.data;
+      
+      // Normalize role to include ROLE_ prefix if missing
+      let normalizedRole: Role = 'ROLE_USER';
+      if (roleStr) {
+        normalizedRole = (roleStr.startsWith('ROLE_') ? roleStr : `ROLE_${roleStr}`) as Role;
+      }
+
+      const user: User = { 
+        user_id, 
+        username, 
+        display_name, 
+        avatar_url, 
+        role: normalizedRole 
+      };
 
       setAuth(user, access_token, refresh_token);
       return true;

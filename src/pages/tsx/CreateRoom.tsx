@@ -33,10 +33,10 @@ const CreateRoom: React.FC<CreateRoomProps> = ({ onClose, onConfirm }) => {
         room_code: roomCode
       });
       
-      const generatedRoomCode = response.data.room_code;
+      const generatedRoomId = response.data.room_id;
       
-      onConfirm({ isPrivate, roomCode: generatedRoomCode, password });
-      navigate(`/room/${generatedRoomCode}`);
+      onConfirm({ isPrivate, roomCode: response.data.room_code, password });
+      navigate(`/room/${generatedRoomId}`);
     } catch (error) {
       console.error('Lỗi khi tạo phòng:', error);
       alert('Không thể tạo phòng. Vui lòng thử lại sau.');

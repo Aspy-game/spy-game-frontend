@@ -37,22 +37,35 @@ interface KeywordPair {
   category: string;
 }
 
+interface GameSettings {
+  maxPlayers: number;
+  minPlayers: number;
+  spiesCount: number;
+  describeDuration: number;
+  discussDuration: number;
+  voteDuration: number;
+  roleCheckDuration: number;
+  roleCheckResultDuration: number;
+}
+
 const Admin: React.FC = () => {
   const { user } = useAuthStore();
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState<'stats' | 'users' | 'rooms' | 'keywords'>('stats');
+  const [activeTab, setActiveTab] = useState<'stats' | 'users' | 'rooms' | 'keywords' | 'settings'>('stats');
   
   const [stats, setStats] = useState<Stats | null>(null);
   const [users, setUsers] = useState<AdminUser[]>([]);
   const [rooms, setRooms] = useState<AdminRoom[]>([]);
   const [keywords, setKeywords] = useState<KeywordPair[]>([]);
+  const [settings, setSettings] = useState<GameSettings | null>(null);
   const [loading, setLoading] = useState(false);
 
   // Keyword form state
   const [newKeyword, setNewKeyword] = useState({ keyword1: '', keyword2: '', category: '' });
 
   useEffect(() => {
-    if (!user || user.role !== 'ROLE_ADMIN') {
+    const isAdmin = user?.role === 'ROLE_ADMIN'
+    if (!user || !isAdmin) {
       navigate('/lobby');
       return;
     }
@@ -74,11 +87,38 @@ const Admin: React.FC = () => {
       } else if (activeTab === 'keywords') {
         const res = await axiosInstance.get('/admin/keywords');
         setKeywords(res.data);
+      } else if (activeTab === 'settings') {
+        const res = await axiosInstance.get('/admin/settings');
+        setSettings(res.data);
       }
     } catch (error) {
       console.error('Error fetching admin data:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleUpdateSettings = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!settings) return;
+
+    // Map camelCase to snake_case for backend
+    const payload = {
+      max_players: settings.maxPlayers,
+      min_players: settings.minPlayers,
+      spies_count: settings.spiesCount,
+      describe_duration: settings.describeDuration,
+      discuss_duration: settings.discussDuration,
+      vote_duration: settings.voteDuration,
+      role_check_duration: settings.roleCheckDuration,
+      role_check_result_duration: settings.roleCheckResultDuration,
+    };
+
+    try {
+      await axiosInstance.patch('/admin/settings', payload);
+      alert('Cập nhật cài đặt thành công!');
+    } catch (error) {
+      alert('Không thể cập nhật cài đặt');
     }
   };
 
@@ -93,9 +133,7 @@ const Admin: React.FC = () => {
 
   const handleUpdateRole = async (id: number, newRole: Role) => {
     try {
-      // Convert newRole to Role type
-      const role: Role = newRole as Role;
-      await axiosInstance.patch(`/admin/users/${id}/role`, { role });
+      await axiosInstance.patch(`/admin/users/${id}/role`, { role: newRole });
       fetchData();
     } catch (error) {
       alert('Không thể cập nhật vai trò');
@@ -173,7 +211,7 @@ const Admin: React.FC = () => {
       </div>
 
       <div style={{ display: 'flex', gap: '15px', marginBottom: '30px' }}>
-        {(['stats', 'users', 'rooms', 'keywords'] as const).map(tab => (
+        {(['stats', 'users', 'rooms', 'keywords', 'settings'] as const).map(tab => (
           <button
             key={tab}
             onClick={() => setActiveTab(tab)}
@@ -193,6 +231,7 @@ const Admin: React.FC = () => {
             {tab === 'users' && 'Người dùng'}
             {tab === 'rooms' && 'Phòng chơi'}
             {tab === 'keywords' && 'Từ khóa'}
+            {tab === 'settings' && 'Cài đặt game'}
           </button>
         ))}
       </div>
@@ -307,6 +346,54 @@ const Admin: React.FC = () => {
               ))}
             </tbody>
           </table>
+        )}
+
+        {activeTab === 'settings' && settings && (
+          <form onSubmit={handleUpdateSettings} style={{ maxWidth: '600px' }}>
+            <div style={{ display: 'grid', gap: '20px' }}>
+              {[
+                { label: 'Số người chơi tối đa', key: 'maxPlayers', min: 2, max: 20 },
+                { label: 'Số người chơi tối thiểu', key: 'minPlayers', min: 2, max: 10 },
+                { label: 'Số lượng gián điệp', key: 'spiesCount', min: 1, max: 5 },
+                { label: 'Thời gian mô tả (giây)', key: 'describeDuration', min: 10, max: 300 },
+                { label: 'Thời gian thảo luận (giây)', key: 'discussDuration', min: 10, max: 300 },
+                { label: 'Thời gian bỏ phiếu (giây)', key: 'voteDuration', min: 10, max: 120 },
+                { label: 'Thời gian kiểm tra vai (giây)', key: 'roleCheckDuration', min: 5, max: 60 },
+                { label: 'Thời gian hiện kết quả vai (giây)', key: 'roleCheckResultDuration', min: 5, max: 60 },
+              ].map(field => (
+                <div key={field.key} style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <label style={{ color: '#ccc', fontSize: '14px' }}>{field.label}</label>
+                    <span style={{ color: '#ffcc00', fontWeight: 'bold' }}>{settings[field.key as keyof GameSettings]}</span>
+                  </div>
+                  <input 
+                    type="range" 
+                    min={field.min} 
+                    max={field.max} 
+                    value={settings[field.key as keyof GameSettings]}
+                    onChange={e => setSettings({...settings, [field.key]: parseInt(e.target.value)})}
+                    style={{ width: '100%', accentColor: '#ffcc00' }}
+                  />
+                </div>
+              ))}
+              <button 
+                type="submit" 
+                style={{ 
+                  marginTop: '20px', 
+                  padding: '15px', 
+                  background: '#ffcc00', 
+                  color: '#000', 
+                  border: 'none', 
+                  borderRadius: '8px', 
+                  fontWeight: 'bold', 
+                  cursor: 'pointer',
+                  textTransform: 'uppercase'
+                }}
+              >
+                Lưu cài đặt
+              </button>
+            </div>
+          </form>
         )}
 
         {activeTab === 'keywords' && (
