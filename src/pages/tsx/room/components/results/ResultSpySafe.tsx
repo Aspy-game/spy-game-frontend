@@ -9,8 +9,6 @@ import { useParams } from 'react-router-dom';
 import bgImage from '../../../../../assets/room/bg.jpg';
 import '../../../../css/room/result-spy-safe.css';
 
-const DEV_ROOM_ID = 'dev123';
-
 interface Props {
   round?: number;
   onDone?: () => void;
@@ -23,7 +21,7 @@ const ResultSpySafe: React.FC<Props> = ({
   autoAdvanceMs = 4000,
 }) => {
   const { roomId: paramRoomId } = useParams<{ roomId: string }>();
-  const roomId = paramRoomId ?? DEV_ROOM_ID;
+  const roomId = paramRoomId ?? '';
 
   useEffect(() => {
     if (!onDone) return;

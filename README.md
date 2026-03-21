@@ -35,15 +35,24 @@ VITE_API_URL=http://localhost:8080/api
 
 # Địa chỉ WebSocket của Backend
 VITE_WS_URL=ws://localhost:8080/ws-game
+
+# Cấu hình nguồn dữ liệu: mock | api
+VITE_DATA_SOURCE=mock
 ```
 
 *Lưu ý: Nếu Backend chạy ở cổng khác 8080, hãy cập nhật lại các giá trị trên.*
 
-### 3. Chạy dự án ở chế độ phát triển
+### 3. Chạy Offline (Chế độ Mock)
+
+Nếu bạn không có Backend chạy thật, hãy đảm bảo `VITE_DATA_SOURCE=mock` trong file `.env`. Ứng dụng sẽ sử dụng dữ liệu giả lập từ thư mục `src/mocks/` và mô phỏng độ trễ mạng (300ms - 800ms).
 
 ```bash
 npm run dev
 ```
+
+### 4. Chạy dự án ở chế độ phát triển (Kết nối API thật)
+
+Đổi `VITE_DATA_SOURCE=api` và cập nhật `VITE_API_URL` tương ứng.
 
 Ứng dụng sẽ chạy tại địa chỉ: `http://localhost:5173/`
 

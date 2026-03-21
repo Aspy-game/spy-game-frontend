@@ -1,41 +1,41 @@
 // =============================================
 // GhostChatView.tsx
-// Màn Vòng 2 khi spy dùng AI — hiển thị đầy đủ game scene:
-//   avatar grid, chat panel, tab "Chat giùm / Tự nói",
-//   badge AI gắn vào avatar spy, countdown + input bar
-//   căn giữa tâm hexagon (giống DescribeNotify Phase 2).
-// [BE] Thay MOCK_* bằng dữ liệu WebSocket thực tế.
+// Màn game chính — hiển thị đầy đủ scene:
+//   avatar grid, chat, tab AI/Manual, countdown, input.
+//
+// ── Keyword badge màu theo phe ──────────────
+//   canUseAI=true  (spy gốc)    → 1 badge ĐỎ   + spy keyword
+//   isCorrupted=true            → 2 badge ĐỎ+VÀNG (thấy cả 2 từ khoá)
+//   canUseAI=false, !corrupted  → 1 badge VÀNG  + civilian keyword
 // =============================================
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import useAuthStore from '../../../../../store/authStore';
 import bgImage from '../../../../../assets/room/bg.jpg';
 import '../../../../css/room/describe-notify.css';
 import DescribeDiscussionFlow, { PlayerBubble } from '../common/DescribeDiscussionFlow';
-import type { GameFlowPhase } from '../common/DescribeDiscussionFlow';
+import { gameService } from '../../../../../services';
+import { useWebSocket } from '../../../../../hooks/useWebSocket';
+import type { Player, ChatMessage, GameFlowPhase } from '../../../../../types/models';
 
-
-// ── Types ────────────────────────────────────────────────────
-interface ChatMessage {
-  id: number;
-  senderName: string;
-  nameClass: 'cu' | 'toi' | 'cho' | 'meo';
-  text: string;
+// ── Props ────────────────────────────────────────────────────
+interface Props {
+  roomId?: string;
+  roundLabel?: string;
+  keyword?: string;
+  civilianKeyword?: string;
+  totalSeconds?: number;
+  onSendDescription?: (text: string) => void;
+  onComplete?: () => void;
+  initialTab?: TabType;
+  canUseAI?: boolean;
+  isCorrupted?: boolean;
+  corruptedPlayerId?: number | null;
 }
 
-interface Player {
-  id: number;
-  displayName: string;
-  emoji: string;
-  bgColor: string;
-  isMe?: boolean;
-  avatarUrl?: string | null;
-  seatIndex: number;
-  isTyping?: boolean;
-  description?: string;
-}
+type TabType = 'AI' | 'MANUAL';
 
-// ── Layout constants (giống DescribeNotify) ──────────────────
+// ── Layout constants ─────────────────────────────────────────
 const AVATAR_POSITIONS: Record<number, { top: number; left: number }> = {
   0: { top: 0,   left: 303 },
   1: { top: 192, left: 572 },
@@ -49,88 +49,127 @@ const SEAT_DISPLAY_ORDER: Record<number, number> = {
   5: 1, 4: 2, 0: 3, 3: 4, 1: 5, 2: 6,
 };
 
-// ── Mock data [BE] ───────────────────────────────────────────
-const MOCK_MESSAGES: ChatMessage[] = [
-  { id: 1, senderName: 'Cú:',  nameClass: 'cu',  text: 'helu mấy cưng' },
-  { id: 2, senderName: 'Tôi:', nameClass: 'toi', text: '' },
-  { id: 3, senderName: 'Chó:', nameClass: 'cho', text: '' },
-  { id: 4, senderName: 'Mèo:', nameClass: 'meo', text: '' },
-];
-
-const MOCK_OTHER_PLAYERS: Omit<Player, 'id'>[] = [
-  { displayName: 'Cú',   emoji: '🦉', bgColor: 'linear-gradient(135deg,#8B5E3C,#5C3A1C)', seatIndex: 0 },
-  { displayName: 'Mèo',  emoji: '🐱', bgColor: 'linear-gradient(135deg,#C8A882,#9A7050)', seatIndex: 1 },
-  { displayName: 'Chó',  emoji: '🐶', bgColor: 'linear-gradient(135deg,#D4956A,#A06030)', seatIndex: 2 },
-  { displayName: 'Chim', emoji: '🐦', bgColor: 'linear-gradient(135deg,#7FB3D3,#4A8FAD)', seatIndex: 3 },
-  { displayName: 'Cáo',  emoji: '🦊', bgColor: 'linear-gradient(135deg,#E8845C,#C4552C)', seatIndex: 4 },
-];
-
-// ── Props ────────────────────────────────────────────────────
-interface Props {
-  roomId?: string;
-  keyword?: string;        // [BE] từ khoá vòng 2
-  totalSeconds?: number;
-  onSendDescription?: (text: string) => void;
-  onComplete?: () => void;
-  initialTab?: TabType;
-  canUseAI?: boolean;
-}
-
-type TabType = 'AI' | 'MANUAL';
-
 // ── Component ────────────────────────────────────────────────
 const GhostChatView: React.FC<Props> = ({
-  roomId = 'dev123',
-  keyword = 'Hospital',
+  roomId = '',
+  roundLabel = 'Vòng 2',
+  keyword: initialKeyword = '',
+  civilianKeyword: initialCivilianKeyword = '',
   totalSeconds = 30,
   onSendDescription,
   onComplete,
   initialTab = 'AI',
   canUseAI = true,
+  isCorrupted = false,
+  corruptedPlayerId = null,
 }) => {
   const { user } = useAuthStore();
   const myDisplayName = user?.display_name ?? 'Tôi';
   const myAvatarUrl   = user?.avatar_url   ?? null;
-  const mySeatIndex   = 5; // [BE] nhận từ WebSocket
+  const mySeatIndex   = 5; // [BE] nhận từ WebSocket player.seatIndex
 
-  const [players, setPlayers] = useState<Player[]>([
-    ...MOCK_OTHER_PLAYERS.map((p, i) => ({ ...p, id: i + 1, isTyping: Math.random() > 0.5 })),
-    {
-      id: 6,
-      displayName: myDisplayName,
-      emoji: '🐻',
-      bgColor: 'linear-gradient(135deg,#9B7B5A,#705030)',
-      isMe: true,
-      avatarUrl: myAvatarUrl,
-      seatIndex: mySeatIndex,
-      isTyping: false,
-      description: undefined,
-    },
-  ]);
-
-  // Chat
-  const [messages, setMessages]         = useState<ChatMessage[]>(MOCK_MESSAGES);
+  const [players, setPlayers] = useState<Player[]>([]);
+  const [messages, setMessages]         = useState<ChatMessage[]>([]);
   const [chatInput, setChatInput]       = useState('');
-  const [nextId, setNextId]               = useState(MOCK_MESSAGES.length + 1);
-
   const [chatExpanded, setChatExpanded] = useState(false);
+  const [isLoading, setIsLoading]       = useState(true);
+  const [error, setError]               = useState<string | null>(null);
   const messagesEndRef                  = useRef<HTMLDivElement>(null);
 
-  // Flow State
-  const [currentPhase, setCurrentPhase] = useState<GameFlowPhase>('INTRO');
-  const [activeTab, setActiveTab] = useState<TabType>(initialTab);
+  const { connect, disconnect, subscribe, connected } = useWebSocket();
+
+  const [currentPhase, setCurrentPhase]           = useState<GameFlowPhase>('INTRO');
+  const [activeTab, setActiveTab]                 = useState<TabType>(initialTab);
   const [myDescriptionSent, setMyDescriptionSent] = useState(false);
+
+  const [keyword, setKeyword] = useState(initialKeyword);
+  const [civilianKeyword, setCivilianKeyword] = useState(initialCivilianKeyword);
+
+  // Fetch initial data
+  useEffect(() => {
+    const fetchData = async () => {
+      setIsLoading(true);
+      setError(null);
+      try {
+        const [roomData, msgData] = await Promise.all([
+          gameService.getRoomDetail(roomId),
+          gameService.getMessages(roomId)
+        ]);
+
+        if (roomData) {
+          setKeyword(roomData.keyword || initialKeyword);
+          setCivilianKeyword(roomData.civilianKeyword || initialCivilianKeyword);
+          
+          const mappedPlayers = roomData.players.map(p => ({
+            ...p,
+            isMe: p.id === user?.user_id || p.displayName === myDisplayName,
+            isTyping: false
+          }));
+          setPlayers(mappedPlayers);
+        }
+
+        setMessages(msgData || []);
+      } catch (err) {
+        console.error('Failed to fetch data for GhostChatView', err);
+        setError('Không thể tải dữ liệu phòng chơi. Vui lòng thử lại.');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchData();
+  }, [roomId, user?.user_id, myDisplayName, initialKeyword, initialCivilianKeyword]);
+
+  // WebSocket connection
+  useEffect(() => {
+    if (!roomId) return;
+    connect();
+    return () => disconnect();
+  }, [roomId, connect, disconnect]);
+
+  // WebSocket subscriptions
+  useEffect(() => {
+    if (connected && roomId) {
+      const msgSub = subscribe(`/topic/room/${roomId}/messages`, (msg: ChatMessage) => {
+        setMessages(prev => {
+          if (msg.senderName === 'Tôi:' || msg.senderName === (user?.display_name + ':')) {
+             if (prev.some(p => p.id === msg.id)) return prev;
+          }
+          return [...prev, msg];
+        });
+      });
+
+      const typingSub = subscribe(`/topic/room/${roomId}/typing`, (data: { playerId: number, isTyping: boolean }) => {
+        setPlayers(prev => prev.map(p => p.id === data.playerId ? { ...p, isTyping: data.isTyping } : p));
+      });
+
+      return () => {
+        msgSub?.unsubscribe();
+        typingSub?.unsubscribe();
+      };
+    }
+  }, [connected, roomId, subscribe, user?.display_name]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
-  const handleChatSend = () => {
+  const handleChatSend = async () => {
     const text = chatInput.trim();
     if (!text) return;
-    setMessages(prev => [...prev, { id: nextId, senderName: 'Tôi:', nameClass: 'toi', text }]);
-    setNextId(n => n + 1);
-    setChatInput('');
+    
+    try {
+      const newMessage = await gameService.sendMessage(roomId, {
+        senderName: 'Tôi:',
+        nameClass: 'toi',
+        text
+      });
+      setMessages(prev => [...prev, newMessage]);
+      setChatInput('');
+    } catch (err) {
+      console.error('Failed to send message', err);
+      // Optional: show toast error
+    }
   };
 
   const handleDescSubmit = (text: string) => {
@@ -139,35 +178,116 @@ const GhostChatView: React.FC<Props> = ({
     onSendDescription?.(text);
   };
 
-  const handleFlowComplete = () => {
-     console.log('[GhostChatView] Flow complete');
-     onComplete?.();
-   };
+  // ── Quyết định hiện badge nào ─────────────────────────────
+  const keywordsToShow = useMemo(() => {
+    if (isCorrupted) {
+      return [
+        { text: keyword,         type: 'spy'      }, // Đỏ — phe gián điệp
+        { text: civilianKeyword, type: 'civilian' }, // Vàng — phe dân thường
+      ];
+    }
+    return canUseAI
+      ? [{ text: keyword,         type: 'spy'      }]
+      : [{ text: civilianKeyword, type: 'civilian' }];
+  }, [isCorrupted, canUseAI, keyword, civilianKeyword]);
+
+  // Keyword dùng cho DescribeDiscussionFlow
+  const displayKeyword = isCorrupted ? keyword : keywordsToShow[0].text;
+
+  const showKeywordBadge = true;
+
+  if (isLoading) {
+    return (
+      <div className="dn-screen" style={{ backgroundImage: `url(${bgImage})`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <div style={{ color: '#fff', fontSize: '24px', fontFamily: "'Baloo Bhaijaan 2', cursive" }}>Đang tải dữ liệu...</div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="dn-screen" style={{ backgroundImage: `url(${bgImage})`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <div style={{ textAlign: 'center' }}>
+          <div style={{ color: '#ff4d4d', fontSize: '24px', fontFamily: "'Baloo Bhaijaan 2', cursive", marginBottom: '20px' }}>{error}</div>
+          <button 
+            onClick={() => window.location.reload()}
+            style={{ padding: '10px 20px', borderRadius: '12px', border: 'none', background: '#CF9325', color: '#fff', cursor: 'pointer' }}
+          >
+            Thử lại
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="dn-screen" style={{ backgroundImage: `url(${bgImage})` }}>
 
-      {/* ── Header — giống DescribeNotify ── */}
+      {/* ── Header ── */}
       <header className="dn-header">
         <div className="dn-round-badge">
-          <span className="dn-round-badge__text">Vòng 2</span>
+          <span className="dn-round-badge__text">{roundLabel}</span>
         </div>
-        {(myDescriptionSent || ['TIMES_UP_DESC', 'DISCUSSING', 'TIMES_UP_DISC', 'COMPLETED'].includes(currentPhase)) && (
-          <div className="dn-keyword-badge">
-            <span className="dn-keyword-badge__text">{keyword}</span>
+
+        {/* Keyword badge(s) - 1 badge: center; 2 badges: fit between round-badge and room-badge */}
+        {showKeywordBadge && (
+          <div style={{
+            position: 'absolute',
+            left: '220px',
+            right: '350px',
+            top: '20px',
+            display: 'flex',
+            flexDirection: 'row',
+            flexWrap: 'nowrap',
+            justifyContent: 'center',
+            alignItems: 'center',
+            gap: '24px',
+            zIndex: 10,
+            animation: 'dn-fadeDown 0.4s ease both',
+          }}>
+            {keywordsToShow.map((kw, idx) => (
+              <div
+                key={idx}
+                style={{
+                  flexShrink: 0,
+                  height: '82px',
+                  padding: '0 24px',
+                  borderRadius: '30px',
+                  boxShadow: '0px 4px 4px 0px rgba(0,0,0,0.25)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  background: kw.type === 'spy'
+                    ? 'rgba(160, 0, 0, 0.95)'
+                    : 'rgba(207, 147, 37, 0.86)',
+                }}
+              >
+                <span style={{
+                  fontFamily: "'Jaini Purva', cursive",
+                  fontSize: '52px',
+                  fontWeight: 400,
+                  lineHeight: 1.314,
+                  color: '#ffffff',
+                  whiteSpace: 'nowrap',
+                }}>{kw.text}</span>
+              </div>
+            ))}
           </div>
         )}
+
         <div className="dn-room-badge">
           <span className="dn-room-badge__text">Phòng: {roomId}</span>
         </div>
       </header>
 
-      {/* ── Avatar grid — giống DescribeNotify ── */}
+      {/* ── Avatar grid ── */}
       <div className="dn-avatars">
         {players.map(player => {
-          const pos   = AVATAR_POSITIONS[player.seatIndex] ?? { top: 0, left: 0 };
-          const order = SEAT_DISPLAY_ORDER[player.seatIndex] ?? (player.seatIndex + 1);
-          const label = player.isMe ? `${order}. Tôi` : `${order}. ${player.displayName}`;
+          const pos          = AVATAR_POSITIONS[player.seatIndex] ?? { top: 0, left: 0 };
+          const order        = SEAT_DISPLAY_ORDER[player.seatIndex] ?? (player.seatIndex + 1);
+          const label        = player.isMe ? `${order}. Tôi` : `${order}. ${player.displayName}`;
+          const isCorrPlayer = corruptedPlayerId !== null && player.id === corruptedPlayerId;
+          const isSpyTeam    = (player.isMe && (canUseAI || isCorrupted)) || isCorrPlayer;
 
           return (
             <div
@@ -182,62 +302,63 @@ const GhostChatView: React.FC<Props> = ({
                 <span style={{ fontSize: 72 }}>{player.emoji}</span>
               )}
 
-              {/* Tab "Chat giùm / Tự nói" + badge AI */}
+              {/* Badge "Bị tha hóa" */}
+              {isCorrPlayer && (
+                <div style={{
+                  position: 'absolute',
+                  top: '-38px', left: '50%',
+                  transform: 'translateX(-50%)',
+                  background: 'rgba(180, 0, 0, 0.92)',
+                  border: '2px solid #FF3B30',
+                  borderRadius: '20px',
+                  padding: '4px 14px',
+                  display: 'flex', alignItems: 'center', gap: '6px',
+                  whiteSpace: 'nowrap', zIndex: 50,
+                  boxShadow: '0 2px 12px rgba(255,59,48,0.5)',
+                  animation: 'dn-fadeDown 0.4s ease both',
+                }}>
+                  <span style={{ fontSize: '14px' }}>☠️</span>
+                  <span style={{
+                    fontFamily: "'Baloo Bhaijaan 2', sans-serif",
+                    fontSize: '16px', fontWeight: 700, color: '#fff',
+                  }}>Bị tha hóa</span>
+                </div>
+              )}
+
+              {/* Tab AI + badge — chỉ spy gốc */}
               {player.seatIndex === 0 && canUseAI && (
                 <>
-                  <div className="rf-ghost-spy-controls" style={{ 
-                    position: 'absolute', 
-                    // Nếu là số 3 (seatIndex 0) thì nằm bên trái, ngược lại nằm trên đầu
-                    top: player.seatIndex === 0 ? '20px' : 'auto',
-                    bottom: player.seatIndex === 0 ? 'auto' : '110%',
-                    left: player.seatIndex === 0 ? 'auto' : '50%',
-                    right: player.seatIndex === 0 ? '110%' : 'auto',
-                    transform: player.seatIndex === 0 ? 'none' : 'translateX(-50%)',
-                    display: 'flex', 
-                    flexDirection: player.seatIndex === 0 ? 'column' : 'row', 
-                    gap: '8px', 
-                    zIndex: 100, 
-                    width: 'max-content'
+                  <div style={{
+                    position: 'absolute', top: '20px', right: '110%',
+                    display: 'flex', flexDirection: 'column', gap: '8px',
+                    zIndex: 100, width: 'max-content',
                   }}>
-                    <button
-                      className={`rf-ghost-tab${activeTab === 'AI' ? ' active' : ''}`}
-                      onClick={() => setActiveTab('AI')}
-                      style={{
-                        background: activeTab === 'AI' ? '#FF843D' : 'rgba(0,0,0,0.5)',
-                        color: 'white', border: 'none', borderRadius: '12px',
-                        padding: '6px 12px', fontSize: '13px', fontWeight: 'bold', cursor: 'pointer',
-                        whiteSpace: 'nowrap'
-                      }}
-                    >
-                      Trò chuyện giùm
-                    </button>
-                    <button
-                      className={`rf-ghost-tab${activeTab === 'MANUAL' ? ' active' : ''}`}
-                      onClick={() => setActiveTab('MANUAL')}
-                      style={{
-                        background: activeTab === 'MANUAL' ? '#5B4133' : 'rgba(0,0,0,0.5)',
-                        color: 'white', border: 'none', borderRadius: '12px',
-                        padding: '6px 12px', fontSize: '13px', fontWeight: 'bold', cursor: 'pointer',
-                        whiteSpace: 'nowrap'
-                      }}
-                    >
-                      Tự nói
-                    </button>
+                    <button onClick={() => setActiveTab('AI')} style={{
+                      background: activeTab === 'AI' ? '#FF843D' : 'rgba(0,0,0,0.5)',
+                      color: 'white', border: 'none', borderRadius: '12px',
+                      padding: '6px 12px', fontSize: '13px', fontWeight: 'bold',
+                      cursor: 'pointer', whiteSpace: 'nowrap',
+                    }}>Trò chuyện giùm</button>
+                    <button onClick={() => setActiveTab('MANUAL')} style={{
+                      background: activeTab === 'MANUAL' ? '#5B4133' : 'rgba(0,0,0,0.5)',
+                      color: 'white', border: 'none', borderRadius: '12px',
+                      padding: '6px 12px', fontSize: '13px', fontWeight: 'bold',
+                      cursor: 'pointer', whiteSpace: 'nowrap',
+                    }}>Tự nói</button>
                   </div>
                   {activeTab === 'AI' && (
-                    <div className="rf-ghost-ai-badge" style={{
+                    <div style={{
                       position: 'absolute', top: '-10px', right: '-10px',
-                      background: '#A020F0', color: 'white', width: '28px', height: '28px',
-                      borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      fontSize: '12px', fontWeight: 'bold', border: '2px solid white', zIndex: 101
-                    }}>
-                      AI
-                    </div>
+                      background: '#A020F0', color: 'white',
+                      width: '28px', height: '28px', borderRadius: '50%',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      fontSize: '12px', fontWeight: 'bold',
+                      border: '2px solid white', zIndex: 101,
+                    }}>AI</div>
                   )}
                 </>
               )}
 
-              {/* Dùng component PlayerBubble mới để hiển thị nội dung chat/typing */}
               <PlayerBubble
                 player={player}
                 currentPhase={currentPhase}
@@ -245,7 +366,7 @@ const GhostChatView: React.FC<Props> = ({
                 myDescriptionSent={myDescriptionSent}
               />
 
-              <div className={`dn-name-tag${player.isMe ? ' dn-name-tag--me' : ''}`}>
+              <div className={`dn-name-tag${isSpyTeam ? ' dn-name-tag--spy' : ' dn-name-tag--civilian'}`}>
                 {label}
               </div>
             </div>
@@ -253,18 +374,17 @@ const GhostChatView: React.FC<Props> = ({
         })}
       </div>
 
-      {/* ── Game Flow Controller (Miêu tả & Tranh luận) ── */}
-      {/* Chỉ hiện input miêu tả nếu activeTab là AI (hoặc nếu là Civilian thì luôn hiện) */}
+      {/* ── Game flow ── */}
       <DescribeDiscussionFlow
-        keyword={keyword}
-        roundLabel="Vòng 2"
+        keyword={displayKeyword}
+        roundLabel={roundLabel}
         descriptionTime={totalSeconds}
         onDescriptionSubmit={handleDescSubmit}
         onPhaseChange={setCurrentPhase}
-        onComplete={handleFlowComplete}
+        onComplete={onComplete}
       />
 
-      {/* ── Chat panel — giống DescribeNotify ── */}
+      {/* ── Chat panel ── */}
       <div className={`dn-chat${chatExpanded ? ' dn-chat--expanded' : ''}`}>
         <div className="dn-chat__messages-wrap">
           <button
