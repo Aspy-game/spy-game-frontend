@@ -1,4 +1,5 @@
 import React, { useState, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import useAuthStore from '../../store/authStore';
 import bg from '../../../img/Gemini_Generated_Image_4oqsgs4oqsgs4oqs.png';
 import '../css/lobby.css';
@@ -19,8 +20,10 @@ interface FlyingCoin {
   delay: number;
 }
 
+
 const Lobby: React.FC = () => {
   const { user } = useAuthStore();
+  const navigate = useNavigate();
   const logoutStore = useAuthStore((state) => state.logout);
   // const { logout, loading } = useAuth();
   const [showProfile, setShowProfile] = useState(false);
@@ -28,6 +31,7 @@ const Lobby: React.FC = () => {
   const [showSettings, setShowSettings] = useState(false);
   const [showChangePassword, setShowChangePassword] = useState(false);
   const [showCreateRoom, setShowCreateRoom] = useState(false);
+
   const [isReceived, setIsReceived] = useState(false);
   const [coins, setCoins] = useState(100);
   const [flyingCoins, setFlyingCoins] = useState<FlyingCoin[]>([]);
@@ -79,6 +83,7 @@ const Lobby: React.FC = () => {
 
   const isModalOpen = showSettings || showChangePassword || showAttendance || showProfile || showCreateRoom;
 
+
   return (
     <div
       className="page-lobby"
@@ -105,9 +110,15 @@ const Lobby: React.FC = () => {
 
       {/* ─── TOP RIGHT NAV ─── */}
       <div className="lobby-nav-top-right">
-        <div className="nav-icon-btn">
+        {user?.role === 'ROLE_ADMIN' && (
+          <div className="nav-icon-btn" onClick={() => navigate('/admin')} style={{ cursor: 'pointer', background: 'rgba(255, 204, 0, 0.2)', color: '#FFCC00' }}>
+            <i className="fa-solid fa-user-shield"></i>
+            <span style={{ fontSize: '12px', marginLeft: '5px', fontWeight: 'bold' }}>Quản lý</span>
+          </div>
+        )}
+        {/* <div className="nav-icon-btn" onClick={() => setShowFriends(true)} style={{ cursor: 'pointer' }}>
           <i className="fa-solid fa-user-group"></i>
-        </div>
+        </div> */}
         <div className="nav-icon-btn" onClick={() => setShowAttendance(true)} style={{ cursor: 'pointer' }}>
           <i className="fa-regular fa-calendar-days"></i>
         </div>
@@ -227,6 +238,7 @@ const Lobby: React.FC = () => {
           } as React.CSSProperties}
         />
       ))}
+
     </div>
   );
 };

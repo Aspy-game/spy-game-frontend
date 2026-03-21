@@ -1,13 +1,14 @@
 import { BrowserRouter as Router, Routes, Route, Navigate, Link } from 'react-router-dom';
 import { useEffect, useState, useRef } from 'react';
+
 import useAuthStore from './store/authStore';
 import Login from './pages/tsx/Login';
 import Register from './pages/tsx/Register';
 import Forgot from './pages/tsx/Forgot';
 import Reset from './pages/tsx/Reset';
+import Admin from './pages/tsx/Admin';
 
-
-import Lobby from './pages/tsx/Lobby';
+ import Lobby from './pages/tsx/Lobby';
 import RoomLobby from './pages/tsx/RoomLobby';
 
 import bg from '../img/185eff45-e478-44e3-ae2c-26ed58d907e5.jpg';
@@ -21,30 +22,46 @@ import Round1Enter from './pages/tsx/room/Round1Enter';
 // ... thêm dần các màn hình khác vào đây
 import useSettingStore from './store/settingStore';
 import bgMusic from './assets/nhacnen.mp3';
+import Round1Enter    from './pages/tsx/room/Round1Enter';
+import DescribeNotify from './pages/tsx/room/DescribeNotify';
+import VoteFlow       from './pages/tsx/room/VoteFlow';
+import Round2Flow     from './pages/tsx/room/Round2Flow';
+import ResultVote     from './pages/tsx/room/components/results/ResultVote';
+import ResultMostVoted from './pages/tsx/room/components/results/ResultMostVoted';
+import ResultSpySafe  from './pages/tsx/room/components/results/ResultSpySafe';
+
 
 const PAGE_W = 1440;
 const PAGE_H = 1080;
 
 function usePageScale() {
   const [scale, setScale] = useState(1);
-
   useEffect(() => {
     function update() {
-      const scaleX = window.innerWidth / PAGE_W;
+      // Tính scale vừa khít màn hình, không bao giờ > 1
+      const scaleX = window.innerWidth  / PAGE_W;
       const scaleY = window.innerHeight / PAGE_H;
-      setScale(Math.min(scaleX, scaleY));
+      setScale(Math.min(scaleX, scaleY, 1)); // ← thêm giới hạn max = 1
     }
     update();
     window.addEventListener('resize', update);
     return () => window.removeEventListener('resize', update);
   }, []);
-
   return scale;
 }
 
 // ─── SCALED PAGE WRAPPER ─────────────────────────────────────────────────────
 function ScaledPage({ children }: { children: React.ReactNode }) {
   const scale = usePageScale();
+  const location = useLocation();
+  const navigate = useNavigate();
+  
+  // transform: scale() không thu nhỏ layout space thực tế
+  // → dùng margin âm để bù lại phần không gian thừa sau khi scale
+  const scaledW = PAGE_W * scale;
+  const scaledH = PAGE_H * scale;
+  const marginX = (scaledW - PAGE_W) / 2;
+  const marginY = (scaledH - PAGE_H) / 2;
 
   return (
     <div
@@ -55,7 +72,8 @@ function ScaledPage({ children }: { children: React.ReactNode }) {
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        background: '#ffffff',
+        background: '#000',
+        position: 'relative',
       }}
     >
       <div
@@ -64,10 +82,53 @@ function ScaledPage({ children }: { children: React.ReactNode }) {
           height: PAGE_H,
           transform: `scale(${scale})`,
           transformOrigin: 'center center',
+          // Margin âm bù lại layout space dư ra sau khi scale
+          marginTop: marginY,
+          marginBottom: marginY,
+          marginLeft: marginX,
+          marginRight: marginX,
           flexShrink: 0,
           position: 'relative',
+          overflow: 'hidden',
         }}
       >
+        {/* 1. Nút Quay lại — Đặt TRƯỚC khung "Vòng" trong container scaled */}
+        {!location.pathname.endsWith('/') && location.pathname !== '/lobby' && (
+          <button
+            onClick={() => navigate('/')}
+            style={{
+              position: 'absolute',
+              top: '20px',
+              left: '21px', 
+              width: '82px',
+              height: '82px',
+              borderRadius: '50%', 
+              background: 'rgba(207, 147, 37, 0.9)', // Màu vàng đồng nhất với các badge khác
+              border: 'none',
+              cursor: 'pointer',
+              zIndex: 1000,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              transition: 'all 0.2s ease',
+              boxShadow: '0 4px 12px rgba(0,0,0,0.4)',
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.background = 'rgba(207, 147, 37, 1)';
+              e.currentTarget.style.transform = 'scale(1.05)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.background = 'rgba(207, 147, 37, 0.9)';
+              e.currentTarget.style.transform = 'scale(1)';
+            }}
+            title="Quay lại"
+          >
+            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M19 12H5"></path>
+              <polyline points="12 19 5 12 12 5"></polyline>
+            </svg>
+          </button>
+        )}
         {children}
       </div>
     </div>
@@ -75,37 +136,43 @@ function ScaledPage({ children }: { children: React.ReactNode }) {
 }
 
 // ─── HOME ────────────────────────────────────────────────────────────────────
-const Home = () => {
-  const [showRules, setShowRules] = useState(false);
-  return (
-    <ScaledPage>
-      <div
-        className="page page-home"
-        style={{
-          backgroundImage: `url(${bg})`,
-          backgroundRepeat: 'no-repeat',
-          backgroundSize: '100% 100%',
-        }}
-      >
-        <div className="title-floating">
-          <div className="title-back">
-            <span className="luckiest back">KHÔNG PHAI TÔI</span>
-            <span className="luckiest back comma">,</span>
-          </div>
-          <div className="title-front">
-            <span className="luckiest front">KHÔNG PHAI TÔI</span>
-            <span className="luckiest front comma">,</span>
-          </div>
+const Home = () => (
+  <ScaledPage>
+    <div className="page page-home" style={{ backgroundImage: `url(${bg})`, backgroundRepeat: 'no-repeat', backgroundSize: '100% 100%' }}>
+      <div className="title-floating">
+        <div className="title-back">
+          <span className="luckiest back">KHÔNG PHAI TÔI</span>
+          <span className="luckiest back comma">,</span>
         </div>
+        <div className="title-front">
+          <span className="luckiest front">KHÔNG PHAI TÔI</span>
+          <span className="luckiest front comma">,</span>
+        </div>
+      </div>
+      <div className="home-actions">
+        <Link to="/login" className="action-text">Đăng nhập</Link>
+        <Link to="/register" className="action-text">Đăng ký</Link>
+      </div>
+      <div className="home-help">
+        <div className="help-box">?</div>
+      </div>
+    </div>
+  </ScaledPage>
+);
 
-        <div className="home-actions">
-          <Link to="/login" className="action-text">Đăng nhập</Link>
-          <Link to="/register" className="action-text">Đăng ký</Link>
-        </div>
-
-        <div className="home-help">
-          <button className="help-box" onClick={() => setShowRules(true)}>?</button>
-        </div>
+// ─── LOBBY ───────────────────────────────────────────────────────────────────
+// const Lobby = () => {
+//   const { user } = useAuthStore();
+//   // const { logout, loading } = useAuth();
+//   return (
+//     <ScaledPage>
+//       <div className="page page-home" style={{ backgroundImage: `url(${bg})`, backgroundRepeat: 'no-repeat', backgroundSize: '100% 100%' }}>
+//         <div className="lobby-center">
+//           <h1 className="lobby-greeting">Chào mừng, {user?.display_name}!</h1>
+//           <p className="lobby-sub">Bạn đã sẵn sàng để bắt đầu trò chơi chưa?</p>
+//           <div className="lobby-actions">
+//             <button className="lobby-btn">Tạo phòng</button>
+//             <button className="lobby-btn secondary">Vào phòng</button>
 
         {showRules && (
           <div className="rules-modal">
@@ -124,6 +191,7 @@ const Home = () => {
     </ScaledPage>
   );
 };
+
 
 // ─── PLACEHOLDER PAGES ───────────────────────────────────────────────────────
 const Room = () => (
@@ -148,6 +216,11 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   return isAuthenticated ? <>{children}</> : <Navigate to="/login" />;
 };
 
+const AdminRoute = ({ children }: { children: React.ReactNode }) => {
+  const { user, isAuthenticated } = useAuthStore();
+  return isAuthenticated && user?.role === 'ROLE_ADMIN' ? <>{children}</> : <Navigate to="/lobby" />;
+};
+  
 const AuthRoute = ({ children }: { children: React.ReactNode }) => {
   const { isAuthenticated } = useAuthStore();
   return isAuthenticated ? <Navigate to="/lobby" /> : <>{children}</>;
@@ -196,58 +269,61 @@ function App() {
         <Route path="/lobby" element={<ProtectedRoute><ScaledPage><Lobby /></ScaledPage></ProtectedRoute>} />
 
 
+
         <Route path="/room/:roomId" element={<ProtectedRoute><ScaledPage><RoomLobby /></ScaledPage></ProtectedRoute>} />
         <Route path="/game/:id" element={<ProtectedRoute><Game /></ProtectedRoute>} />
 
-        {/* ── Room game screens  ── */}
-        <Route path="/dev/round1" element={<ScaledPage><Round1Enter /></ScaledPage>} />
-        {/*
-          Tất cả màn hình trong game đều nằm dưới /game/:roomId/...
-          Được bảo vệ bởi ProtectedRoute
-        */}
-        <Route
-          path="/game/:roomId/round1"
-          element={
-            <ProtectedRoute>
-              <ScaledPage>
-                <Round1Enter />
-              </ScaledPage>
-            </ProtectedRoute>
-          }
+        {/* ── DEV ONLY — xóa trước khi nộp ── */}
+        <Route path="/dev/round1"          element={<ScaledPage><Round1Enter /></ScaledPage>} />
+        <Route path="/dev/describe-notify" element={<ScaledPage><DescribeNotify /></ScaledPage>} />
+        <Route path="/dev/vote"            element={<ScaledPage><VoteFlow /></ScaledPage>} />
+        <Route path="/dev/round2"          element={<ScaledPage><Round2Flow /></ScaledPage>} />
+        <Route path="/dev/result-vote"     element={<ScaledPage><ResultVote /></ScaledPage>} />
+
+        <Route path="/dev/result-most-voted" element={<ScaledPage><ResultMostVoted /></ScaledPage>} />
+
+        <Route path="/dev/result-spy-safe" element={<ScaledPage><ResultSpySafe /></ScaledPage>} />
+        <Route path="/dev/round3"            element={<ScaledPage><Round3Flow /></ScaledPage>} />
+        
+        
+        {/* ── Room game screens ── */}
+        <Route path="/game/:roomId/round1"
+          element={<ProtectedRoute><ScaledPage><Round1Enter /></ScaledPage></ProtectedRoute>}
         />
-
-        {/*
-          Thêm dần các màn hình khác vào đây theo đúng thứ tự:
-
-          <Route path="/game/:roomId/describe/notify"   element={<ProtectedRoute><ScaledPage><DescribeNotify /></ScaledPage></ProtectedRoute>} />
-          <Route path="/game/:roomId/describe/start"    element={<ProtectedRoute><ScaledPage><DescribeStart /></ScaledPage></ProtectedRoute>} />
-          <Route path="/game/:roomId/describe/sent"     element={<ProtectedRoute><ScaledPage><DescribeSent /></ScaledPage></ProtectedRoute>} />
-          <Route path="/game/:roomId/describe/end"      element={<ProtectedRoute><ScaledPage><DescribeEnd /></ScaledPage></ProtectedRoute>} />
-          <Route path="/game/:roomId/describe/view-all" element={<ProtectedRoute><ScaledPage><DescribeViewAll /></ScaledPage></ProtectedRoute>} />
-
-          <Route path="/game/:roomId/vote/notify"   element={<ProtectedRoute><ScaledPage><VoteNotify /></ScaledPage></ProtectedRoute>} />
-          <Route path="/game/:roomId/vote/select"   element={<ProtectedRoute><ScaledPage><VoteSelect /></ScaledPage></ProtectedRoute>} />
-          <Route path="/game/:roomId/vote/sent"     element={<ProtectedRoute><ScaledPage><VoteSent /></ScaledPage></ProtectedRoute>} />
-          <Route path="/game/:roomId/vote/timeout"  element={<ProtectedRoute><ScaledPage><VoteTimeout /></ScaledPage></ProtectedRoute>} />
-
-          <Route path="/game/:roomId/discuss/describe" element={<ProtectedRoute><ScaledPage><DiscussDescribe /></ScaledPage></ProtectedRoute>} />
-          <Route path="/game/:roomId/discuss/notify"   element={<ProtectedRoute><ScaledPage><DiscussNotify /></ScaledPage></ProtectedRoute>} />
-          <Route path="/game/:roomId/discuss/chat"     element={<ProtectedRoute><ScaledPage><DiscussChat /></ScaledPage></ProtectedRoute>} />
-          <Route path="/game/:roomId/discuss/end"      element={<ProtectedRoute><ScaledPage><DiscussEnd /></ScaledPage></ProtectedRoute>} />
-
-          <Route path="/game/:roomId/result/vote"       element={<ProtectedRoute><ScaledPage><ResultVote /></ScaledPage></ProtectedRoute>} />
-          <Route path="/game/:roomId/result/most-voted" element={<ProtectedRoute><ScaledPage><ResultMostVoted /></ScaledPage></ProtectedRoute>} />
-          <Route path="/game/:roomId/result/spy-safe"   element={<ProtectedRoute><ScaledPage><ResultSpySafe /></ScaledPage></ProtectedRoute>} />
-
-          <Route path="/game/:roomId/round2"                  element={<ProtectedRoute><ScaledPage><Round2Enter /></ScaledPage></ProtectedRoute>} />
-          <Route path="/game/:roomId/round2/rolecheck"        element={<ProtectedRoute><ScaledPage><Round2RoleCheck /></ScaledPage></ProtectedRoute>} />
-          <Route path="/game/:roomId/round2/role-correct"     element={<ProtectedRoute><ScaledPage><Round2RoleCorrect /></ScaledPage></ProtectedRoute>} />
-          <Route path="/game/:roomId/round2/manipulate"       element={<ProtectedRoute><ScaledPage><Round2Manipulate /></ScaledPage></ProtectedRoute>} />
-          <Route path="/game/:roomId/round2/ghost-chat"       element={<ProtectedRoute><ScaledPage><Round2GhostChat /></ScaledPage></ProtectedRoute>} />
-          <Route path="/game/:roomId/round2/ghost-chat-input" element={<ProtectedRoute><ScaledPage><Round2GhostChatInput /></ScaledPage></ProtectedRoute>} />
-          <Route path="/game/:roomId/round2/typing"           element={<ProtectedRoute><ScaledPage><Round2Typing /></ScaledPage></ProtectedRoute>} />
-          <Route path="/game/:roomId/round2/after-r1"         element={<ProtectedRoute><ScaledPage><Round2AfterR1 /></ScaledPage></ProtectedRoute>} />
-        */}
+        <Route path="/game/:roomId/describe/notify"
+          element={<ProtectedRoute><ScaledPage><DescribeNotify /></ScaledPage></ProtectedRoute>}
+        />
+{/* Vote (dùng chung mọi vòng — truyền round qua state hoặc query) */}
+        <Route path="/game/:roomId/vote/notify"
+          element={<ProtectedRoute><ScaledPage><VoteFlow /></ScaledPage></ProtectedRoute>} />
+ 
+        {/* Kết quả (dùng chung mọi vòng) */}
+        <Route path="/game/:roomId/result/vote"
+          element={<ProtectedRoute><ScaledPage><ResultVote /></ScaledPage></ProtectedRoute>} />
+        <Route path="/game/:roomId/result/most-voted"
+          element={<ProtectedRoute><ScaledPage><ResultMostVoted /></ScaledPage></ProtectedRoute>} />
+        <Route path="/game/:roomId/result/spy-safe"
+          element={<ProtectedRoute><ScaledPage><ResultSpySafe /></ScaledPage></ProtectedRoute>} />
+ 
+        {/* Vòng 2 */}
+        <Route path="/game/:roomId/round2"
+          element={<ProtectedRoute><ScaledPage><Round2Flow /></ScaledPage></ProtectedRoute>} />
+ 
+        {/* Vòng 3 */}
+        <Route path="/game/:roomId/round3"
+          element={<ProtectedRoute><ScaledPage><Round3Flow /></ScaledPage></ProtectedRoute>} />
+        {/* <Route path="/game/:roomId/vote"            element={<ProtectedRoute><ScaledPage><VoteFlow /></ScaledPage></ProtectedRoute>} />
+        <Route path="/game/:roomId/result/vote"       element={<ProtectedRoute><ScaledPage><ResultVote /></ScaledPage></ProtectedRoute>} />
+        <Route path="/game/:roomId/result/most-voted" element={<ProtectedRoute><ScaledPage><ResultMostVoted /></ScaledPage></ProtectedRoute>} />
+        <Route path="/game/:roomId/result/spy-safe"   element={<ProtectedRoute><ScaledPage><ResultSpySafe /></ScaledPage></ProtectedRoute>} />
+        <Route path="/game/:roomId/round2"                  element={<ProtectedRoute><ScaledPage><Round2Enter /></ScaledPage></ProtectedRoute>} />
+        <Route path="/game/:roomId/round2/rolecheck"        element={<ProtectedRoute><ScaledPage><Round2RoleCheck /></ScaledPage></ProtectedRoute>} />
+        <Route path="/game/:roomId/round2/role-correct"     element={<ProtectedRoute><ScaledPage><Round2RoleCorrect /></ScaledPage></ProtectedRoute>} />
+        <Route path="/game/:roomId/round2/manipulate"       element={<ProtectedRoute><ScaledPage><Round2Manipulate /></ScaledPage></ProtectedRoute>} />
+        <Route path="/game/:roomId/round2/ghost-chat"       element={<ProtectedRoute><ScaledPage><Round2GhostChat /></ScaledPage></ProtectedRoute>} />
+        <Route path="/game/:roomId/round2/ghost-chat-input" element={<ProtectedRoute><ScaledPage><Round2GhostChatInput /></ScaledPage></ProtectedRoute>} />
+        <Route path="/game/:roomId/round2/typing"           element={<ProtectedRoute><ScaledPage><Round2Typing /></ScaledPage></ProtectedRoute>} />
+        <Route path="/game/:roomId/round2/after-r1"         element={<ProtectedRoute><ScaledPage><Round2AfterR1 /></ScaledPage></ProtectedRoute>} /> */}
       </Routes>
     </Router>
   );

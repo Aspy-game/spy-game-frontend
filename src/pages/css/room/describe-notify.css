@@ -1,0 +1,547 @@
+/* =============================================
+   describe-notify.css
+   1440×1024 – tất cả phases trong 1 màn
+   ============================================= */
+
+@import url('https://fonts.googleapis.com/css2?family=Baloo+Bhaijaan+2:wght@400;600;700&family=Baloo+Bhaijaan&family=Jaini+Purva&display=swap');
+html, body, #root { width: 100%; height: 100%; overflow: hidden; }
+
+:root {
+  --dn-badge-bg    : rgba(207, 147, 37, 0.86);
+  --dn-chat-bg     : rgba(37, 36, 36, 0.852);
+  --dn-banner-bg   : rgba(167, 114, 83, 0.7);
+  --dn-timesup-bg  : rgba(167, 114, 83, 0.85);
+  --dn-input-bg    : rgba(66, 39, 44, 0.9);
+  --dn-shadow      : 0px 4px 4px 0px rgba(0, 0, 0, 0.25);
+  --dn-border      : 1px solid #000000;
+  --dn-white       : #ffffff;
+  --dn-placeholder : rgba(128, 125, 125, 0.8);
+  --dn-cu  : #ff4d4d;
+  --dn-toi : #ffa500;
+  --dn-cho : #ffff00;
+  --dn-meo : #4dff4d;
+
+  /* Bubble */
+  --dn-bubble-bg     : rgba(255, 255, 255, 0.96);
+  --dn-bubble-border : rgba(0, 0, 0, 0.10);
+  --dn-bubble-tail   : 12px;
+}
+
+/* ── Screen ──────────────────────────────────────────────────── */
+.dn-screen {
+  width: 1440px; height: 1024px;
+  position: relative; overflow: hidden;
+  background-color: #1c4a08;
+  background-size: cover; background-position: center;
+  font-family: 'Baloo Bhaijaan 2', sans-serif;
+}
+
+/* ── Header ──────────────────────────────────────────────────── */
+.dn-header {
+  position: absolute; top: 0; left: 0; width: 1440px;
+  z-index: 10;
+  animation: dn-fadeDown 0.5s ease both;
+}
+
+.dn-round-badge {
+  position: absolute; left: 115px; top: 20px;
+  width: 185px; height: 82px;
+  background: var(--dn-badge-bg); border-radius: 30px;
+  box-shadow: var(--dn-shadow);
+  display: flex; align-items: center; justify-content: center;
+}
+.dn-round-badge__text {
+  font-family: 'Jaini Purva', cursive;
+  font-size: 60px; font-weight: 400; line-height: 1.314;
+  color: var(--dn-white); white-space: nowrap;
+}
+
+.dn-keyword-badge {
+  position: absolute; left: 50%; top: 20px;
+  transform: translateX(-50%);
+  min-width: 240px; height: 82px; padding: 0 28px;
+  background: var(--dn-badge-bg); border-radius: 30px;
+  box-shadow: var(--dn-shadow);
+  display: flex; align-items: center; justify-content: center;
+  animation: dn-fadeDown 0.4s ease both;
+}
+.dn-keyword-badge__text {
+  font-family: 'Jaini Purva', cursive;
+  font-size: 60px; font-weight: 400; line-height: 1.314;
+  color: var(--dn-white); white-space: nowrap;
+}
+
+.dn-room-badge {
+  position: absolute; left: 1097px; top: 30px;
+  width: 323px; height: 82px;
+  background: var(--dn-badge-bg); border-radius: 30px;
+  box-shadow: var(--dn-shadow);
+  display: flex; align-items: center; justify-content: center;
+}
+.dn-room-badge__text {
+  font-family: 'Jaini Purva', cursive;
+  font-size: 60px; font-weight: 400; line-height: 1.314;
+  color: var(--dn-white); white-space: nowrap;
+}
+
+.dn-my-label {
+  font-family: 'Jaini Purva', cursive;
+  font-size: 64px; font-weight: 400; line-height: 1.314;
+  color: var(--dn-white);
+  text-shadow: 0 2px 8px rgba(0,0,0,0.3);
+  z-index: 10;
+  animation: dn-fadeDown 0.5s 0.1s ease both;
+}
+
+/* ── Avatar grid ─────────────────────────────────────────────── */
+.dn-avatars {
+  position: absolute; left: 345px; top: 110px;
+  width: 740px; height: 802px; display: block;
+  animation: dn-fadeLeft 0.6s 0.1s ease both;
+}
+.dn-avatar {
+  position: absolute; width: 148px; height: 146px;
+  border-radius: 16px; overflow: visible;
+  box-shadow: var(--dn-shadow);
+  display: flex; align-items: center; justify-content: center;
+}
+.dn-avatar--a0 { left: 303px; top: 0px;   }
+.dn-avatar--a1 { left: 572px; top: 192px; }
+.dn-avatar--a2 { left: 592px; top: 481px; }
+.dn-avatar--a3 { left: 303px; top: 656px; }
+.dn-avatar--a4 { left: 0px;   top: 481px; }
+.dn-avatar--a5 { left: 0px;   top: 192px; }
+
+/* ═══════════════════════════════════════════════════════════════
+   SPEECH BUBBLE
+   ═══════════════════════════════════════════════════════════════ */
+.dn-speech-bubble {
+  position: absolute;
+  min-width: 140px; max-width: 320px;
+  padding: 8px 24px;
+  background: rgba(0, 0, 0, 0.4);
+  border-radius: 50% / 50%;
+  border: 1px solid #ffffff;
+  display: inline-flex; align-items: center; justify-content: center;
+  pointer-events: none; z-index: 20;
+  white-space: nowrap;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+  animation: dn-bubblePop 0.4s cubic-bezier(0.34,1.56,0.64,1) both;
+}
+.dn-speech-bubble__text {
+  font-family: 'Baloo Bhaijaan 2', sans-serif;
+  font-size: 28px; font-weight: 500;
+  color: #ffffff; text-align: center;
+}
+
+.dn-avatar--a0 .dn-speech-bubble::after,
+.dn-avatar--a1 .dn-speech-bubble::after,
+.dn-avatar--a2 .dn-speech-bubble::after,
+.dn-avatar--a3 .dn-speech-bubble::after {
+  content: '';
+  position: absolute;
+  right: 100%; top: 50%;
+  transform: translateY(-50%);
+  border: 10px solid transparent;
+  border-right-color: #ffffff;
+  margin-right: -1px;
+}
+
+.dn-avatar--a4 .dn-speech-bubble::after,
+.dn-avatar--a5 .dn-speech-bubble::after {
+  content: '';
+  position: absolute;
+  left: 100%; top: 50%;
+  transform: translateY(-50%);
+  border: 10px solid transparent;
+  border-left-color: #ffffff;
+  margin-left: -1px;
+}
+
+.dn-speech-bubble--0 { animation-delay: 0.05s; }
+.dn-speech-bubble--1 { animation-delay: 0.15s; }
+.dn-speech-bubble--2 { animation-delay: 0.25s; }
+.dn-speech-bubble--3 { animation-delay: 0.35s; }
+.dn-speech-bubble--4 { animation-delay: 0.45s; }
+.dn-speech-bubble--5 { animation-delay: 0.55s; }
+
+/* ── Typing bubble ──────────────────────────────────────────── */
+.dn-typing-bubble {
+  position: absolute;
+  min-width: 160px; height: 52px;
+  padding: 0 24px;
+  background: rgba(0, 0, 0, 0.4);
+  border-radius: 50% / 50%;
+  border: 1px solid #ffffff;
+  display: flex; align-items: center; justify-content: center;
+  pointer-events: none; z-index: 20;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+  animation: dn-bubblePop 0.3s cubic-bezier(0.34,1.56,0.64,1) both;
+}
+.dn-typing-bubble__text {
+  font-family: 'Baloo Bhaijaan 2', sans-serif;
+  font-size: 24px; font-weight: 500;
+  color: #ffffff; white-space: nowrap;
+  animation: dn-typingDots 1.4s ease-in-out infinite;
+}
+
+.dn-typing-bubble--0::after,
+.dn-typing-bubble--1::after,
+.dn-typing-bubble--2::after,
+.dn-typing-bubble--3::after {
+  content: ''; position: absolute;
+  right: 100%; top: 50%; transform: translateY(-50%);
+  border: 10px solid transparent; border-right-color: #ffffff;
+  margin-right: -1px;
+}
+.dn-typing-bubble--4::after,
+.dn-typing-bubble--5::after {
+  content: ''; position: absolute;
+  left: 100%; top: 50%; transform: translateY(-50%);
+  border: 10px solid transparent; border-left-color: #ffffff;
+  margin-left: -1px;
+}
+
+/* Container bao cả countdown + input, căn giữa tâm hexagon.
+   Tâm hexagon 6 avatar (tọa độ tuyệt đối trên màn 1440px):
+     x = (a5.cx + a1.cx) / 2 = (419 + 991) / 2 = 705
+     y = (a0.cy + a3.cy) / 2 = (183 + 839) / 2 = 511
+   QUAN TRỌNG: Không dùng transform: translate() kết hợp với animation có transform
+   vì CSS chỉ giữ 1 transform → dùng left/top = tâm - self_size/2 tuyệt đối.
+   Self width = 380px → left = 705 - 190 = 515
+   Self height ≈ 152px (68 badge + 16 gap + 68 input) → top = 511 - 76 = 435 */
+.dn-describe-input-wrap {
+  position: absolute;
+  left: 515px;
+  top: 435px;
+  width: 380px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  z-index: 50;
+  animation: dn-fadeUp 0.4s ease both;
+}
+
+/* Countdown badge bên trong wrap */
+.dn-countdown-badge-inline {
+  width: 160px; height: 68px;
+  background: var(--dn-badge-bg);
+  border-radius: 30px;
+  box-shadow: var(--dn-shadow);
+  display: flex; align-items: center; justify-content: center;
+  gap: 10px;
+}
+.dn-countdown-badge__icon { font-size: 28px; line-height: 1; flex-shrink: 0; }
+.dn-countdown-badge__num {
+  font-family: 'Baloo Bhaijaan 2', sans-serif;
+  font-size: 34px; font-weight: 700; line-height: 1;
+  color: var(--dn-white); min-width: 28px; text-align: center;
+}
+
+/* Input bar */
+.dn-describe-input-bar {
+  width: 380px; height: 68px;
+  background: rgba(30, 20, 20, 0.75);
+  backdrop-filter: blur(8px);
+  border-radius: 34px;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+  display: flex; align-items: center;
+  padding: 0 10px 0 24px; gap: 8px;
+}
+.dn-describe-input {
+  flex: 1; background: transparent; border: none; outline: none;
+  font-family: 'Baloo Bhaijaan 2', sans-serif;
+  font-size: 26px; line-height: 1;
+  color: var(--dn-white);
+}
+.dn-describe-input::placeholder { color: rgba(200, 180, 180, 0.6); }
+.dn-send-btn {
+  background: none; border: none; cursor: pointer; padding: 2px;
+  display: flex; align-items: center; justify-content: center;
+  transition: transform 0.15s ease; flex-shrink: 0;
+}
+.dn-send-btn:hover { transform: scale(1.15); }
+.dn-send-btn svg { width: 36px; height: 36px; }
+
+/* "Đã gửi" label – thay input bar */
+.dn-sent-label {
+  width: 380px; height: 68px;
+  background: rgba(52,199,89,0.18);
+  border: 2px solid rgba(52,199,89,0.55);
+  border-radius: 34px;
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'Baloo Bhaijaan 2', sans-serif;
+  font-size: 26px; font-weight: 600; color: #34C759;
+  animation: dn-fadeUp 0.4s ease both;
+}
+
+/* Phase 3 countdown – cùng tâm với Phase 2 */
+.dn-countdown-badge {
+  position: absolute;
+  /* left = tâm_x - badge_width/2 = 705 - 80 = 625 */
+  left: 625px;
+  /* top  = tâm_y - badge_height/2 = 511 - 34 = 477 */
+  top: 477px;
+  width: 160px; height: 68px;
+  background: var(--dn-badge-bg);
+  border-radius: 30px;
+  box-shadow: var(--dn-shadow);
+  display: flex; align-items: center; justify-content: center;
+  gap: 10px;
+  z-index: 9;
+  animation: dn-fadeUp 0.4s ease both;
+}
+.dn-countdown-badge--phase3 {
+  /* same position, already defined above */
+}
+
+
+/* ── Phase 3b: Discuss wrap (countdown + panel tranh luận) ───── */
+.dn-discuss-wrap {
+  position: absolute;
+  left: 515px;
+  top: 410px;
+  width: 380px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  z-index: 50;
+  opacity: 0;
+  animation: dn-fadeIn 0.5s ease 0s forwards;
+}
+.dn-discuss-countdown {
+  width: 160px; height: 68px;
+  background: var(--dn-badge-bg);
+  border-radius: 30px;
+  box-shadow: var(--dn-shadow);
+  display: flex; align-items: center; justify-content: center;
+  gap: 10px;
+  flex-shrink: 0;
+}
+.dn-discuss-panel {
+  width: 380px;
+  padding: 18px 28px;
+  background: rgba(167, 114, 83, 0.75);
+  border-radius: 24px;
+  border: 2px solid rgba(255,255,255,0.18);
+  box-shadow: 0 6px 24px rgba(0,0,0,0.35);
+  display: flex; align-items: center; justify-content: center;
+}
+.dn-discuss-panel__text {
+  font-family: 'Baloo Bhaijaan', sans-serif;
+  font-size: 42px; font-weight: 400; line-height: 1.3;
+  color: var(--dn-white); text-align: center;
+  text-shadow: 0 2px 8px rgba(0,0,0,0.3);
+  white-space: nowrap; user-select: none;
+}
+/* ── OVERLAY "Hết thời gian tranh luận" ─────────────────────── */
+.dn-discuss-timesup-overlay {
+  position: absolute; inset: 0; z-index: 40;
+  display: flex; align-items: center; justify-content: center;
+  background: rgba(0,0,0,0.28);
+  animation: dn-fadeIn 0.35s ease both;
+}
+.dn-discuss-timesup-box {
+  min-width: 700px; padding: 28px 56px;
+  background: rgba(167, 114, 83, 0.92);
+  border-radius: 30px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+  display: flex; align-items: center; justify-content: center;
+  animation: dn-boxPop 0.45s cubic-bezier(0.34,1.4,0.64,1) 0.1s both;
+}
+.dn-discuss-timesup-text {
+  font-family: 'Baloo Bhaijaan', sans-serif;
+  font-size: 72px; font-weight: 700; line-height: 1.3;
+  color: var(--dn-white); text-align: center;
+  text-shadow: 0 3px 16px rgba(0,0,0,0.3);
+  white-space: nowrap; user-select: none;
+}
+/* ── Banner (Phase 1) ────────────────────────────────────────── */
+.dn-banner {
+  position: absolute; left: 267px; top: 412px;
+  width: 910px; height: 200px;
+  background: var(--dn-banner-bg); border-radius: 30px;
+  box-shadow: var(--dn-shadow);
+  display: flex; align-items: center; justify-content: center;
+  z-index: 8;
+  animation: dn-fadeUp 0.6s 0.15s ease both, dn-pulse 3s 1s ease-in-out infinite;
+}
+.dn-banner__text {
+  font-family: 'Baloo Bhaijaan', sans-serif;
+  font-size: 70px; font-weight: 400; line-height: 1.507;
+  color: var(--dn-white); text-align: center;
+  text-shadow: 0 2px 10px rgba(0,0,0,0.3);
+  white-space: nowrap; user-select: none;
+}
+.dn-banner__keyword { color: #FFD700; font-style: italic; }
+
+/* ── OVERLAY "Hết thời gian miêu tả" ────────────────────────── */
+.dn-timesup-overlay {
+  position: absolute; inset: 0; z-index: 30;
+  display: flex; align-items: center; justify-content: center;
+  background: rgba(0,0,0,0.22);
+  animation: dn-fadeIn 0.35s ease both;
+}
+.dn-timesup-box {
+  min-width: 680px; padding: 28px 56px;
+  background: var(--dn-timesup-bg); border-radius: 30px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.35);
+  display: flex; align-items: center; justify-content: center;
+  animation: dn-boxPop 0.45s cubic-bezier(0.34,1.4,0.64,1) 0.1s both;
+}
+.dn-timesup-text {
+  font-family: 'Baloo Bhaijaan', sans-serif;
+  font-size: 80px; font-weight: 700; line-height: 1.3;
+  color: var(--dn-white); text-align: center;
+  text-shadow: 0 3px 16px rgba(0,0,0,0.3);
+  white-space: nowrap; user-select: none;
+}
+
+/* ── Chat panel ──────────────────────────────────────────────── */
+.dn-chat {
+  position: absolute; left: 0; bottom: 0;
+  width: 465px;
+  z-index: 10;
+  animation: dn-fadeLeft 0.6s 0.2s ease both;
+  transition: all 0.35s cubic-bezier(0.4,0,0.2,1);
+}
+.dn-chat--expanded {
+  top: 208px; left: 280px; width: 846px; z-index: 20; bottom: auto;
+}
+.dn-chat--expanded .dn-chat__messages {
+  height: 550px; max-height: 550px; width: 100%;
+  border-radius: 30px 30px 0 0;
+}
+.dn-chat--expanded .dn-chat__input-bar {
+  width: 100%; border-radius: 0 0 30px 30px;
+  border-top: none; margin-top: 0;
+}
+.dn-chat__messages-wrap { position: relative; }
+.dn-chat__expand-btn {
+  position: absolute; top: 6px; right: 0px;
+  transform: translateX(50%);
+  width: 32px; height: 32px;
+  background: rgba(255,251,251,0.637);
+  border: 1px solid rgba(0,0,0,0.15);
+  border-radius: 8px; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  z-index: 12;
+  transition: background 0.15s ease, transform 0.15s ease;
+  padding: 5px; box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+}
+.dn-chat__expand-btn:hover {
+  background: rgb(0,0,0);
+  transform: translateX(50%) scale(1.1);
+}
+.dn-chat__expand-btn svg { width: 18px; height: 18px; stroke: rgb(0,0,0); stroke-width: 10; }
+
+.dn-chat__messages {
+  width: 465px; height: 230px; max-height: 230px;
+  background: var(--dn-chat-bg);
+  border: var(--dn-border); border-radius: 30px;
+  box-shadow: var(--dn-shadow);
+  padding: 13px 21px 10px;
+  overflow-y: auto; scrollbar-width: thin;
+  scrollbar-color: rgba(255,255,255,0.4) transparent;
+}
+.dn-chat__messages::-webkit-scrollbar { width: 4px; }
+.dn-chat__messages::-webkit-scrollbar-track { background: transparent; }
+.dn-chat__messages::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.4); border-radius: 4px; }
+
+.dn-chat-row { display: flex; align-items: baseline; gap: 8px; line-height: 1.712; }
+.dn-chat-name { font-size: 32px; font-weight: 600; white-space: nowrap; line-height: 1.712; }
+.dn-chat-name--cu  { color: var(--dn-cu);  }
+.dn-chat-name--toi { color: var(--dn-toi); }
+.dn-chat-name--cho { color: var(--dn-cho); }
+.dn-chat-name--meo { color: var(--dn-meo); }
+.dn-chat-msg {
+  font-size: 32px; font-weight: 400; color: var(--dn-white);
+  line-height: 1.712; word-break: break-word; white-space: normal; flex: 1;
+}
+.dn-chat__input-bar {
+  margin-top: 3px; width: 465px; height: 42px;
+  background: var(--dn-chat-bg); border: var(--dn-border);
+  border-radius: 30px; box-shadow: var(--dn-shadow);
+  display: flex; align-items: center; padding: 0 8px 0 16px; gap: 4px;
+}
+.dn-chat__input {
+  flex: 1; background: transparent; border: none; outline: none;
+  font-family: 'Baloo Bhaijaan 2', sans-serif;
+  font-size: 16px; color: var(--dn-white);
+}
+.dn-chat__input::placeholder { color: rgba(255,255,255,0.55); }
+.dn-chat__btn {
+  background: none; border: none; cursor: pointer; padding: 2px 4px;
+  display: flex; align-items: center; justify-content: center;
+  transition: transform 0.15s ease; flex-shrink: 0;
+}
+.dn-chat__btn:hover { transform: scale(1.18); }
+.dn-chat__btn svg { width: 28px; height: 28px; }
+
+
+/* ── Name tag dưới avatar: "N. Tên" ─────────────────────────── */
+.dn-name-tag {
+  position: absolute;
+  bottom: -36px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0, 0, 0, 0.72);
+  border: 1px solid rgba(255,255,255,0.18);
+  border-radius: 12px;
+  padding: 2px 14px;
+  white-space: nowrap;
+  font-family: 'Baloo Bhaijaan 2', sans-serif;
+  font-size: 20px;
+  font-weight: 600;
+  color: rgba(255,255,255,0.92);
+  line-height: 1.5;
+  pointer-events: none;
+  z-index: 25;
+}
+/* Bản thân: highlight vàng nhẹ */
+.dn-name-tag--me {
+  background: rgba(207, 147, 37, 0.82);
+  border-color: rgba(255,220,80,0.45);
+  color: #ffffff;
+}
+.dn-avatar__img {
+  width: 100%; height: 100%;
+  object-fit: cover; border-radius: 16px; display: block;
+}
+
+/* ── Animations ──────────────────────────────────────────────── */
+@keyframes dn-fadeDown  { from { opacity:0; transform:translateY(-16px); } to { opacity:1; transform:translateY(0); } }
+@keyframes dn-fadeUp    { from { opacity:0; transform:translateY(24px);  } to { opacity:1; transform:translateY(0); } }
+@keyframes dn-fadeLeft  { from { opacity:0; transform:translateX(-20px); } to { opacity:1; transform:translateX(0); } }
+@keyframes dn-fadeIn    { from { opacity:0; }                              to { opacity:1; } }
+@keyframes dn-slideIn   { from { opacity:0; transform:translateX(-12px); } to { opacity:1; transform:translateX(0); } }
+@keyframes dn-pulse     { 0%,100%{ transform:scale(1); } 50%{ transform:scale(1.02); } }
+@keyframes dn-bubblePop { from { opacity:0; transform:scale(0.6); } to { opacity:1; transform:scale(1); } }
+@keyframes dn-boxPop    { from { opacity:0; transform:scale(0.85); } to { opacity:1; transform:scale(1); } }
+@keyframes dn-typingDots {
+  0%, 60%, 100% { opacity: 1; }
+  30% { opacity: 0.4; }
+}
+
+.dn-chat-row:nth-child(1) { animation: dn-slideIn 0.4s 0.3s ease both; }
+.dn-chat-row:nth-child(2) { animation: dn-slideIn 0.4s 0.5s ease both; }
+.dn-chat-row:nth-child(3) { animation: dn-slideIn 0.4s 0.7s ease both; }
+.dn-chat-row:nth-child(4) { animation: dn-slideIn 0.4s 0.9s ease both; }
+
+
+/* Phe thường dân — nền vàng chữ trắng (giống hình) */
+.dn-name-tag--civilian {
+  background: rgba(207, 147, 37, 0.82);
+  border-color: rgba(255, 220, 80, 0.45);
+  color: #ffffff;
+}
+
+/* Phe gián điệp — nền đỏ chữ trắng */
+.dn-name-tag--spy {
+  background: rgba(180, 0, 0, 0.88);
+  border-color: rgba(255, 59, 48, 0.55);
+  color: #ffffff;
+}

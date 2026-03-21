@@ -1,7 +1,7 @@
 import { useState, useCallback } from 'react';
 import axiosInstance from '../api/axiosInstance';
 import useAuthStore from '../store/authStore';
-import type { LoginResponse, RegisterResponse, User } from '../types';
+import type { LoginResponse, RegisterResponse, Role, User } from '../types';
 
 // ─────────────────────────────────────────────────────────────
 //  ĐỔI THÀNH false KHI CÓ BACKEND THẬT
@@ -14,6 +14,7 @@ const MOCK_USERS = [
     password: '123456',
     user_id: '1',
     display_name: 'Admin',
+    role: 'ROLE_ADMIN',
     access_token: 'mock-access-token',
     refresh_token: 'mock-refresh-token',
   },
@@ -22,6 +23,7 @@ const MOCK_USERS = [
     password: '123456',
     user_id: '2',
     display_name: 'Cáo Nâu',
+    role: 'ROLE_USER',
     access_token: 'mock-access-token-2',
     refresh_token: 'mock-refresh-token-2',
   },
@@ -43,7 +45,12 @@ export const useAuth = () => {
           (u) => u.username === username && u.password === password
         );
         if (!found) throw new Error('Tên đăng nhập hoặc mật khẩu không đúng');
-        const user: User = { user_id: Number(found.user_id), username: found.username, display_name: found.display_name };
+        const user: User = { 
+          user_id: Number(found.user_id), 
+          username: found.username, 
+          display_name: found.display_name,
+          role: found.role as Role
+        };
         setAuth(user, found.access_token, found.refresh_token);
         return true;
       }
@@ -51,10 +58,12 @@ export const useAuth = () => {
       const response = await axiosInstance.post<LoginResponse & { avatar_url?: string }>('/auth/login', { username, password });
       const { user_id, display_name, avatar_url, access_token, refresh_token } = response.data;
       const user: User = { user_id, username, display_name, avatar_url };
+
       setAuth(user, access_token, refresh_token);
       return true;
     } catch (err: any) {
       const message = err.response?.data?.message || err.message || 'Đăng nhập thất bại.';
+
       setError(message);
       return false;
     } finally {
@@ -70,7 +79,12 @@ export const useAuth = () => {
         await new Promise((r) => setTimeout(r, 500));
         const exists = MOCK_USERS.find((u) => u.username === data.username);
         if (exists) throw new Error('Tên đăng nhập đã tồn tại');
-        const user: User = { user_id: Number('999'), username: data.username, display_name: data.display_name };
+        const user: User = { 
+          user_id: Number('999'), 
+          username: data.username, 
+          display_name: data.display_name,
+          role: 'ROLE_USER' as Role
+        };
         setAuth(user, 'mock-access-token-new', 'mock-refresh-token-new');
         return true;
       }
@@ -78,10 +92,12 @@ export const useAuth = () => {
       const response = await axiosInstance.post<RegisterResponse & { avatar_url?: string }>('/auth/register', data);
       const { user_id, username, display_name, avatar_url, access_token, refresh_token } = response.data;
       const user: User = { user_id, username, display_name, avatar_url };
+
       setAuth(user, access_token, refresh_token);
       return true;
     } catch (err: any) {
       const message = err.response?.data?.message || err.message || 'Đăng ký thất bại.';
+
       setError(message);
       return false;
     } finally {
