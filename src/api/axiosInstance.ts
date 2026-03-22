@@ -4,6 +4,7 @@ const axiosInstance = axios.create({
   baseURL: import.meta.env.VITE_API_URL || 'http://localhost:8000/api',
   headers: {
     'Content-Type': 'application/json',
+    'ngrok-skip-browser-warning': 'true',
   },
 });
 
@@ -41,6 +42,8 @@ axiosInstance.interceptors.response.use(
           try {
             const response = await axios.post(`${axiosInstance.defaults.baseURL}/auth/refresh`, {
               refresh_token: refreshToken
+            }, {
+              headers: { 'ngrok-skip-browser-warning': 'true' }
             });
             
             const { access_token } = response.data;

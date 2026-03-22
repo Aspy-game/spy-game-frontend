@@ -7,6 +7,7 @@ export interface User {
   email?: string;
   avatar_url?: string;
   role?: Role;
+  balance?: number;
 }
 
 export type RoomStatus = 'waiting' | 'in_game' | 'finished';
@@ -27,6 +28,7 @@ export interface LoginResponse {
   access_token: string;
   refresh_token: string;
   expires_in: number;
+  role?: Role;
 }
 
 export interface RefreshResponse {

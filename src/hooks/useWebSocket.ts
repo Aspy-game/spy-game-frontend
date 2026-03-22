@@ -1,32 +1,34 @@
 import { Client } from '@stomp/stompjs';
 import type { StompSubscription } from '@stomp/stompjs';
-import SockJS from 'sockjs-client';
 import { useCallback, useRef, useState } from 'react';
-
-const SOCKET_URL = import.meta.env.VITE_WS_URL || 'http://localhost:8080/ws-game';
 
 export const useWebSocket = () => {
   const clientRef = useRef<Client | null>(null);
   const [connected, setConnected] = useState(false);
 
   const connect = useCallback((onConnectCallback?: () => void) => {
+    // Nếu đã có client đang chạy, deactivate nó trước khi tạo mới (reset)
     if (clientRef.current) {
-      console.log('WebSocket client already exists.');
-      return;
+      console.log('Resetting existing WebSocket client...');
+      clientRef.current.deactivate();
+      clientRef.current = null;
     }
 
-    const socket = new SockJS(SOCKET_URL);
+    const SOCKET_URL = import.meta.env.VITE_WS_URL || 'ws://localhost:8080/ws';
+
     const client = new Client({
-      webSocketFactory: () => socket,
+      webSocketFactory: () => new WebSocket(SOCKET_URL),
       debug: (str: string) => console.log(`[WS-DEBUG]: ${str}`),
       reconnectDelay: 5000,
       heartbeatIncoming: 4000,
       heartbeatOutgoing: 4000,
     });
 
+    // ✅ Gán trước khi activate để subscribe() dùng được ngay
+    clientRef.current = client;
+
     client.onConnect = (frame: any) => {
       console.log('WebSocket Connected: ' + frame);
-      clientRef.current = client;
       setConnected(true);
       onConnectCallback?.();
     };
@@ -38,7 +40,7 @@ export const useWebSocket = () => {
     };
 
     client.onStompError = (frame: any) => {
-      console.error('Broker reported error: ' + (frame.headers ? frame.headers['message'] : 'Unknown error'));
+      console.error('Broker reported error: ' + (frame.headers?.['message'] ?? 'Unknown error'));
       console.error('Additional details: ' + frame.body);
     };
 
@@ -50,11 +52,13 @@ export const useWebSocket = () => {
     if (clientRef.current) {
       console.log('Deactivating WebSocket client...');
       clientRef.current.deactivate();
+      clientRef.current = null;
+      setConnected(false);
     }
   }, []);
 
   const sendMessage = useCallback((destination: string, body: any) => {
-    if (clientRef.current && clientRef.current.connected) {
+    if (clientRef.current?.connected) {
       clientRef.current.publish({
         destination,
         body: JSON.stringify(body),
@@ -62,18 +66,21 @@ export const useWebSocket = () => {
     }
   }, []);
 
-  const subscribe = useCallback((topic: string, callback: (message: any) => void): StompSubscription | null => {
-    if (clientRef.current && clientRef.current.connected) {
-      return clientRef.current.subscribe(topic, (message: any) => {
-        try {
-          callback(JSON.parse(message.body));
-        } catch (e) {
-          console.error('Error parsing message body:', e);
-        }
-      });
-    }
-    return null;
-  }, []);
+  const subscribe = useCallback(
+    (topic: string, callback: (message: any) => void): StompSubscription | null => {
+      if (clientRef.current?.connected) {
+        return clientRef.current.subscribe(topic, (message: any) => {
+          try {
+            callback(JSON.parse(message.body));
+          } catch (e) {
+            console.error('Error parsing message body:', e);
+          }
+        });
+      }
+      return null;
+    },
+    []
+  );
 
   return { connect, disconnect, sendMessage, subscribe, connected };
 };

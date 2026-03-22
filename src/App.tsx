@@ -10,6 +10,7 @@ import Admin from './pages/tsx/Admin';
 
  import Lobby from './pages/tsx/Lobby';
 import RoomLobby from './pages/tsx/RoomLobby';
+import GameScreen from './pages/tsx/GameScreen';
 
 import bg from '../img/185eff45-e478-44e3-ae2c-26ed58d907e5.jpg';
 import './pages/css/home.css';
@@ -22,14 +23,16 @@ import Round1Enter from './pages/tsx/room/Round1Enter';
 // ... thêm dần các màn hình khác vào đây
 import useSettingStore from './store/settingStore';
 import bgMusic from './assets/nhacnen.mp3';
-import Round1Enter    from './pages/tsx/room/Round1Enter';
 import DescribeNotify from './pages/tsx/room/DescribeNotify';
 import VoteFlow       from './pages/tsx/room/VoteFlow';
 import Round2Flow     from './pages/tsx/room/Round2Flow';
 import ResultVote     from './pages/tsx/room/components/results/ResultVote';
 import ResultMostVoted from './pages/tsx/room/components/results/ResultMostVoted';
 import ResultSpySafe  from './pages/tsx/room/components/results/ResultSpySafe';
+import Round3Flow from './pages/tsx/room/Round3Flow';
 
+
+import AdminMenu from './components/AdminMenu';
 
 const PAGE_W = 1440;
 const PAGE_H = 1080;
@@ -53,8 +56,6 @@ function usePageScale() {
 // ─── SCALED PAGE WRAPPER ─────────────────────────────────────────────────────
 function ScaledPage({ children }: { children: React.ReactNode }) {
   const scale = usePageScale();
-  const location = useLocation();
-  const navigate = useNavigate();
   
   // transform: scale() không thu nhỏ layout space thực tế
   // → dùng margin âm để bù lại phần không gian thừa sau khi scale
@@ -92,43 +93,6 @@ function ScaledPage({ children }: { children: React.ReactNode }) {
           overflow: 'hidden',
         }}
       >
-        {/* 1. Nút Quay lại — Đặt TRƯỚC khung "Vòng" trong container scaled */}
-        {!location.pathname.endsWith('/') && location.pathname !== '/lobby' && (
-          <button
-            onClick={() => navigate('/')}
-            style={{
-              position: 'absolute',
-              top: '20px',
-              left: '21px', 
-              width: '82px',
-              height: '82px',
-              borderRadius: '50%', 
-              background: 'rgba(207, 147, 37, 0.9)', // Màu vàng đồng nhất với các badge khác
-              border: 'none',
-              cursor: 'pointer',
-              zIndex: 1000,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              transition: 'all 0.2s ease',
-              boxShadow: '0 4px 12px rgba(0,0,0,0.4)',
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.background = 'rgba(207, 147, 37, 1)';
-              e.currentTarget.style.transform = 'scale(1.05)';
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.background = 'rgba(207, 147, 37, 0.9)';
-              e.currentTarget.style.transform = 'scale(1)';
-            }}
-            title="Quay lại"
-          >
-            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M19 12H5"></path>
-              <polyline points="12 19 5 12 12 5"></polyline>
-            </svg>
-          </button>
-        )}
         {children}
       </div>
     </div>
@@ -136,43 +100,29 @@ function ScaledPage({ children }: { children: React.ReactNode }) {
 }
 
 // ─── HOME ────────────────────────────────────────────────────────────────────
-const Home = () => (
-  <ScaledPage>
-    <div className="page page-home" style={{ backgroundImage: `url(${bg})`, backgroundRepeat: 'no-repeat', backgroundSize: '100% 100%' }}>
-      <div className="title-floating">
-        <div className="title-back">
-          <span className="luckiest back">KHÔNG PHAI TÔI</span>
-          <span className="luckiest back comma">,</span>
-        </div>
-        <div className="title-front">
-          <span className="luckiest front">KHÔNG PHAI TÔI</span>
-          <span className="luckiest front comma">,</span>
-        </div>
-      </div>
-      <div className="home-actions">
-        <Link to="/login" className="action-text">Đăng nhập</Link>
-        <Link to="/register" className="action-text">Đăng ký</Link>
-      </div>
-      <div className="home-help">
-        <div className="help-box">?</div>
-      </div>
-    </div>
-  </ScaledPage>
-);
+const Home = () => {
+  const [showRules, setShowRules] = useState(false);
 
-// ─── LOBBY ───────────────────────────────────────────────────────────────────
-// const Lobby = () => {
-//   const { user } = useAuthStore();
-//   // const { logout, loading } = useAuth();
-//   return (
-//     <ScaledPage>
-//       <div className="page page-home" style={{ backgroundImage: `url(${bg})`, backgroundRepeat: 'no-repeat', backgroundSize: '100% 100%' }}>
-//         <div className="lobby-center">
-//           <h1 className="lobby-greeting">Chào mừng, {user?.display_name}!</h1>
-//           <p className="lobby-sub">Bạn đã sẵn sàng để bắt đầu trò chơi chưa?</p>
-//           <div className="lobby-actions">
-//             <button className="lobby-btn">Tạo phòng</button>
-//             <button className="lobby-btn secondary">Vào phòng</button>
+  return (
+    <ScaledPage>
+      <div className="page page-home" style={{ backgroundImage: `url(${bg})`, backgroundRepeat: 'no-repeat', backgroundSize: '100% 100%' }}>
+        <div className="title-floating">
+          <div className="title-back">
+            <span className="luckiest back">KHÔNG PHAI TÔI</span>
+            <span className="luckiest back comma">,</span>
+          </div>
+          <div className="title-front">
+            <span className="luckiest front">KHÔNG PHAI TÔI</span>
+            <span className="luckiest front comma">,</span>
+          </div>
+        </div>
+        <div className="home-actions">
+          <Link to="/login" className="action-text">Đăng nhập</Link>
+          <Link to="/register" className="action-text">Đăng ký</Link>
+        </div>
+        <div className="home-help">
+          <div className="help-box" onClick={() => setShowRules(true)}>?</div>
+        </div>
 
         {showRules && (
           <div className="rules-modal">
@@ -192,20 +142,32 @@ const Home = () => (
   );
 };
 
+// ─── LOBBY ───────────────────────────────────────────────────────────────────
+// const Lobby = () => {
+//   const { user } = useAuthStore();
+//   // const { logout, loading } = useAuth();
+//   return (
+//     <ScaledPage>
+//       <div className="page page-home" style={{ backgroundImage: `url(${bg})`, backgroundRepeat: 'no-repeat', backgroundSize: '100% 100%' }}>
+//         <div className="lobby-center">
+//           <h1 className="lobby-greeting">Chào mừng, {user?.display_name}!</h1>
+//           <p className="lobby-sub">Bạn đã sẵn sàng để bắt đầu trò chơi chưa?</p>
+//           <div className="lobby-actions">
+//             <button className="lobby-btn">Tạo phòng</button>
+//             <button className="lobby-btn secondary">Vào phòng</button>
+//           </div>
+//         </div>
+//       </div>
+//     </ScaledPage>
+//   );
+// };
+
 
 // ─── PLACEHOLDER PAGES ───────────────────────────────────────────────────────
 const Room = () => (
   <ScaledPage>
     <div className="page page-home" style={{ backgroundImage: `url(${bg})`, backgroundRepeat: 'no-repeat', backgroundSize: '100% 100%' }}>
       <div className="lobby-center"><h1 className="lobby-greeting">Phòng chờ</h1></div>
-    </div>
-  </ScaledPage>
-);
-
-const Game = () => (
-  <ScaledPage>
-    <div className="page page-home" style={{ backgroundImage: `url(${bg})`, backgroundRepeat: 'no-repeat', backgroundSize: '100% 100%' }}>
-      <div className="lobby-center"><h1 className="lobby-greeting">Trong ván chơi</h1></div>
     </div>
   </ScaledPage>
 );
@@ -218,7 +180,8 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
 
 const AdminRoute = ({ children }: { children: React.ReactNode }) => {
   const { user, isAuthenticated } = useAuthStore();
-  return isAuthenticated && user?.role === 'ROLE_ADMIN' ? <>{children}</> : <Navigate to="/lobby" />;
+  const isAdmin = user?.role === 'ROLE_ADMIN'
+  return isAuthenticated && isAdmin ? <>{children}</> : <Navigate to="/lobby" />;
 };
   
 const AuthRoute = ({ children }: { children: React.ReactNode }) => {
@@ -264,14 +227,14 @@ function App() {
         <Route path="/register" element={<AuthRoute><ScaledPage><Register /></ScaledPage></AuthRoute>} />
         <Route path="/forgot" element={<AuthRoute><ScaledPage><Forgot /></ScaledPage></AuthRoute>} />
         <Route path="/reset" element={<AuthRoute><ScaledPage><Reset /></ScaledPage></AuthRoute>} />
-
+        <Route path="/admin" element={<AdminRoute><ScaledPage><Admin /></ScaledPage></AdminRoute>} />
         {/* ── Protected ── */}
         <Route path="/lobby" element={<ProtectedRoute><ScaledPage><Lobby /></ScaledPage></ProtectedRoute>} />
 
 
 
         <Route path="/room/:roomId" element={<ProtectedRoute><ScaledPage><RoomLobby /></ScaledPage></ProtectedRoute>} />
-        <Route path="/game/:id" element={<ProtectedRoute><Game /></ProtectedRoute>} />
+        <Route path="/game/:matchId" element={<ProtectedRoute><ScaledPage><GameScreen /></ScaledPage></ProtectedRoute>} />
 
         {/* ── DEV ONLY — xóa trước khi nộp ── */}
         <Route path="/dev/round1"          element={<ScaledPage><Round1Enter /></ScaledPage>} />
@@ -325,6 +288,7 @@ function App() {
         <Route path="/game/:roomId/round2/typing"           element={<ProtectedRoute><ScaledPage><Round2Typing /></ScaledPage></ProtectedRoute>} />
         <Route path="/game/:roomId/round2/after-r1"         element={<ProtectedRoute><ScaledPage><Round2AfterR1 /></ScaledPage></ProtectedRoute>} /> */}
       </Routes>
+      <AdminMenu />
     </Router>
   );
 }

@@ -10,7 +10,16 @@ export interface Player {
   seatIndex: number;
   isTyping?: boolean;
   description?: string;
-  role?: 'SPY' | 'CIVILIAN';
+  role?: 'SPY' | 'CIVILIAN' | 'unknown';
+  hasVoted?: boolean;
+  isAI?: boolean;
+}
+
+export interface RoleCheckResult {
+  role: 'SPY' | 'CIVILIAN';
+  isCorrect: boolean;
+  rewardCoins: number;
+  abilityAvailable?: 'manipulate_ai' | 'infection' | null;
 }
 
 export interface ChatMessage {

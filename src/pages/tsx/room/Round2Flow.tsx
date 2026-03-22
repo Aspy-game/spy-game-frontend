@@ -13,20 +13,22 @@ import '../../css/room/round2-flow.css';
 import GuessingView from './components/round2/GuessingView';
 import GuessCorrectNotify from './components/round2/GuessCorrectNotify';
 import ManipulationView from './components/round2/ManipulationView';
+import CorruptSelectView from './components/round2/CorruptSelectView';
 import WaitingView from './components/round2/WaitingView';
 import GhostChatView from './components/round2/GhostChatView';
 import AfterR1View from './components/round2/AfterR1View';
 import TypingAfterR1View from './components/round2/TypingAfterR1View';
 
 import { gameService } from '../../../services';
-import type { GameRoom, Player } from '../../../types/models';
+import type { GameRoom, Player, RoleCheckResult } from '../../../types/models';
 import useAuthStore from '../../../store/authStore';
 
 // --- Types ---
 type GameState =
   | 'SELF_GUESSING'           // Tất cả người chơi tự đoán vai trò
-  | 'GUESS_CORRECT_NOTIFY'    // Thông báo đoán đúng (chỉ hiện với spy đoán đúng + còn AI)
+  | 'GUESS_CORRECT_NOTIFY'    // Thông báo đoán đúng
   | 'PROMPTING_MANIPULATION'  // Hỏi có muốn điều khiển AI không
+  | 'CORRUPTING_HUMAN'        // Chọn người để tha hóa
   | 'ROUND_2_STARTING'        // Màn 2 bắt đầu (Banner "Vòng 2")
   | 'GHOST_CHATTING_AI'       // Vòng 2 với quyền dùng AI
   | 'GHOST_CHATTING_MANUAL'   // Vòng 2 không dùng AI (tự nói)
@@ -42,6 +44,7 @@ const Round2Flow: React.FC = () => {
   const [room, setRoom] = useState<GameRoom | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [guessResult, setGuessResult] = useState<RoleCheckResult | null>(null);
 
   useEffect(() => {
     const fetchRoom = async () => {
@@ -68,17 +71,6 @@ const Round2Flow: React.FC = () => {
   // The current player (me)
   const myPlayer = room?.players?.find((p) => p.id === user?.user_id || p.displayName === (user?.display_name ?? 'Tôi'));
 
-  /**
-   * Kiểm tra điều kiện để hiển thị màn chọn điều khiển AI:
-   */
-  const canControlAI = (guess: 'SPY' | 'CIVILIAN'): boolean => {
-    if (!myPlayer || !room) return false;
-    const isCorrectGuess = myPlayer.role === guess;
-    const isSpy = myPlayer.role === 'SPY';
-    const hasAI = room.hasAI;
-    return isCorrectGuess && isSpy && hasAI;
-  };
-
   // Tự động chuyển từ Banner "Vòng 2" sang màn hình Chat sau 1 giây
   useEffect(() => {
     if (gameState === 'ROUND_2_STARTING') {
@@ -95,28 +87,32 @@ const Round2Flow: React.FC = () => {
     navigate(`/game/${roomId}/vote/notify`);
   };
 
-  const handleSelfGuessSubmit = (guess: 'SPY' | 'CIVILIAN') => {
-    if (!myPlayer) return;
-    console.log(`[Round2Flow] Player guessed: ${guess}, actual role: ${myPlayer.role}`);
-
-    const isCorrect = myPlayer.role === guess;
-
-    if (!isCorrect) {
-      // Đoán sai → Vẫn được vào ván (Manual)
-      setGameState('ROUND_2_STARTING');
-      return;
-    }
-
-    if (canControlAI(guess)) {
-      setGameState('GUESS_CORRECT_NOTIFY');
-    } else {
-      // Đoán đúng nhưng là Civilian hoặc không còn AI → Vẫn được vào ván (Manual)
+  const handleSelfGuessSubmit = async (guess: 'SPY' | 'CIVILIAN') => {
+    if (!roomId) return;
+    try {
+      const result = await gameService.guessRole(roomId, guess);
+      setGuessResult(result);
+      
+      if (result.isCorrect) {
+        setGameState('GUESS_CORRECT_NOTIFY');
+      } else {
+        setGameState('ROUND_2_STARTING');
+      }
+    } catch (err) {
+      console.error('Failed to submit guess', err);
+      // Fallback: still continue game
       setGameState('ROUND_2_STARTING');
     }
   };
 
   const handleCorrectNotifyDone = () => {
-    setGameState('PROMPTING_MANIPULATION');
+    if (guessResult?.abilityAvailable === 'manipulate_ai') {
+      setGameState('PROMPTING_MANIPULATION');
+    } else if (guessResult?.abilityAvailable === 'infection') {
+      setGameState('CORRUPTING_HUMAN');
+    } else {
+      setGameState('ROUND_2_STARTING');
+    }
   };
 
   const handleManipulationChoice = (choice: 'CHATBOT' | 'MANUAL') => {
@@ -127,6 +123,11 @@ const Round2Flow: React.FC = () => {
       // Chọn "Tự nói" (không dùng AI) → Vẫn được vào ván (Manual)
       setGameState('ROUND_2_STARTING');
     }
+  };
+
+  const handleInfectionComplete = (targetId: number) => {
+    console.log(`[Round2Flow] Infection complete on target: ${targetId}`);
+    setGameState('ROUND_2_STARTING');
   };
 
   // --- Render Logic ---
@@ -201,8 +202,9 @@ const Round2Flow: React.FC = () => {
         </header>
 
         {gameState === 'SELF_GUESSING'        && <GuessingView onSubmit={handleSelfGuessSubmit} />}
-        {gameState === 'GUESS_CORRECT_NOTIFY' && <GuessCorrectNotify onDone={handleCorrectNotifyDone} />}
+        {gameState === 'GUESS_CORRECT_NOTIFY' && <GuessCorrectNotify result={guessResult} onDone={handleCorrectNotifyDone} />}
         {gameState === 'PROMPTING_MANIPULATION' && <ManipulationView onChoice={handleManipulationChoice} />}
+        {gameState === 'CORRUPTING_HUMAN' && <CorruptSelectView round={2} onComplete={handleInfectionComplete} />}
         {gameState === 'AFTER_R1'             && <AfterR1View />}
         {gameState === 'TYPING_AFTER_R1'      && <TypingAfterR1View />}
         {gameState === 'ROUND_2_STARTING'     && <WaitingView text="Vòng 2" />}
