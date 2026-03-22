@@ -119,11 +119,10 @@ const CorruptSelectView: React.FC<Props> = ({
   const handleConfirm = async () => {
     if (!selectedId) return;
     try {
-      await gameService.corruptPlayer(roomId, selectedId);
+      await gameService.infectPlayer(roomId, selectedId);
       setPhase('CONFIRMED');
     } catch (err) {
-      console.error('Failed to corrupt player', err);
-      // Optional: show error toast to user
+      console.error('Failed to infect player', err);
     }
   };
 

@@ -38,9 +38,6 @@ interface KeywordPair {
 }
 
 interface GameSettings {
-  maxPlayers: number;
-  minPlayers: number;
-  spiesCount: number;
   describeDuration: number;
   discussDuration: number;
   voteDuration: number;
@@ -64,7 +61,7 @@ const Admin: React.FC = () => {
   const [newKeyword, setNewKeyword] = useState({ keyword1: '', keyword2: '', category: '' });
 
   useEffect(() => {
-    const isAdmin = user?.role === 'ROLE_ADMIN'
+    const isAdmin = user?.role === 'ROLE_ADMIN' 
     if (!user || !isAdmin) {
       navigate('/lobby');
       return;
@@ -104,9 +101,6 @@ const Admin: React.FC = () => {
 
     // Map camelCase to snake_case for backend
     const payload = {
-      max_players: settings.maxPlayers,
-      min_players: settings.minPlayers,
-      spies_count: settings.spiesCount,
       describe_duration: settings.describeDuration,
       discuss_duration: settings.discussDuration,
       vote_duration: settings.voteDuration,
@@ -352,9 +346,6 @@ const Admin: React.FC = () => {
           <form onSubmit={handleUpdateSettings} style={{ maxWidth: '600px' }}>
             <div style={{ display: 'grid', gap: '20px' }}>
               {[
-                { label: 'Số người chơi tối đa', key: 'maxPlayers', min: 2, max: 20 },
-                { label: 'Số người chơi tối thiểu', key: 'minPlayers', min: 2, max: 10 },
-                { label: 'Số lượng gián điệp', key: 'spiesCount', min: 1, max: 5 },
                 { label: 'Thời gian mô tả (giây)', key: 'describeDuration', min: 10, max: 300 },
                 { label: 'Thời gian thảo luận (giây)', key: 'discussDuration', min: 10, max: 300 },
                 { label: 'Thời gian bỏ phiếu (giây)', key: 'voteDuration', min: 10, max: 120 },

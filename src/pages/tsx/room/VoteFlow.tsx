@@ -138,9 +138,9 @@ const VoteFlow: React.FC = () => {
       });
 
       // Subscribe to votes (giả sử server gửi event khi có ai đó vote)
-      const voteSub = subscribe(`/topic/room/${roomId}/votes`, (data: { voterId: number, targetId: number }) => {
-        console.log(`[WS] Player ${data.voterId} voted for ${data.targetId}`);
-        // Cập nhật UI nếu cần (ví dụ hiện icon đã vote trên avatar)
+      const voteSub = subscribe(`/topic/room/${roomId}/votes`, (data: { voterId: number }) => {
+        console.log(`[WS] Player ${data.voterId} has voted`);
+        setPlayers(prev => prev.map(p => p.id === data.voterId ? { ...p, hasVoted: true } : p));
       });
 
       // Subscribe to room state (để tự động chuyển sang kết quả khi hết giờ)
@@ -242,6 +242,8 @@ const VoteFlow: React.FC = () => {
                 const isSelected = selectedPlayerId === player.id;
                 const isVoted    = votedPlayerId === player.id;
                 const isMe       = !!player.isMe;
+                const isAI       = !!player.isAI;
+                const playerHasVoted = !!player.hasVoted;
 
                 return (
                   <div
@@ -251,6 +253,7 @@ const VoteFlow: React.FC = () => {
                       isVoted                           ? 'vf-avatar--voted'    : '',
                       isSelected && !isVoted            ? 'vf-avatar--selected' : '',
                       !isMe && !isSelected && !hasVoted ? 'vf-avatar--hoverable': '',
+                      isAI                              ? 'vf-avatar--ai'       : '',
                     ].filter(Boolean).join(' ')}
                     style={{
                       top: pos.top, left: pos.left,
@@ -265,8 +268,12 @@ const VoteFlow: React.FC = () => {
                     }
 
                     <div className="vf-player-name-tag">
-                      {player.isMe ? `${idx + 1}. Tôi` : `${idx + 1}. ${player.displayName}`}
+                      {player.isMe ? `${idx + 1}. Tôi` : `${idx + 1}. ${player.displayName} ${isAI ? '(AI)' : ''}`}
                     </div>
+
+                    {playerHasVoted && (
+                      <div className="vf-has-voted-badge" title="Đã vote">🗳️</div>
+                    )}
 
                     {isVoted && (
                       <div className="vf-selected-check vf-voted-check">

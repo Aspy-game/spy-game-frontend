@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import useAuthStore from '../../store/authStore';
 import axiosInstance from '../../api/axiosInstance';
+import { gameService } from '../../services/gameService';
 import { useWebSocket } from '../../hooks/useWebSocket';
 import bg from '../../../img/Gemini_Generated_Image_fkpdh6fkpdh6fkpd.png';
 
@@ -45,6 +46,7 @@ const RoomLobby: React.FC = () => {
   const { user } = useAuthStore();
   const navigate = useNavigate();
   const { connect, disconnect, subscribe, sendMessage, connected } = useWebSocket();
+  const setUser = useAuthStore(state => state.setUser);
   
   const [roomInfo, setRoomInfo] = useState<any>(null);
   const [players, setPlayers] = useState<Player[]>([]);
@@ -54,27 +56,49 @@ const RoomLobby: React.FC = () => {
 
   useEffect(() => {
     fetchRoomDetail();
+    fetchUserProfile(); // Lấy số dư mới nhất
     connect(() => {
-      // Subscriptions will be handled when connected changes
+      // Send addUser when connected
+      if (roomId) {
+        sendMessage(`/app/game.addUser/${roomId}`, {});
+      }
     });
     return () => disconnect();
   }, [roomId]);
 
   useEffect(() => {
     if (connected && roomId) {
+      console.log(`[WS-SUBSCRIBE]: Subscribing to /topic/room/${roomId}`);
       // Subscribe to room updates
       subscribe(`/topic/room/${roomId}`, (update: any) => {
-        if (update.type === 'PLAYER_JOIN' || update.type === 'PLAYER_LEAVE' || update.type === 'ROOM_UPDATE') {
+        console.log('[WS-EVENT]: Received update:', update);
+        const type = update.type || update.status; // Support both naming conventions
+
+        if (['PLAYER_JOIN', 'PLAYER_LEAVE', 'ROOM_UPDATE', 'JOIN', 'waiting'].includes(type)) {
           fetchRoomDetail();
-        } else if (update.type === 'CHAT') {
+        } else if (type === 'PLAYER_KICKED') {
+          if (update.target_user_id === user?.user_id) {
+            alert('Bạn đã bị mời ra khỏi phòng!');
+            navigate('/lobby');
+          } else {
+            fetchRoomDetail();
+          }
+        } else if (type === 'CHAT' || update.content) {
+          // If it has content and sender, it's likely a chat message even if type is missing
           setChatMessages(prev => [...prev, {
             id: Date.now().toString(),
-            sender: update.sender,
-            text: update.content,
+            sender: update.sender || 'Hệ thống',
+            text: update.content || update.text || '',
             color: update.sender === user?.display_name ? '#FFCC00' : '#FFD700'
           }]);
-        } else if (update.type === 'GAME_START') {
-          navigate(`/game/${roomId}/round1`);
+        } else if (type === 'GAME_START' || type === 'started') {
+          const matchId = update.matchId || update.match_id || update.match_ID;
+          if (matchId) {
+            console.log('[WS-NAVIGATE]: Moving to game with matchId:', matchId);
+            navigate(`/game/${matchId}`);
+          } else {
+            console.error('[WS-ERROR]: GAME_START received but match_id is missing!');
+          }
         }
       });
 
@@ -82,6 +106,15 @@ const RoomLobby: React.FC = () => {
       subscribe(`/user/queue/role`, (roleInfo: any) => {
         console.log('Private Role Info:', roleInfo);
         // Store this in a game state or context
+      });
+
+      // Subscribe to room-specific events (e.g., being kicked)
+      subscribe(`/user/queue/room-events`, (event: any) => {
+        console.log('[WS-EVENT]: Received room-event:', event);
+        if (event.type === 'KICKED') {
+          alert('Bạn đã bị mời ra khỏi phòng!');
+          navigate('/lobby');
+        }
       });
 
       // Subscribe to role check result
@@ -112,12 +145,36 @@ const RoomLobby: React.FC = () => {
     }
   };
 
-  const handleStartGame = () => {
-    if (roomInfo?.host_id === user?.user_id) {
-      sendMessage(`/app/room/${roomId}/start`, {});
+  const fetchUserProfile = async () => {
+    try {
+      const response = await axiosInstance.get('/auth/me'); // Hoặc endpoint profile của bạn
+      if (response.data) {
+        setUser(response.data); // Cập nhật store với balance mới
+      }
+    } catch (error) {
+      console.error('Lỗi khi tải thông tin người dùng:', error);
+    }
+  };
+
+  const handleStartGame = async () => {
+    if (isHost) {
+      if (players.length < 3) {
+        alert('Cần ít nhất 3 người chơi để bắt đầu game!');
+        return;
+      }
+      try {
+        const response = await axiosInstance.post(`/rooms/${roomId}/start`);
+        const { match_id } = response.data;
+        console.log('Game started with match_id:', match_id);
+      } catch (error: any) {
+        const errorMsg = error.response?.data?.error || error.response?.data?.message || 'Không thể bắt đầu trò chơi.';
+        if (errorMsg.toLowerCase().includes('balance')) {
+          alert(`Số dư không đủ! \n\n${errorMsg}\n\n(Admin có thể sử dụng Menu Admin > Tặng Xu để nạp thêm)`);
+        } else {
+          alert(errorMsg);
+        }
+      }
     } else {
-      // Logic for ready status if implemented in BE
-      // sendMessage(`/app/room/${roomId}/ready`, { ready: true });
       alert('Chỉ chủ phòng mới có thể bắt đầu game!');
     }
   };
@@ -132,11 +189,45 @@ const RoomLobby: React.FC = () => {
     }
   };
 
+  const handleTransferHost = async (targetUserId: number) => {
+    if (window.confirm('Bạn có chắc chắn muốn nhường quyền Trưởng phòng?')) {
+      try {
+        await axiosInstance.post(`/rooms/${roomId}/transfer-host`, { user_id: targetUserId });
+      } catch (error: any) {
+        alert(error.response?.data?.error || 'Lỗi khi nhường quyền Trưởng phòng.');
+      }
+    }
+  };
+
+  const handleSetSpy = async (targetUserId: number, targetName: string) => {
+    if (window.confirm(`Bạn có chắc chắn muốn chọn ${targetName} làm Gián điệp?`)) {
+      try {
+        await gameService.setSpy(roomId!, String(targetUserId));
+        alert(`Đã chọn ${targetName} làm Gián điệp!`);
+        fetchRoomDetail();
+      } catch (error: any) {
+        alert(error.response?.data?.error || error.response?.data?.message || 'Lỗi khi chọn Gián điệp.');
+      }
+    }
+  };
+
+  const handleKickPlayer = async (targetUserId: number) => {
+    if (window.confirm('Bạn có chắc chắn muốn mời người chơi này ra khỏi phòng?')) {
+      try {
+        await axiosInstance.post(`/rooms/${roomId}/kick`, { user_id: targetUserId });
+      } catch (error: any) {
+        alert(error.response?.data?.error || 'Lỗi khi mời người chơi ra khỏi phòng.');
+      }
+    }
+  };
+
   const handleSendMessage = () => {
     if (!inputMessage.trim()) return;
-    sendMessage(`/app/room/${roomId}/chat`, { content: inputMessage });
+    sendMessage(`/app/game.sendMessage/${roomId}`, { content: inputMessage, sender: user?.display_name });
     setInputMessage('');
   };
+
+  const isHost = String(roomInfo?.host_id) === String(user?.user_id);
 
   return (
     <div 
@@ -154,8 +245,16 @@ const RoomLobby: React.FC = () => {
       </button>
 
       {/* ─── TOP RIGHT ROOM CODE ─── */}
-      <div className="room-code-box-new">
-        <span className="room-code-text">Mã: {roomInfo?.room_code || '...'}</span>
+      <div className="room-top-right-group">
+        {user?.balance !== undefined && (
+          <div className="user-balance-box">
+            <i className="fa-solid fa-coins"></i>
+            <span>{user.balance}</span>
+          </div>
+        )}
+        <div className="room-code-box-new">
+          <span className="room-code-text">Mã: {roomInfo?.room_code || '...'}</span>
+        </div>
       </div>
 
       {/* ─── PLAYERS CIRCLE ─── */}
@@ -178,10 +277,45 @@ const RoomLobby: React.FC = () => {
                 )}
               </div>
               {player && (
-                <span className="player-name-new">
-                  {player.user_id === user?.user_id ? 'Tôi' : player.display_name}
-                  {player.user_id === roomInfo?.host_id && ' 👑'}
-                </span>
+                <div className="player-info-container">
+                  <span className="player-name-new">
+                    {String(player.user_id) === String(user?.user_id) ? 'Tôi' : player.display_name}
+                    {String(player.user_id) === String(roomInfo?.host_id) && ' 👑'}
+                  </span>
+                  
+                  {/* Host Actions: Chỉ hiển thị cho Host */}
+                  {isHost && (
+                    <div className="host-actions-overlay always-visible-host">
+                      <button 
+                        className="host-action-btn spy-select" 
+                        onClick={(e) => { e.stopPropagation(); handleSetSpy(player.user_id, player.display_name); }}
+                        title="Chọn làm Gián điệp (Host only)"
+                      >
+                        <i className="fa-solid fa-mask"></i>
+                      </button>
+                      
+                      {/* Các nút Kick và Transfer chỉ hiện cho người chơi KHÁC */}
+                      {String(player.user_id) !== String(user?.user_id) && (
+                        <>
+                          <button 
+                            className="host-action-btn kick" 
+                            onClick={(e) => { e.stopPropagation(); handleKickPlayer(player.user_id); }}
+                            title="Kick người chơi"
+                          >
+                            <i className="fa-solid fa-user-minus"></i>
+                          </button>
+                          <button 
+                            className="host-action-btn transfer" 
+                            onClick={(e) => { e.stopPropagation(); handleTransferHost(player.user_id); }}
+                            title="Nhường quyền trưởng phòng"
+                          >
+                            <i className="fa-solid fa-crown"></i>
+                          </button>
+                        </>
+                      )}
+                    </div>
+                  )}
+                </div>
               )}
             </div>
           );

@@ -9,6 +9,7 @@ import Settings from './Settings';
 import ChangePassword from './ChangePassword';
 import CreateRoom from './CreateRoom';
 import axiosInstance from '../../api/axiosInstance';
+import { useWebSocket } from '../../hooks/useWebSocket';
 
 interface FlyingCoin {
   id: number;
@@ -34,19 +35,62 @@ const Lobby: React.FC = () => {
   const [showCreateRoom, setShowCreateRoom] = useState(false);
 
   const [isReceived, setIsReceived] = useState(false);
-  const [coins, setCoins] = useState(100);
   const [flyingCoins, setFlyingCoins] = useState<FlyingCoin[]>([]);
   const [isShaking, setIsShaking] = useState(false);
+  const setUser = useAuthStore(state => state.setUser);
   
   const [rooms, setRooms] = useState<any[]>([]);
   const [searchCode, setSearchCode] = useState('');
   const [isLoadingRooms, setIsLoadingRooms] = useState(false);
+  const { connect, disconnect, subscribe, connected } = useWebSocket();
   
   const coinBoxRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     fetchRooms();
+    fetchUserProfile();
+    connect();
+    return () => disconnect();
   }, []);
+
+  const fetchUserProfile = async () => {
+    try {
+      const response = await axiosInstance.get('/auth/me');
+      if (response.data) {
+        setUser(response.data);
+      }
+    } catch (error) {
+      console.error('Lỗi khi tải thông tin người dùng:', error);
+    }
+  };
+
+  useEffect(() => {
+    if (connected) {
+      subscribe('/topic/rooms/lobby', (event: any) => {
+        const { type, room_id, room_code, current_players, max_players, status, is_private } = event;
+        
+        setRooms(prevRooms => {
+          if (type === 'ROOM_DELETED') {
+            return prevRooms.filter(r => r.room_id !== room_id);
+          }
+          
+          if (type === 'ROOM_UPDATED') {
+            const index = prevRooms.findIndex(r => r.room_id === room_id);
+            const updatedRoom = { room_id, room_code, current_players, max_players, status, is_private };
+            
+            if (index !== -1) {
+              const newRooms = [...prevRooms];
+              newRooms[index] = updatedRoom;
+              return newRooms;
+            } else if (!is_private && status === 'waiting') {
+              return [...prevRooms, updatedRoom];
+            }
+          }
+          return prevRooms;
+        });
+      });
+    }
+  }, [connected, subscribe]);
 
   const fetchRooms = async () => {
     try {
@@ -101,7 +145,7 @@ const Lobby: React.FC = () => {
 
     // Delay the coin addition and shake until animation finishes
     setTimeout(() => {
-      setCoins(prev => prev + amount);
+      fetchUserProfile(); // Cập nhật lại số dư từ server
       setIsShaking(true);
       setTimeout(() => setIsShaking(false), 500);
       setFlyingCoins([]);
@@ -141,12 +185,6 @@ const Lobby: React.FC = () => {
 
       {/* ─── TOP RIGHT NAV ─── */}
       <div className="lobby-nav-top-right">
-        {user?.role === 'ROLE_ADMIN' && (
-          <div className="nav-icon-btn" onClick={() => navigate('/admin')} style={{ cursor: 'pointer', background: 'rgba(255, 204, 0, 0.2)', color: '#FFCC00' }}>
-            <i className="fa-solid fa-user-shield"></i>
-            <span style={{ fontSize: '12px', marginLeft: '5px', fontWeight: 'bold' }}>Quản lý</span>
-          </div>
-        )}
         {/* <div className="nav-icon-btn" onClick={() => setShowFriends(true)} style={{ cursor: 'pointer' }}>
           <i className="fa-solid fa-user-group"></i>
         </div> */}
@@ -155,7 +193,7 @@ const Lobby: React.FC = () => {
         </div>
         <div className={`coin-box-lobby ${isShaking ? 'shake' : ''}`} ref={coinBoxRef}>
           <i className="fa-solid fa-coins" style={{ color: '#FFCC00', fontSize: '30px' }}></i>
-          <span className="coin-amount">{coins}</span>
+          <span className="coin-amount">{user?.balance || 0}</span>
           <span className="coin-plus">+</span>
         </div>
         <div className="nav-icon-btn" onClick={() => setShowSettings(true)} style={{ cursor: 'pointer' }}>

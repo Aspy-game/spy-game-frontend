@@ -18,18 +18,41 @@
     z-index: 100;
 }
 
-.room-code-box-new {
+.room-top-right-group {
     position: absolute;
     top: 30px;
     right: 50px;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 15px;
+    z-index: 100;
+}
+
+.room-code-box-new {
     background: #CF9325;
     padding: 10px 25px;
     border-radius: 30px;
     box-shadow: 0 4px 4px rgba(0,0,0,0.25);
-    z-index: 100;
     display: flex;
     align-items: center;
     justify-content: center;
+}
+
+.user-balance-box {
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(5px);
+    padding: 8px 20px;
+    border-radius: 20px;
+    border: 1px solid #FFCC00;
+    color: #FFCC00;
+    font-family: 'Baloo Bhaijaan 2', cursive;
+    font-size: 24px;
+    font-weight: 800;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.3);
 }
 
 .room-code-text {
@@ -184,5 +207,63 @@
     color: #333;
     font-size: 20px;
     cursor: pointer;
+}
+
+/* ─── HOST ACTIONS ─── */
+.player-info-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: relative;
+    width: 100%;
+}
+
+.host-actions-overlay {
+    display: none;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    gap: 15px;
+    background: rgba(0, 0, 0, 0.8);
+    padding: 10px 20px;
+    border-radius: 30px;
+    backdrop-filter: blur(8px);
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+    z-index: 10;
+}
+
+.player-avatar-slot:hover .host-actions-overlay,
+.host-actions-overlay.always-visible-host {
+    display: flex;
+}
+
+.host-action-btn {
+    background: none;
+    border: none;
+    color: white;
+    font-size: 24px;
+    cursor: pointer;
+    transition: transform 0.2s, color 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.host-action-btn:hover {
+    transform: scale(1.2);
+}
+
+.host-action-btn.kick:hover {
+    color: #ff4d4d;
+}
+
+.host-action-btn.transfer:hover {
+    color: #ffd700;
+}
+
+.host-action-btn.spy-select:hover {
+    color: #A00000;
 }
 

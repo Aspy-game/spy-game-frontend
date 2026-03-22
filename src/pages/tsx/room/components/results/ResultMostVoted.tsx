@@ -115,7 +115,7 @@ const ResultMostVoted: React.FC<Props> = ({
 
       <div className="dn-timesup-overlay">
         <div className="rmv-container">
-          <span className="rmv-title">NGƯỜI BỊ VOTE NHIỀU NHẤT</span>
+          <span className="rmv-title">THÔNG BÁO LOẠI</span>
           <div className="rmv-avatar-card">
             <div className="rmv-avatar-circle" style={{ background: player.bgColor }}>
               {player.avatarUrl ? (
@@ -124,11 +124,7 @@ const ResultMostVoted: React.FC<Props> = ({
                 <span className="rmv-avatar-emoji">{player.emoji}</span>
               )}
             </div>
-            <span className="rmv-player-name">{player.displayName}</span>
-            <div className="rmv-vote-count">
-              <span className="rmv-count-num">{player.voteCount}</span>
-              <span className="rmv-count-label">VOTES</span>
-            </div>
+            <span className="rmv-player-name">Người chơi {player.displayName} đã bị loại!</span>
           </div>
         </div>
       </div>

@@ -10,6 +10,7 @@ import Admin from './pages/tsx/Admin';
 
  import Lobby from './pages/tsx/Lobby';
 import RoomLobby from './pages/tsx/RoomLobby';
+import GameScreen from './pages/tsx/GameScreen';
 
 import bg from '../img/185eff45-e478-44e3-ae2c-26ed58d907e5.jpg';
 import './pages/css/home.css';
@@ -30,6 +31,8 @@ import ResultMostVoted from './pages/tsx/room/components/results/ResultMostVoted
 import ResultSpySafe  from './pages/tsx/room/components/results/ResultSpySafe';
 import Round3Flow from './pages/tsx/room/Round3Flow';
 
+
+import AdminMenu from './components/AdminMenu';
 
 const PAGE_W = 1440;
 const PAGE_H = 1080;
@@ -169,14 +172,6 @@ const Room = () => (
   </ScaledPage>
 );
 
-const Game = () => (
-  <ScaledPage>
-    <div className="page page-home" style={{ backgroundImage: `url(${bg})`, backgroundRepeat: 'no-repeat', backgroundSize: '100% 100%' }}>
-      <div className="lobby-center"><h1 className="lobby-greeting">Trong ván chơi</h1></div>
-    </div>
-  </ScaledPage>
-);
-
 // ─── ROUTE GUARDS ────────────────────────────────────────────────────────────
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const { isAuthenticated } = useAuthStore();
@@ -185,7 +180,8 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
 
 const AdminRoute = ({ children }: { children: React.ReactNode }) => {
   const { user, isAuthenticated } = useAuthStore();
-  return isAuthenticated && user?.role === 'ROLE_ADMIN' ? <>{children}</> : <Navigate to="/lobby" />;
+  const isAdmin = user?.role === 'ROLE_ADMIN'
+  return isAuthenticated && isAdmin ? <>{children}</> : <Navigate to="/lobby" />;
 };
   
 const AuthRoute = ({ children }: { children: React.ReactNode }) => {
@@ -238,7 +234,7 @@ function App() {
 
 
         <Route path="/room/:roomId" element={<ProtectedRoute><ScaledPage><RoomLobby /></ScaledPage></ProtectedRoute>} />
-        <Route path="/game/:id" element={<ProtectedRoute><Game /></ProtectedRoute>} />
+        <Route path="/game/:matchId" element={<ProtectedRoute><ScaledPage><GameScreen /></ScaledPage></ProtectedRoute>} />
 
         {/* ── DEV ONLY — xóa trước khi nộp ── */}
         <Route path="/dev/round1"          element={<ScaledPage><Round1Enter /></ScaledPage>} />
@@ -292,6 +288,7 @@ function App() {
         <Route path="/game/:roomId/round2/typing"           element={<ProtectedRoute><ScaledPage><Round2Typing /></ScaledPage></ProtectedRoute>} />
         <Route path="/game/:roomId/round2/after-r1"         element={<ProtectedRoute><ScaledPage><Round2AfterR1 /></ScaledPage></ProtectedRoute>} /> */}
       </Routes>
+      <AdminMenu />
     </Router>
   );
 }

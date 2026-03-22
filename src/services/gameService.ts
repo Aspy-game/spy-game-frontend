@@ -1,5 +1,5 @@
 import axiosInstance from '../api/axiosInstance';
-import type { GameRoom, ChatMessage, MostVotedResult } from '../types/models';
+import type { GameRoom, ChatMessage, MostVotedResult, RoleCheckResult } from '../types/models';
 
 export const gameService = {
   /**
@@ -37,8 +37,16 @@ export const gameService = {
   /**
    * Tha hóa một người chơi.
    */
-  corruptPlayer: async (roomId: string, targetId: number): Promise<void> => {
-    await axiosInstance.post(`/rooms/${roomId}/corrupt`, { targetId });
+  infectPlayer: async (matchId: string, targetId: number): Promise<void> => {
+    await axiosInstance.post(`/game/${matchId}/infect`, { target_id: targetId });
+  },
+
+  /**
+   * Sử dụng kỹ năng đặc biệt (ví dụ: Thao túng AI).
+   */
+  useAbility: async (matchId: string, content: string): Promise<{ is_manipulated: boolean }> => {
+    const response = await axiosInstance.post(`/game/${matchId}/use-ability`, { content });
+    return response.data;
   },
 
   /**
@@ -46,5 +54,20 @@ export const gameService = {
    */
   votePlayer: async (roomId: string, targetId: number): Promise<void> => {
     await axiosInstance.post(`/rooms/${roomId}/vote`, { targetId });
+  },
+
+  /**
+   * Gửi dự đoán vai trò.
+   */
+  guessRole: async (matchId: string, role: 'SPY' | 'CIVILIAN'): Promise<RoleCheckResult> => {
+    const response = await axiosInstance.post<RoleCheckResult>(`/game/${matchId}/guess-role`, { role });
+    return response.data;
+  },
+
+  /**
+   * Đặt người chơi làm Spy (Debug).
+   */
+  setSpy: async (roomId: string, userId: string): Promise<void> => {
+    await axiosInstance.post(`/rooms/${roomId}/admin/set-spy`, { user_id: userId });
   }
 };

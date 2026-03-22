@@ -84,6 +84,7 @@ const GhostChatView: React.FC<Props> = ({
 
   const [keyword, setKeyword] = useState(initialKeyword);
   const [civilianKeyword, setCivilianKeyword] = useState(initialCivilianKeyword);
+  const [isMeCorrupted, setIsMeCorrupted] = useState(isCorrupted);
 
   // Fetch initial data
   useEffect(() => {
@@ -100,6 +101,10 @@ const GhostChatView: React.FC<Props> = ({
           setKeyword(roomData.keyword || initialKeyword);
           setCivilianKeyword(roomData.civilianKeyword || initialCivilianKeyword);
           
+          if (roomData.corruptedPlayerId === user?.user_id) {
+            setIsMeCorrupted(true);
+          }
+
           const mappedPlayers = roomData.players.map(p => ({
             ...p,
             isMe: p.id === user?.user_id || p.displayName === myDisplayName,
@@ -143,9 +148,20 @@ const GhostChatView: React.FC<Props> = ({
         setPlayers(prev => prev.map(p => p.id === data.playerId ? { ...p, isTyping: data.isTyping } : p));
       });
 
+      // Lắng nghe thông báo tha hóa
+      const privateSub = subscribe('/queue/private', (data: any) => {
+        if (data.type === 'INFECTED') {
+          setIsMeCorrupted(true);
+          if (data.spyKeyword) {
+            setKeyword(data.spyKeyword);
+          }
+        }
+      });
+
       return () => {
         msgSub?.unsubscribe();
         typingSub?.unsubscribe();
+        privateSub?.unsubscribe();
       };
     }
   }, [connected, roomId, subscribe, user?.display_name]);
@@ -159,16 +175,24 @@ const GhostChatView: React.FC<Props> = ({
     if (!text) return;
     
     try {
-      const newMessage = await gameService.sendMessage(roomId, {
-        senderName: 'Tôi:',
-        nameClass: 'toi',
-        text
-      });
-      setMessages(prev => [...prev, newMessage]);
+      if (activeTab === 'AI' && canUseAI) {
+        // Thao túng AI
+        const res = await gameService.useAbility(roomId, text);
+        if (res.is_manipulated) {
+          // BE sẽ tự gửi tin nhắn AI qua socket, FE không cần thêm manual ở đây
+          // Nhưng có thể hiện thông báo "Đã gửi qua AI (+30 xu)"
+        }
+      } else {
+        const newMessage = await gameService.sendMessage(roomId, {
+          senderName: 'Tôi:',
+          nameClass: 'toi',
+          text
+        });
+        setMessages(prev => [...prev, newMessage]);
+      }
       setChatInput('');
     } catch (err) {
       console.error('Failed to send message', err);
-      // Optional: show toast error
     }
   };
 
@@ -180,7 +204,7 @@ const GhostChatView: React.FC<Props> = ({
 
   // ── Quyết định hiện badge nào ─────────────────────────────
   const keywordsToShow = useMemo(() => {
-    if (isCorrupted) {
+    if (isMeCorrupted) {
       return [
         { text: keyword,         type: 'spy'      }, // Đỏ — phe gián điệp
         { text: civilianKeyword, type: 'civilian' }, // Vàng — phe dân thường
@@ -189,10 +213,10 @@ const GhostChatView: React.FC<Props> = ({
     return canUseAI
       ? [{ text: keyword,         type: 'spy'      }]
       : [{ text: civilianKeyword, type: 'civilian' }];
-  }, [isCorrupted, canUseAI, keyword, civilianKeyword]);
+  }, [isMeCorrupted, canUseAI, keyword, civilianKeyword]);
 
   // Keyword dùng cho DescribeDiscussionFlow
-  const displayKeyword = isCorrupted ? keyword : keywordsToShow[0].text;
+  const displayKeyword = isMeCorrupted ? keyword : keywordsToShow[0].text;
 
   const showKeywordBadge = true;
 
@@ -286,8 +310,8 @@ const GhostChatView: React.FC<Props> = ({
           const pos          = AVATAR_POSITIONS[player.seatIndex] ?? { top: 0, left: 0 };
           const order        = SEAT_DISPLAY_ORDER[player.seatIndex] ?? (player.seatIndex + 1);
           const label        = player.isMe ? `${order}. Tôi` : `${order}. ${player.displayName}`;
-          const isCorrPlayer = corruptedPlayerId !== null && player.id === corruptedPlayerId;
-          const isSpyTeam    = (player.isMe && (canUseAI || isCorrupted)) || isCorrPlayer;
+          const isCorrPlayer = (corruptedPlayerId !== null && player.id === corruptedPlayerId) || (player.isMe && isMeCorrupted);
+          const isSpyTeam    = (player.isMe && (canUseAI || isMeCorrupted)) || isCorrPlayer;
 
           return (
             <div

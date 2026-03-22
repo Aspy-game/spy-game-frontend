@@ -58,7 +58,8 @@ const Round1Enter: React.FC = () => {
 
         const mappedPlayers = roomData.players.map(p => ({
           ...p,
-          isMe: p.id === user?.user_id || p.displayName === (user?.display_name ?? 'Tôi')
+          isMe: p.id === user?.user_id || p.displayName === (user?.display_name ?? 'Tôi'),
+          role: p.id === user?.user_id ? 'unknown' : p.role // Vòng 1 ẩn vai trò
         }));
         setPlayers(mappedPlayers);
       } catch (err) {
