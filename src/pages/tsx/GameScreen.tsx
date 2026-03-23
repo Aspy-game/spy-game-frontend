@@ -3,13 +3,13 @@ import { useNavigate, useParams } from 'react-router-dom';
 import useAuthStore from '../../store/authStore';
 import { gameApi } from '../../api/gameApi';
 import { useWebSocket } from '../../hooks/useWebSocket';
-import bg from '../../../img/185eff45-e478-44e3-ae2c-26ed58d907e5.jpg';
+import bg from '../../../img/Gemini_Generated_Image_fkpdh6fkpdh6fkpd.png';
 import '../css/game-screen.css';
 
 // Import Avatars
 import avatar1 from '../../../img/Gemini_Generated_Image_mz01hgmz01hgmz01.png';
 import avatar2 from '../../../img/Gemini_Generated_Image_olvekholvekholve.png';
-import avatar3 from '../../../img/Gemini_Generated_Image_v515kev515kev515.png';
+import avatar3 from '../../../img/hinhcao.jpg';
 import avatar4 from '../../../img/Gemini_Generated_Image_jhisy6jhisy6jhis.png';
 import avatar5 from '../../../img/Gemini_Generated_Image_8nnqwq8nnqwq8nnq.png';
 import avatar6 from '../../../img/Gemini_Generated_Image_59nsf059nsf059ns.png';
@@ -24,28 +24,72 @@ const avatarMap: { [key: number]: string } = {
 };
 
 // Helper for color mapping in anonymous mode
-const getPlayerColor = (displayName: string) => {
-  const match = displayName.match(/Người chơi (\w+)/i);
-  if (match) {
-    const color = match[1].toLowerCase();
-    const colors: { [key: string]: string } = {
-      red: '#FF4136',
-      blue: '#0074D9',
-      green: '#2ECC40',
-      yellow: '#FFDC00',
-      purple: '#B10DC9',
-      orange: '#FF851B',
-      pink: '#F012BE',
-      cyan: '#7FDBFF',
-      brown: '#85144b',
-      gray: '#AAAAAA',
-      white: '#FFFFFF',
-      black: '#111111'
-    };
-    return colors[color];
+const getPlayerColor = (displayName: string, colorCode?: string) => {
+  const color = (colorCode || "").toLowerCase();
+  const colors: { [key: string]: string } = {
+    red: '#FF4136',
+    blue: '#0074D9',
+    green: '#2ECC40',
+    yellow: '#FFDC00',
+    purple: '#B10DC9',
+    orange: '#FF851B',
+    pink: '#F012BE',
+    cyan: '#7FDBFF',
+    brown: '#85144b',
+    gray: '#AAAAAA',
+    white: '#FFFFFF',
+    black: '#111111'
+  };
+
+  if (colors[color]) return colors[color];
+
+  // Fallback for name parsing if colorCode is missing
+  const nameToColor: { [key: string]: string } = {
+    'mèo béo': 'red', 'cún con': 'blue', 'gấu trúc': 'green', 'vịt vàng': 'yellow',
+    'cáo nhỏ': 'purple', 'hổ con': 'orange', 'thỏ ngọc': 'pink', 'chim cánh cụt': 'cyan',
+    'sóc chuột': 'brown', 'voi con': 'gray', 'ngựa vằn': 'white', 'cá heo': 'black'
+  };
+
+  const lowerName = displayName?.toLowerCase() || '';
+  for (const [key, val] of Object.entries(nameToColor)) {
+    if (lowerName.includes(key)) return colors[val];
   }
+
+  // Legacy regex check
+  const match = displayName?.match(/Người chơi (\w+)/i);
+  if (match) return colors[match[1].toLowerCase()];
+
   return null;
 };
+
+const getPlayerAvatarByColor = (displayName: string, colorCode?: string) => {
+  const color = (colorCode || "").toLowerCase();
+  const colorToAvatar: { [key: string]: string } = {
+    red: avatar1, blue: avatar2, green: avatar3, yellow: avatar4,
+    purple: avatar5, orange: avatar6, pink: avatar1, cyan: avatar2,
+    brown: avatar3, gray: avatar4, white: avatar5, black: avatar6
+  };
+
+  if (colorToAvatar[color]) return colorToAvatar[color];
+
+  // Fallback animal name mapping
+  const nameToColor: { [key: string]: string } = {
+    'mèo béo': 'red', 'cún con': 'blue', 'gấu trúc': 'green', 'vịt vàng': 'yellow',
+    'cáo nhỏ': 'purple', 'hổ con': 'orange', 'thỏ ngọc': 'pink', 'chim cánh cụt': 'cyan',
+    'sóc chuột': 'brown', 'voi con': 'gray', 'ngựa vằn': 'white', 'cá heo': 'black'
+  };
+
+  const lowerName = displayName?.toLowerCase() || '';
+  for (const [key, val] of Object.entries(nameToColor)) {
+    if (lowerName.includes(key)) return colorToAvatar[val];
+  }
+
+  const match = displayName?.match(/Người chơi (\w+)/i);
+  if (match) return colorToAvatar[match[1].toLowerCase()];
+
+  return null;
+};
+
 
 const GameScreen: React.FC = () => {
   const { matchId } = useParams<{ matchId: string }>();
@@ -71,15 +115,15 @@ const GameScreen: React.FC = () => {
   const parseServerDate = (dateStr: string) => {
     if (!dateStr) return 0;
     // Xử lý chuỗi date có nanoseconds (9 chữ số sau dấu chấm) mà JS Date có thể không hiểu
-    const sanitizedDate = dateStr.includes('.') 
-      ? dateStr.split('.')[0] + 'Z' 
+    const sanitizedDate = dateStr.includes('.')
+      ? dateStr.split('.')[0] + 'Z'
       : dateStr;
     return new Date(sanitizedDate).getTime();
   };
 
   const fetchState = async () => {
     if (!matchId) return;
-    
+
     // Stop fetching if game is already over
     const currentPhase = gameStateRef.current?.phase || gameStateRef.current?.status;
     if (currentPhase === 'GAME_OVER') {
@@ -91,12 +135,12 @@ const GameScreen: React.FC = () => {
       const response = await gameApi.getGameState(matchId);
       console.log('[GET-GAME-STATE]:', response.data);
       const state = response.data;
-      
+
       // Map your_keyword từ API sang state.keyword nếu có
       if (state.your_keyword) {
         state.keyword = state.your_keyword;
       }
-      
+
       // Map your_role sang state.role nếu có
       if (state.your_role) {
         state.role = state.your_role;
@@ -110,7 +154,7 @@ const GameScreen: React.FC = () => {
         const now = new Date().getTime();
         state.timer = Math.max(0, Math.floor((endTime - now) / 1000));
       }
-      
+
       setGameState(state);
       setLoading(false);
     } catch (err: any) {
@@ -180,7 +224,7 @@ const GameScreen: React.FC = () => {
         case 'GAME_OVER': msg = 'TRÒ CHƠI KẾT THÚC!'; break;
         default: msg = `Chuyển sang: ${phase}`;
       }
-      
+
       setPhaseMessage(msg);
       const timeout = setTimeout(() => setPhaseMessage(null), 3000);
       prevPhaseRef.current = phase;
@@ -191,7 +235,7 @@ const GameScreen: React.FC = () => {
   useEffect(() => {
     if (connected && matchId) {
       console.log(`[WS-SUBSCRIBE]: match topic for ${matchId}`);
-      
+
       // 1. Subscribe to match updates (Timer, Phase, Players)
       // Chỉ lắng nghe topic gốc, không lắng nghe sub-topics để tránh nhận dữ liệu rác (votes, chat)
       subscribe(`/topic/match/${matchId}`, (update: any) => {
@@ -214,10 +258,10 @@ const GameScreen: React.FC = () => {
       subscribe(`/user/queue/role`, (roleInfo: any) => {
         console.log('[WS-PRIVATE-ROLE]:', roleInfo);
         // roleInfo structure: { role: 'SPY'|'CIVILIAN', keyword: '...' }
-        setGameState((prev: any) => ({ 
-          ...prev, 
-          role: roleInfo.role, 
-          keyword: roleInfo.keyword || roleInfo.your_keyword 
+        setGameState((prev: any) => ({
+          ...prev,
+          role: roleInfo.role,
+          keyword: roleInfo.keyword || roleInfo.your_keyword
         }));
       });
 
@@ -225,9 +269,9 @@ const GameScreen: React.FC = () => {
       subscribe(`/user/queue/role-check-result`, (result: any) => {
         console.log('[WS-ROLE-CHECK-RESULT]:', result);
         // result structure: { correct: boolean, message: string, coins_gained: number, ability_available: string }
-        setGameState((prev: any) => ({ 
-          ...prev, 
-          personal_role_check_result: result 
+        setGameState((prev: any) => ({
+          ...prev,
+          personal_role_check_result: result
         }));
       });
 
@@ -316,30 +360,30 @@ const GameScreen: React.FC = () => {
       // 5. Subscribe to descriptions (Danh sách mô tả từ khóa)
       subscribe(`/topic/match/${matchId}/descriptions`, (descUpdate: any) => {
         console.log('[WS-DESCRIPTIONS-UPDATE]:', descUpdate);
-        
+
         // New structure: { descriptions: [{ user_id, content, ... }], all_submitted: boolean }
         if (descUpdate.descriptions && Array.isArray(descUpdate.descriptions)) {
           setGameState((prev: any) => {
             if (!prev) return prev;
-            
+
             // Map descriptions to existing players
             const updatedPlayers = prev.players.map((p: any) => {
               const d = descUpdate.descriptions.find((item: any) => String(item.user_id) === String(p.user_id));
               return d ? { ...p, description: d.content } : p;
             });
-            
-            return { 
-              ...prev, 
+
+            return {
+              ...prev,
               players: updatedPlayers,
-              all_submitted: descUpdate.all_submitted 
+              all_submitted: descUpdate.all_submitted
             };
           });
-        } 
+        }
         // Fallback for old single update format
         else if (descUpdate.user_id && descUpdate.content) {
           setGameState((prev: any) => {
             if (!prev) return prev;
-            const updatedPlayers = prev.players.map((p: any) => 
+            const updatedPlayers = prev.players.map((p: any) =>
               String(p.user_id) === String(descUpdate.user_id) ? { ...p, description: descUpdate.content } : p
             );
             return { ...prev, players: updatedPlayers };
@@ -359,12 +403,12 @@ const GameScreen: React.FC = () => {
         console.log('[WS-GAME-OVER]:', finalResult);
         // Map winner_role sang winner để đồng nhất logic
         const mappedWinner = finalResult.winner_role === 'civilians' ? 'CIVILIAN' : 'SPY';
-        
-        setGameState((prev: any) => ({ 
-          ...prev, 
-          ...finalResult, 
+
+        setGameState((prev: any) => ({
+          ...prev,
+          ...finalResult,
           phase: 'GAME_OVER', // Ép chuyển phase ngay lập tức
-          winner: mappedWinner 
+          winner: mappedWinner
         }));
       });
     }
@@ -403,30 +447,30 @@ const GameScreen: React.FC = () => {
 
   const renderPhase = () => {
     const phase = (gameState.phase || gameState.status || '').toUpperCase();
-    
+
     switch (phase) {
       case 'ROLE_ASSIGN':
         return <RoleAssignView gameState={gameState} user={user} />;
       case 'DESCRIBING':
         return (
-          <DescribingView 
-            matchId={matchId!} 
-            gameState={gameState} 
-            user={user} 
-            isSpy={isSpy} 
-            selectedAbility={selectedAbility} 
-            onFakeMessageSubmit={handleFakeMessageSubmit} 
+          <DescribingView
+            matchId={matchId!}
+            gameState={gameState}
+            user={user}
+            isSpy={isSpy}
+            selectedAbility={selectedAbility}
+            onFakeMessageSubmit={handleFakeMessageSubmit}
           />
         );
       case 'DISCUSSING':
         return (
-          <DiscussingView 
-            matchId={matchId!} 
-            gameState={gameState} 
-            user={user} 
-            isSpy={isSpy} 
-            selectedAbility={selectedAbility} 
-            onFakeMessageSubmit={handleFakeMessageSubmit} 
+          <DiscussingView
+            matchId={matchId!}
+            gameState={gameState}
+            user={user}
+            isSpy={isSpy}
+            selectedAbility={selectedAbility}
+            onFakeMessageSubmit={handleFakeMessageSubmit}
           />
         );
       case 'VOTING':
@@ -478,22 +522,23 @@ const GameScreen: React.FC = () => {
   const selectedAbility = gameState?.selected_ability || gameState?.personal_role_check_result?.confirmed_ability;
 
   return (
-    <div 
+    <div
       className={`game-screen-container ${gameState?.role?.toLowerCase() === 'infected' ? 'infected-theme' : ''}`}
       style={{ backgroundImage: `url(${bg})`, backgroundSize: 'cover', backgroundPosition: 'center' }}
     >
       <div className="game-top-bar">
-        <button className="game-leave-btn" onClick={() => navigate('/lobby')}>
-          <i className="fa-solid fa-circle-left"></i>
-          <span>Rời ván</span>
+        <button className="room-lobby-back-btn" onClick={() => navigate('/lobby')}>
+          <i className="fa-solid fa-arrow-left"></i>
         </button>
-        <div className="game-match-info">Trận: {matchId?.substring(0, 8)}</div>
-        <div className="game-timer">
-          <i className="fa-solid fa-clock"></i>
-          <span>{gameState.timer || 0}s</span>
-        </div>
       </div>
-      
+
+      <div className="game-timer">
+        <i className="fa-solid fa-clock"></i>
+        <span>{gameState?.timer || 0}s</span>
+      </div>
+
+      <div className="game-match-info">Mã phòng: {gameState?.room_code || '...'}</div>
+
       {/* Pass common props to views if needed, or just let them access gameState */}
       {renderPhase()}
 
@@ -518,7 +563,7 @@ const GameScreen: React.FC = () => {
           </div>
         </div>
       )}
-      
+
       {phaseMessage && (
         <div className="phase-notification-overlay animate-pop-in">
           <div className="phase-notification-card">
@@ -543,18 +588,18 @@ const RoleAssignView: React.FC<{ gameState: any, user: any }> = ({ gameState, us
         <h2 className="role-assign-title">
           {isInfected ? 'BẠN ĐÃ BỊ THA HÓA' : 'HÃY MÔ TẢ TỪ KHÓA'}
         </h2>
-        
+
         <div className={`role-badge ${isInfected ? 'infected' : 'unknown'}`}>
           {isInfected ? 'PHE GIÁN ĐIỆP 🕵️‍♂️' : 'ĐANG GIẤU MẶT 🎭'}
         </div>
-        
+
         <div className="keyword-section">
           <p className="keyword-label">Từ khóa của bạn là:</p>
           <div className="keyword-box">{keyword}</div>
         </div>
 
         <p className="role-assign-hint">
-          {isInfected 
+          {isInfected
             ? 'Bạn hiện thuộc phe Gián điệp. Hãy giúp Gián điệp chiến thắng!'
             : 'Hãy mô tả từ khóa của bạn khéo léo. Vai trò thực sự sẽ được tiết lộ sau!'}
         </p>
@@ -568,9 +613,9 @@ const RoleAssignView: React.FC<{ gameState: any, user: any }> = ({ gameState, us
 };
 
 // Sub-component for DESCRIBING phase
-const DescribingView: React.FC<{ 
-  matchId: string, 
-  gameState: any, 
+const DescribingView: React.FC<{
+  matchId: string,
+  gameState: any,
   user: any,
   isSpy?: boolean,
   selectedAbility?: string,
@@ -578,16 +623,16 @@ const DescribingView: React.FC<{
 }> = ({ matchId, gameState, user, isSpy, selectedAbility, onFakeMessageSubmit }) => {
   const [description, setDescription] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
-  
+
   // Find me and my current status
   const me = gameState.players?.find((p: any) => String(p.user_id) === String(user?.user_id));
   const hasSubmitted = !!me?.description;
-  
+
   // Robust turn check (handle string vs number comparison)
-  const myTurn = gameState.current_turn_user_id && user?.user_id && 
-                 String(gameState.current_turn_user_id) === String(user.user_id);
-  
-  const currentTurnPlayer = gameState.players?.find((p: any) => 
+  const myTurn = gameState.current_turn_user_id && user?.user_id &&
+    String(gameState.current_turn_user_id) === String(user.user_id);
+
+  const currentTurnPlayer = gameState.players?.find((p: any) =>
     String(p.user_id) === String(gameState.current_turn_user_id)
   );
   const isAiTurn = currentTurnPlayer && String(currentTurnPlayer.user_id).startsWith('ai_');
@@ -612,67 +657,49 @@ const DescribingView: React.FC<{
         <i className="fa-solid fa-key"></i>
         <span>Từ khóa: {gameState.keyword || '???'}</span>
       </div>
-      <PlayerCircle 
-        players={gameState.players} 
-        currentTurnId={gameState.current_turn_user_id} 
+      <PlayerCircle
+        players={gameState.players}
+        currentTurnId={gameState.current_turn_user_id}
         isSpy={isSpy}
         selectedAbility={selectedAbility}
         onFakeMessageSubmit={onFakeMessageSubmit}
       />
-      
-      <div className="action-panel centered-panel">
-        <div className={`my-turn-panel animate-pop-in ${hasSubmitted ? 'submitted' : !myTurn ? 'not-my-turn' : ''}`}>
-          <div className="panel-header">
-            <i className={`fa-solid ${hasSubmitted ? 'fa-circle-check' : myTurn ? 'fa-pen-to-square' : isAiTurn ? 'fa-robot' : 'fa-feather-pointed'}`}></i>
-            <h3>
-              {hasSubmitted ? 'ĐÃ GỬI MÔ TẢ' : myTurn ? 'Đến lượt bạn mô tả!' : isAiTurn ? 'AI KeywordSpy đang suy nghĩ...' : 'Chuẩn bị mô tả của bạn'}
-            </h3>
-          </div>
-          
-          {!hasSubmitted ? (
-            <>
-              <div className="input-group">
-                <input 
-                  type="text" 
-                  placeholder="Nhập mô tả của bạn (1-30 từ)..."
-                  value={description}
-                  autoFocus
-                  onChange={(e) => setDescription(e.target.value)}
-                  onKeyDown={(e) => e.key === 'Enter' && handleSubmit()}
-                />
-                <button 
-                  onClick={handleSubmit} 
-                  disabled={isSubmitting || !description.trim()}
-                  className="btn-active"
-                >
-                  {isSubmitting ? <i className="fa-solid fa-spinner fa-spin"></i> : 'GỬI'}
-                </button>
-              </div>
-              <p className="input-hint">
-                {myTurn ? 'Hãy mô tả khéo léo để không lộ từ khóa!' : 'Bạn có thể gửi ngay mà không cần chờ lượt.'}
-                <br />
-                Vòng chơi sẽ kết thúc sớm nếu tất cả mọi người đã gửi xong.
-              </p>
-            </>
-          ) : (
-            <div className="submitted-state">
-              <div className="my-description">
-                <span className="label">Mô tả của bạn:</span>
-                <p className="content">"{me?.description}"</p>
-              </div>
-              <p className="input-hint success">Đã lưu mô tả thành công. Đang chờ những người khác...</p>
-            </div>
-          )}
+
+      {!hasSubmitted ? (
+        <div className="input-group">
+          <input
+            type="text"
+            placeholder="Nhập mô tả của bạn (1-30 từ)..."
+            value={description}
+            autoFocus
+            onChange={(e) => setDescription(e.target.value)}
+            onKeyDown={(e) => e.key === 'Enter' && handleSubmit()}
+          />
+          <button
+            onClick={handleSubmit}
+            disabled={isSubmitting || !description.trim()}
+            className="btn-active"
+          >
+            {isSubmitting ? <i className="fa-solid fa-spinner fa-spin"></i> : <i className="fa-regular fa-paper-plane"></i>}
+          </button>
         </div>
-      </div>
+      ) : (
+        <div className="submitted-state">
+          <div className="my-description">
+            <span className="label">Mô tả của bạn:</span>
+            <p className="content">"{me?.description}"</p>
+          </div>
+          <p className="input-hint success">Đang chờ những người khác...</p>
+        </div>
+      )}
     </div>
   );
 };
 
 // Sub-component for DISCUSSING phase
-const DiscussingView: React.FC<{ 
-  matchId: string, 
-  gameState: any, 
+const DiscussingView: React.FC<{
+  matchId: string,
+  gameState: any,
   user: any,
   isSpy?: boolean,
   selectedAbility?: string,
@@ -680,6 +707,7 @@ const DiscussingView: React.FC<{
 }> = ({ matchId, gameState, user, isSpy, selectedAbility, onFakeMessageSubmit }) => {
   const [chat, setChat] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isChatExpanded, setIsChatExpanded] = useState(true);
   const chatEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -705,31 +733,42 @@ const DiscussingView: React.FC<{
         <i className="fa-solid fa-key"></i>
         <span>Từ khóa: {gameState.keyword || '???'}</span>
       </div>
-      <PlayerCircle 
-        players={gameState.players || []} 
+      <PlayerCircle
+        players={gameState.players || []}
         isSpy={isSpy}
         selectedAbility={selectedAbility}
         onFakeMessageSubmit={onFakeMessageSubmit}
       />
-      
-      <div className="discussion-panel">
-        <div className="chat-area">
-          {gameState.messages?.map((msg: any, idx: number) => {
-            const senderPlayer = gameState.players?.find((p: any) => p.user_id === msg.sender_id);
-            const color = senderPlayer ? getPlayerColor(senderPlayer.display_name) : null;
-            return (
-              <div key={idx} className={`chat-bubble ${msg.sender_id === user?.user_id ? 'mine' : ''}`}>
-                <span className="sender" style={color ? { color: color } : {}}>{msg.sender_name || 'Người chơi'}:</span>
-                <span className="text">{msg.content}</span>
-              </div>
-            );
-          })}
-          <div ref={chatEndRef} />
-        </div>
+
+      <div className={`discussion-panel ${isChatExpanded ? 'expanded' : 'minimized'}`}>
+        <button
+          className="chat-toggle-btn"
+          onClick={() => setIsChatExpanded(!isChatExpanded)}
+          title={isChatExpanded ? "Thu nhỏ chat" : "Mở rộng chat"}
+        >
+          <i className={isChatExpanded ? "fa-solid fa-compress" : "fa-solid fa-comments"}></i>
+        </button>
+
+        {isChatExpanded && (
+          <div className="chat-area">
+            {gameState.messages?.map((msg: any, idx: number) => {
+              const senderPlayer = gameState.players?.find((p: any) => p.user_id === msg.sender_id);
+              const color = senderPlayer ? getPlayerColor(senderPlayer.display_name, senderPlayer.color) : null;
+              return (
+                <div key={idx} className={`chat-bubble ${msg.sender_id === user?.user_id ? 'mine' : ''}`}>
+                  <span className="sender" style={color ? { color: color } : {}}>{msg.sender_name || 'Người chơi'}:</span>
+                  <span className="text">{msg.content}</span>
+                </div>
+              );
+            })}
+            <div ref={chatEndRef} />
+          </div>
+        )}
+
         <div className="chat-input-group">
-          <input 
-            type="text" 
-            placeholder="Thảo luận tự do..." 
+          <input
+            type="text"
+            placeholder={isChatExpanded ? "Thảo luận tự do..." : "Chat..."}
             value={chat}
             onChange={(e) => setChat(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && handleChat()}
@@ -767,38 +806,37 @@ const VotingView: React.FC<{ matchId: string, gameState: any, user: any }> = ({ 
       <h2 className="voting-title">{gameState.phase === 'VOTE_TIE' ? 'HÒA PHIẾU! HÃY BẦU LẠI' : 'AI LÀ GIÁN ĐIỆP?'}</h2>
       <div className="voting-players">
         {gameState.players.filter((p: any) => p.user_id !== user?.user_id && p.is_alive).map((p: any) => {
-          const color = getPlayerColor(p.display_name);
+          const color = getPlayerColor(p.display_name, p.color);
           const isAI = String(p.user_id).startsWith('ai_');
           // Show checkmark if user has voted for someone, or if server says this user has voted
           // In hide mode, voteCounts only indicates who has voted
           const playerHasVoted = gameState.voteCounts && !!gameState.voteCounts[p.user_id];
 
           return (
-            <div 
-              key={p.user_id} 
+            <div
+              key={p.user_id}
               className={`voting-card ${votedId === p.user_id ? 'voted' : ''} ${isAI ? 'ai-card' : ''}`}
               onClick={() => handleVote(p.user_id)}
             >
-              <div 
+              <div
                 className="avatar-circle"
-                style={color ? { 
-                  borderColor: '#FFF', 
+                style={color ? {
+                  borderColor: '#FFF',
                   boxShadow: `0 0 15px ${color}`,
-                  backgroundColor: color 
                 } : {}}
               >
-                <img 
-                  src={avatarMap[p.seat_index % 6]} 
-                  alt={p.display_name} 
-                  style={color ? { opacity: 0.7 } : {}}
+                <img
+                  src={getPlayerAvatarByColor(p.display_name, p.color) || avatarMap[p.user_id % 6]}
+                  alt={p.display_name}
+                  style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }}
                 />
               </div>
               <div className="player-name" style={color ? { color: color, textShadow: '0 0 10px rgba(0,0,0,0.8)' } : {}}>
                 {p.display_name} {isAI && <span className="ai-tag">(AI)</span>}
               </div>
-              
+
               {votedId === p.user_id && <div className="voted-badge">ĐÃ CHỌN</div>}
-              
+
               {/* If server sends data, it means someone voted. In hide mode, we just show a generic "Voted" indicator */}
               {playerHasVoted && (
                 <div className="vote-status-indicator">
@@ -835,19 +873,19 @@ const RoleCheckView: React.FC<{ matchId: string, gameState: any, user: any }> = 
       <h2 className="role-check-title">XÁC NHẬN VAI TRÒ</h2>
       <p className="role-check-hint">Bạn là ai trong trận đấu này?</p>
       <div className="role-check-actions">
-        <button 
-          className={`role-btn civilian ${guessedRole === 'civilian' ? 'selected' : ''}`} 
+        <button
+          className={`role-btn civilian ${guessedRole === 'civilian' ? 'selected' : ''}`}
           onClick={() => handleGuess('civilian')}
           disabled={!!guessedRole}
         >
-          DÂN THƯỜNG 👨‍🌾
+          DÂN THƯỜNG
         </button>
-        <button 
-          className={`role-btn spy ${guessedRole === 'spy' ? 'selected' : ''}`} 
+        <button
+          className={`role-btn spy ${guessedRole === 'spy' ? 'selected' : ''}`}
           onClick={() => handleGuess('spy')}
           disabled={!!guessedRole}
         >
-          GIÁN ĐIỆP 🕵️‍♂️
+          GIÁN ĐIỆP
         </button>
       </div>
       {guessedRole && <p className="waiting-msg">Đã gửi xác nhận. Đang chờ kết quả...</p>}
@@ -856,11 +894,11 @@ const RoleCheckView: React.FC<{ matchId: string, gameState: any, user: any }> = 
 };
 
 // Sub-component for ROLE_CHECK_RESULT phase
-const RoleCheckResultView: React.FC<{ 
-  matchId: string, 
-  gameState: any, 
-  user: any, 
-  setGameState: any, 
+const RoleCheckResultView: React.FC<{
+  matchId: string,
+  gameState: any,
+  user: any,
+  setGameState: any,
   isModal?: boolean
 }> = ({ matchId, gameState, user, setGameState, isModal }) => {
   const result = gameState.personal_role_check_result;
@@ -875,7 +913,7 @@ const RoleCheckResultView: React.FC<{
     if (!result && gameState.role_check_correct !== undefined) {
       const role = (gameState.actual_role || gameState.role || '').toLowerCase();
       const isCorrect = gameState.role_check_correct;
-      
+
       let roleDisplay = 'Dân Thường';
       if (role === 'spy') roleDisplay = 'Gián Điệp';
       else if (role === 'infected') roleDisplay = 'Kẻ Bị Tha Hóa';
@@ -887,8 +925,8 @@ const RoleCheckResultView: React.FC<{
           correct: isCorrect,
           actual_role: role,
           can_use_ability: prev.can_use_ability ?? false,
-          message: prev.message || (isCorrect 
-            ? `Bạn là ${roleDisplay}` 
+          message: prev.message || (isCorrect
+            ? `Bạn là ${roleDisplay}`
             : "Bạn đã đoán nhầm vai trò."),
           reward_coins: prev.reward_coins ?? true,
           abilities_available: prev.abilities || prev.abilities_available || [],
@@ -966,24 +1004,23 @@ const RoleCheckResultView: React.FC<{
   const isSpyOrInfected = actualRole === 'spy' || actualRole === 'infected';
 
   // Làm sạch message để tránh lặp lại "Chính xác!" nếu header đã hiển thị
-  const cleanMessage = result?.message 
+  const cleanMessage = result?.message
     ? result.message.replace(/^(Chính xác!|Sai rồi!|Rất tiếc!|Bạn đã đoán nhầm vai trò\.)\s*/i, '')
     : '';
 
   return (
     <div className={`role-check-result-container animate-pop-in ${actualRole}`}>
-      <h2 className="result-title">KẾT QUẢ XÁC NHẬN</h2>
       {result ? (
         <div className={`personal-result-card ${actualRole}`}>
           <p className={`result-status ${result.correct ? 'correct' : 'incorrect'}`}>
-            {result.correct ? 'CHÍNH XÁC! ✅' : 'SAI RỒI! ❌'}
+            {result.correct ? 'CHÍNH XÁC!' : 'SAI RỒI!'}
           </p>
           <p className="result-msg">{cleanMessage}</p>
-          
+
           {result.reward_coins && (
-            <div className="coins-badge">
+            <div className="coins-reward-text">
               <i className="fa-solid fa-coins"></i>
-              <span>Đã nhận thưởng xu!</span>
+              <span>+ {result.reward_amount || 100} xu</span>
             </div>
           )}
 
@@ -999,7 +1036,7 @@ const RoleCheckResultView: React.FC<{
               <h3 className="ability-title">
                 <i className="fa-solid fa-wand-magic-sparkles"></i> KỸ NĂNG ĐẶC BIỆT
               </h3>
-              
+
               {!confirmedAbilityType ? (
                 <div className="ability-selection">
                   <p className="ability-intro-text">Hãy chọn 1 kỹ năng để sử dụng trong trận đấu:</p>
@@ -1034,9 +1071,9 @@ const RoleCheckResultView: React.FC<{
                     <div className="ability-usage">
                       <p className="ability-usage-title">Kỹ năng: Thao túng AI</p>
                       <p className="ability-usage-desc">Bạn có thể nhập nội dung để AI KeywordSpy nói thay bạn.</p>
-                      <input 
-                        type="text" 
-                        placeholder="Nhập nội dung AI sẽ nói..." 
+                      <input
+                        type="text"
+                        placeholder="Nhập nội dung AI sẽ nói..."
                         value={abilityContent}
                         onChange={(e) => setAbilityContent(e.target.value)}
                         autoFocus
@@ -1052,7 +1089,7 @@ const RoleCheckResultView: React.FC<{
                       <p className="ability-usage-desc">Chọn 1 người chơi để biến thành đồng minh bí mật:</p>
                       <div className="infect-list">
                         {(result.alive_humans || []).map((p: any) => (
-                          <button 
+                          <button
                             key={p.user_id}
                             className={`infect-btn ${selectedTarget === p.user_id ? 'selected' : ''}`}
                             onClick={() => setSelectedTarget(p.user_id)}
@@ -1097,16 +1134,15 @@ const RoleCheckResultView: React.FC<{
 const RoundResultView: React.FC<{ gameState: any }> = ({ gameState }) => {
   const result = gameState.eliminated_result || gameState.eliminated_player;
   const name = result?.eliminated_display_name || result?.display_name;
-  const color = name ? getPlayerColor(name) : null;
+  const color = name ? getPlayerColor(name, result?.color) : null;
 
   return (
     <div className="round-result-container animate-pop-in">
-      <h2 className="result-title">KẾT QUẢ VÒNG CHƠI</h2>
       {name ? (
         <div className="eliminated-card">
           <p className="eliminated-text">Kết quả bỏ phiếu:</p>
-          <div 
-            className="eliminated-name" 
+          <div
+            className="eliminated-name"
             style={color ? { color: color } : {}}
           >
             {name} đã bị loại!
@@ -1132,7 +1168,7 @@ const GameOverView: React.FC<{ gameState: any, navigate: any }> = ({ gameState, 
     <div className="game-over-container animate-pop-in">
       <h1 className="game-over-title">TRÒ CHƠI KẾT THÚC</h1>
       <div className={`winner-badge ${winner.includes('spy') ? 'spy' : 'civilian'}`}>
-        PHE THẮNG: {winner.includes('spy') ? 'GIÁN ĐIỆP 🕵️‍♂️' : 'DÂN THƯỜNG 👨‍🌾'}
+        PHE THẮNG: {winner.includes('spy') ? 'GIÁN ĐIỆP' : 'DÂN THƯỜNG'}
       </div>
 
       <div className="keywords-summary">
@@ -1145,7 +1181,7 @@ const GameOverView: React.FC<{ gameState: any, navigate: any }> = ({ gameState, 
           <span className="value">{gameState.spy_keyword}</span>
         </div>
       </div>
-      
+
       <div className="final-scores-table">
         <div className="score-header">
           <span>Người chơi</span>
@@ -1154,10 +1190,10 @@ const GameOverView: React.FC<{ gameState: any, navigate: any }> = ({ gameState, 
         </div>
         {gameState.players.map((p: any) => {
           const roleUpper = p.role?.toUpperCase();
-          const isActualSpy = (gameState.spy_user_id && String(p.user_id) === String(gameState.spy_user_id)) || 
-                             roleUpper === 'SPY' || 
-                             roleUpper === 'SPY_ALLY' ||
-                             roleUpper === 'INFECTED';
+          const isActualSpy = (gameState.spy_user_id && String(p.user_id) === String(gameState.spy_user_id)) ||
+            roleUpper === 'SPY' ||
+            roleUpper === 'SPY_ALLY' ||
+            roleUpper === 'INFECTED';
           return (
             <div key={p.user_id} className="score-row">
               <span className="player-name">
@@ -1181,8 +1217,8 @@ const GameOverView: React.FC<{ gameState: any, navigate: any }> = ({ gameState, 
 };
 
 // Common Player Circle Component
-const PlayerCircle: React.FC<{ 
-  players: any[], 
+const PlayerCircle: React.FC<{
+  players: any[],
   currentTurnId?: any,
   isSpy?: boolean,
   selectedAbility?: string,
@@ -1209,34 +1245,34 @@ const PlayerCircle: React.FC<{
   return (
     <div className="players-circle">
       {players.map((p, idx) => {
-        const color = getPlayerColor(p.display_name);
+        const color = getPlayerColor(p.display_name, p.color);
         const isActive = currentTurnId && p.user_id && String(currentTurnId) === String(p.user_id);
         const roleUpper = p.role?.toUpperCase();
         const isInfected = roleUpper === 'INFECTED' || roleUpper === 'SPY_ALLY';
         const isAi = String(p.user_id).startsWith('ai_');
-        
+
         return (
-          <div 
-            key={p.user_id} 
+          <div
+            key={p.user_id}
             className={`player-slot pos-${idx} ${isActive ? 'active' : ''} ${!p.is_alive ? 'dead' : ''} ${isInfected ? 'infected' : ''}`}
           >
-            <div 
+            <div
               className="avatar-circle"
-              style={color ? { 
-                borderColor: isInfected ? '#FF3B30' : '#FFF', 
+              style={color ? {
+                borderColor: isInfected ? '#FF3B30' : '#FFF',
                 boxShadow: isInfected ? '0 0 20px #FF3B30' : `0 0 20px ${color}`,
-                backgroundColor: color 
+                backgroundColor: 'rgba(0,0,0,0.3)' // Darker background behind image
               } : {}}
             >
-              <img 
-                src={avatarMap[p.seat_index % 6]} 
-                alt={p.display_name} 
-                style={color ? { opacity: 0.7 } : {}}
+              <img
+                src={getPlayerAvatarByColor(p.display_name, p.color) || avatarMap[p.seat_index % 6]}
+                alt={p.display_name}
+                style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }}
               />
               {isActive && <div className="active-indicator">ĐANG NÓI...</div>}
             </div>
             <div className="player-name" style={color ? { color: color, textShadow: '0 0 10px rgba(0,0,0,0.8)' } : {}}>{p.display_name}</div>
-            
+
             {/* Show description if exists, otherwise show status if active */}
             {p.description ? (
               <div className="player-bubble">{p.description}</div>
@@ -1250,9 +1286,9 @@ const PlayerCircle: React.FC<{
             {isAi && isSpy && selectedAbility === 'fake_message' && (
               <div className="ai-manipulation-input animate-pop-in">
                 <form onSubmit={handleFakeSubmit}>
-                  <input 
-                    type="text" 
-                    placeholder="Thao túng AI nói..." 
+                  <input
+                    type="text"
+                    placeholder="Thao túng AI nói..."
                     value={fakeMsg}
                     onChange={(e) => setFakeMsg(e.target.value)}
                     disabled={isSubmitting}
