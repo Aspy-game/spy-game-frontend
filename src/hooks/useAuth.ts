@@ -45,9 +45,9 @@ export const useAuth = () => {
           (u) => u.username === username && u.password === password
         );
         if (!found) throw new Error('Tên đăng nhập hoặc mật khẩu không đúng');
-        const user: User = { 
-          user_id: Number(found.user_id), 
-          username: found.username, 
+        const user: User = {
+          user_id: Number(found.user_id),
+          username: found.username,
           display_name: found.display_name,
           role: found.role as Role
         };
@@ -57,25 +57,29 @@ export const useAuth = () => {
 
       const response = await axiosInstance.post<LoginResponse & { avatar_url?: string, role?: string }>('/auth/login', { username, password });
       const { user_id, display_name, avatar_url, access_token, refresh_token, role } = response.data;
-      
+
       // Normalize role to include ROLE_ prefix if missing
       let normalizedRole: Role = 'ROLE_USER';
       if (role) {
         normalizedRole = (role.startsWith('ROLE_') ? role : `ROLE_${role}`) as Role;
       }
 
-      const user: User = { 
-        user_id, 
-        username, 
-        display_name, 
-        avatar_url, 
-        role: normalizedRole 
+      const user: User = {
+        user_id,
+        username,
+        display_name,
+        avatar_url,
+        role: normalizedRole
       };
 
       setAuth(user, access_token, refresh_token);
       return true;
     } catch (err: any) {
-      const message = err.response?.data?.message || err.message || 'Đăng nhập thất bại.';
+      const status = err.response?.status;
+      const message =
+        status === 401
+          ? 'Tên đăng nhập hoặc mật khẩu không đúng. Vui lòng thử lại.'
+          : err.response?.data?.message || err.message || 'Đăng nhập thất bại.';
 
       setError(message);
       return false;
@@ -92,9 +96,9 @@ export const useAuth = () => {
         await new Promise((r) => setTimeout(r, 500));
         const exists = MOCK_USERS.find((u) => u.username === data.username);
         if (exists) throw new Error('Tên đăng nhập đã tồn tại');
-        const user: User = { 
-          user_id: Number('999'), 
-          username: data.username, 
+        const user: User = {
+          user_id: Number('999'),
+          username: data.username,
           display_name: data.display_name,
           role: 'ROLE_USER' as Role
         };
@@ -104,19 +108,19 @@ export const useAuth = () => {
 
       const response = await axiosInstance.post<RegisterResponse & { avatar_url?: string, role?: string }>('/auth/register', data);
       const { user_id, username, display_name, avatar_url, access_token, refresh_token, role: roleStr } = response.data;
-      
+
       // Normalize role to include ROLE_ prefix if missing
       let normalizedRole: Role = 'ROLE_USER';
       if (roleStr) {
         normalizedRole = (roleStr.startsWith('ROLE_') ? roleStr : `ROLE_${roleStr}`) as Role;
       }
 
-      const user: User = { 
-        user_id, 
-        username, 
-        display_name, 
-        avatar_url, 
-        role: normalizedRole 
+      const user: User = {
+        user_id,
+        username,
+        display_name,
+        avatar_url,
+        role: normalizedRole
       };
 
       setAuth(user, access_token, refresh_token);

@@ -36,7 +36,7 @@ export default function Login() {
             <div className="login-field" style={{ top: 135 }}>
               <input
                 type="text"
-                className="login-input"
+                className={`login-input${error ? ' login-input--error' : ''}`}
                 placeholder="Tên tài khoản"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
@@ -47,7 +47,7 @@ export default function Login() {
             <div className="login-field" style={{ top: 272 }}>
               <input
                 type={showPwd ? 'text' : 'password'}
-                className="login-input"
+                className={`login-input${error ? ' login-input--error' : ''}`}
                 placeholder="Mật khẩu"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}

@@ -29,7 +29,7 @@ const Lobby: React.FC = () => {
   const logoutStore = useAuthStore((state) => state.logout);
   // const { logout, loading } = useAuth();
   const [showProfile, setShowProfile] = useState(false);
-  const [showAttendance, setShowAttendance] = useState(true);
+  const [showAttendance, setShowAttendance] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [showChangePassword, setShowChangePassword] = useState(false);
   const [showCreateRoom, setShowCreateRoom] = useState(false);
@@ -49,9 +49,24 @@ const Lobby: React.FC = () => {
   useEffect(() => {
     fetchRooms();
     fetchUserProfile();
+    checkCheckinStatus();
     connect();
     return () => disconnect();
   }, []);
+
+  const checkCheckinStatus = async () => {
+    try {
+      const res = await axiosInstance.get('/economy/daily-checkin/status');
+      if (res.data.canCheckin) {
+        setShowAttendance(true);
+        setIsReceived(false);
+      } else {
+        setIsReceived(true);
+      }
+    } catch (error) {
+      console.error('Lỗi khi kiểm tra trạng thái điểm danh:', error);
+    }
+  };
 
   const fetchUserProfile = async () => {
     try {
@@ -120,8 +135,17 @@ const Lobby: React.FC = () => {
     handleJoinRoom(searchCode.trim().toUpperCase());
   };
 
-  const handleReceiveAttendance = (amount: number, event: React.MouseEvent) => {
+  const handleReceiveAttendance = async (amount: number, event: React.MouseEvent) => {
     if (!coinBoxRef.current) return;
+
+    try {
+      // Gọi API điểm danh trước
+      await axiosInstance.post('/economy/daily-checkin');
+    } catch (error: any) {
+      const errorMsg = error.response?.data?.error || 'Điểm danh thất bại.';
+      alert(errorMsg);
+      return;
+    }
 
     const boxRect = coinBoxRef.current.getBoundingClientRect();
     const startX = event.clientX;
