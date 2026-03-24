@@ -632,6 +632,7 @@ const DescribingView: React.FC<{
   // Find me and my current status
   const me = gameState.players?.find((p: any) => String(p.user_id) === String(user?.user_id));
   const hasSubmitted = !!me?.description;
+  const isAlive = me?.is_alive !== false;
 
   // Robust turn check (handle string vs number comparison)
   const myTurn = gameState.current_turn_user_id && user?.user_id &&
@@ -671,7 +672,11 @@ const DescribingView: React.FC<{
         onFakeMessageSubmit={onFakeMessageSubmit}
       />
 
-      {!hasSubmitted ? (
+      {!isAlive ? (
+        <div className="submitted-state">
+          <p className="input-hint error">Bạn đã bị loại. Vui lòng theo dõi trận đấu.</p>
+        </div>
+      ) : !hasSubmitted ? (
         <div className="input-group">
           <input
             type="text"
@@ -715,6 +720,9 @@ const DiscussingView: React.FC<{
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isChatExpanded, setIsChatExpanded] = useState(true);
   const chatEndRef = useRef<HTMLDivElement>(null);
+
+  const me = gameState.players?.find((p: any) => String(p.user_id) === String(user?.user_id));
+  const isAlive = me?.is_alive !== false;
 
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -777,12 +785,13 @@ const DiscussingView: React.FC<{
         <div className="chat-input-group">
           <input
             type="text"
-            placeholder={isChatExpanded ? "Thảo luận tự do..." : "Chat..."}
+            placeholder={!isAlive ? "Bạn đã bị loại, không thể chat..." : (isChatExpanded ? "Thảo luận tự do..." : "Chat...")}
             value={chat}
             onChange={(e) => setChat(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && handleChat()}
+            disabled={!isAlive || isSubmitting}
           />
-          <button onClick={handleChat} disabled={isSubmitting}>
+          <button onClick={handleChat} disabled={!isAlive || isSubmitting}>
             <i className="fa-solid fa-paper-plane"></i>
           </button>
         </div>
@@ -795,13 +804,16 @@ const DiscussingView: React.FC<{
 const VotingView: React.FC<{ matchId: string, gameState: any, user: any }> = ({ matchId, gameState, user }) => {
   const [votedId, setVotedId] = useState<string | null>(null);
 
+  const me = gameState.players?.find((p: any) => String(p.user_id) === String(user?.user_id));
+  const isAlive = me?.is_alive !== false;
+
   // Reset votedId if phase changes (for re-voting in VOTE_TIE)
   useEffect(() => {
     setVotedId(null);
   }, [gameState.phase, gameState.round]);
 
   const handleVote = async (targetUserId: string) => {
-    if (votedId || targetUserId === user?.user_id) return;
+    if (!isAlive || votedId || targetUserId === user?.user_id) return;
     try {
       await gameApi.submitVote(matchId, targetUserId);
       setVotedId(targetUserId);
@@ -824,8 +836,9 @@ const VotingView: React.FC<{ matchId: string, gameState: any, user: any }> = ({ 
           return (
             <div
               key={p.user_id}
-              className={`voting-card ${votedId === p.user_id ? 'voted' : ''} ${isAI ? 'ai-card' : ''}`}
+              className={`voting-card ${votedId === p.user_id ? 'voted' : ''} ${isAI ? 'ai-card' : ''} ${!isAlive ? 'disabled' : ''}`}
               onClick={() => handleVote(p.user_id)}
+              style={!isAlive ? { cursor: 'not-allowed', opacity: 0.7 } : {}}
             >
               <div
                 className="avatar-circle"
@@ -857,7 +870,9 @@ const VotingView: React.FC<{ matchId: string, gameState: any, user: any }> = ({ 
         })}
       </div>
       <p className="voting-hint">
-        {votedId ? 'Bạn đã bỏ phiếu cho người này. Đang chờ kết quả...' : 'Hãy chọn người bạn nghi ngờ nhất! AI cũng có thể là Gián điệp.'}
+        {!isAlive 
+          ? 'Bạn đã bị loại, không thể tham gia bỏ phiếu.' 
+          : (votedId ? 'Bạn đã bỏ phiếu cho người này. Đang chờ kết quả...' : 'Hãy chọn người bạn nghi ngờ nhất! AI cũng có thể là Gián điệp.')}
       </p>
     </div>
   );
