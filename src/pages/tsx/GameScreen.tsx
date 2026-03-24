@@ -13,6 +13,8 @@ import avatar3 from '../../../img/hinhcao.jpg';
 import avatar4 from '../../../img/Gemini_Generated_Image_jhisy6jhisy6jhis.png';
 import avatar5 from '../../../img/Gemini_Generated_Image_8nnqwq8nnqwq8nnq.png';
 import avatar6 from '../../../img/Gemini_Generated_Image_59nsf059nsf059ns.png';
+import avatar7 from '../../../img/chon.jpg';
+import avatar8 from '../../../img/soi.jpg';
 
 const avatarMap: { [key: number]: string } = {
   0: avatar1,
@@ -21,6 +23,8 @@ const avatarMap: { [key: number]: string } = {
   3: avatar4,
   4: avatar5,
   5: avatar6,
+  6: avatar7,
+  7: avatar8,
 };
 
 // Helper for color mapping in anonymous mode
@@ -66,8 +70,8 @@ const getPlayerAvatarByColor = (displayName: string, colorCode?: string) => {
   const color = (colorCode || "").toLowerCase();
   const colorToAvatar: { [key: string]: string } = {
     red: avatar1, blue: avatar2, green: avatar3, yellow: avatar4,
-    purple: avatar5, orange: avatar6, pink: avatar1, cyan: avatar2,
-    brown: avatar3, gray: avatar4, white: avatar5, black: avatar6
+    purple: avatar5, orange: avatar6, pink: avatar7, cyan: avatar8,
+    brown: avatar1, gray: avatar2, white: avatar3, black: avatar4
   };
 
   if (colorToAvatar[color]) return colorToAvatar[color];
@@ -476,7 +480,7 @@ const GameScreen: React.FC = () => {
       case 'VOTING':
         return <VotingView matchId={matchId!} gameState={gameState} user={user} />;
       case 'VOTE_TIE':
-        return <RoundResultView gameState={gameState} />;
+        return <RoundResultView gameState={gameState} user={user} />;
       case 'ROLE_CHECK':
         return <RoleCheckView matchId={matchId!} gameState={gameState} user={user} />;
       case 'ROLE_CHECK_RESULT':
@@ -484,7 +488,7 @@ const GameScreen: React.FC = () => {
         // Vẫn render phase này nếu server đang ở đây
         return <RoleCheckResultView matchId={matchId!} gameState={gameState} user={user} setGameState={setGameState} isModal={false} />;
       case 'ROUND_RESULT':
-        return <RoundResultView gameState={gameState} />;
+        return <RoundResultView gameState={gameState} user={user} />;
       case 'GAME_OVER':
         return <GameOverView gameState={gameState} navigate={navigate} />;
       default:
@@ -498,7 +502,8 @@ const GameScreen: React.FC = () => {
   // 3. CHỈ hiện Modal nếu phase hiện tại đã chuyển sang phase khác (không còn là ROLE_CHECK_RESULT hoặc ROLE_RESULT)
   const currentPhaseUpper = (gameState?.phase || gameState?.status || '').toUpperCase();
   const isInResultPhase = currentPhaseUpper === 'ROLE_CHECK_RESULT' || currentPhaseUpper === 'ROLE_RESULT';
-  const showRoleResultModal = hasEnteredResultPhase && !result?.acknowledged && !isInResultPhase;
+  const hasAbilitiesToSelect = result?.abilities_available && result.abilities_available.length > 0;
+  const showRoleResultModal = hasEnteredResultPhase && !result?.acknowledged && !isInResultPhase && hasAbilitiesToSelect;
 
   // Modal cho người bị Tha Hóa (Infected)
   const showInfectionModal = gameState?.role?.toLowerCase() === 'infected' && !gameState?.infected_acknowledged;
@@ -659,6 +664,7 @@ const DescribingView: React.FC<{
       </div>
       <PlayerCircle
         players={gameState.players}
+        user={user}
         currentTurnId={gameState.current_turn_user_id}
         isSpy={isSpy}
         selectedAbility={selectedAbility}
@@ -735,6 +741,7 @@ const DiscussingView: React.FC<{
       </div>
       <PlayerCircle
         players={gameState.players || []}
+        user={user}
         isSpy={isSpy}
         selectedAbility={selectedAbility}
         onFakeMessageSubmit={onFakeMessageSubmit}
@@ -756,7 +763,9 @@ const DiscussingView: React.FC<{
               const color = senderPlayer ? getPlayerColor(senderPlayer.display_name, senderPlayer.color) : null;
               return (
                 <div key={idx} className={`chat-bubble ${msg.sender_id === user?.user_id ? 'mine' : ''}`}>
-                  <span className="sender" style={color ? { color: color } : {}}>{msg.sender_name || 'Người chơi'}:</span>
+                  <span className="sender" style={color ? { color: color } : {}}>
+                    {String(msg.sender_id) === String(user?.user_id) ? 'Tôi' : (msg.sender_name || 'Người chơi')}:
+                  </span>
                   <span className="text">{msg.content}</span>
                 </div>
               );
@@ -949,11 +958,12 @@ const RoleCheckResultView: React.FC<{
           personal_role_check_result: {
             ...prev.personal_role_check_result,
             confirmed_ability: abilityType,
-            acknowledged: true // Đánh dấu đã xem xong (Spy có skill)
+            acknowledged: true, // Đánh dấu đã xem xong (Spy có skill)
+            done_with_panel: abilityType === 'none' // Nếu "None" thì ẩn luôn panel chính
           }
         }));
         if (abilityType === 'none') {
-          alert('Đã bỏ qua sử dụng kỹ năng.');
+          // No alert needed, it will just disappear
         }
       }
     } catch (err: any) {
@@ -969,7 +979,8 @@ const RoleCheckResultView: React.FC<{
       ...prev,
       personal_role_check_result: {
         ...prev.personal_role_check_result,
-        acknowledged: true
+        acknowledged: true,
+        done_with_panel: true
       }
     }));
   };
@@ -987,10 +998,19 @@ const RoleCheckResultView: React.FC<{
         await gameApi.infectPlayer(matchId, selectedTarget);
         alert('Đã thực hiện tha hóa người chơi!');
       }
+
+      // Update state to hide the panel after successful usage
+      setGameState((prev: any) => ({
+        ...prev,
+        personal_role_check_result: {
+          ...prev.personal_role_check_result,
+          done_with_panel: true
+        }
+      }));
+
       // Clear after use
       setAbilityContent('');
       setSelectedTarget(null);
-      // Không reset confirmedAbilityType ở đây để giữ trạng thái đã confirm trong phase result
     } catch (err: any) {
       alert(err.response?.data?.message || 'Lỗi khi sử dụng kỹ năng.');
     } finally {
@@ -1018,9 +1038,9 @@ const RoleCheckResultView: React.FC<{
           <p className="result-msg">{cleanMessage}</p>
 
           {result.reward_coins && (
-            <div className="coins-reward-text">
+            <div className={`coins-reward-text ${!result.correct ? 'incorrect' : ''}`}>
               <i className="fa-solid fa-coins"></i>
-              <span>+ {result.reward_amount || 100} xu</span>
+              <span>{result.correct ? '+' : '-'} {result.reward_amount || 10} xu</span>
             </div>
           )}
 
@@ -1031,7 +1051,7 @@ const RoleCheckResultView: React.FC<{
             </div>
           )}
 
-          {hasAbilities && (
+          {hasAbilities && !result?.done_with_panel && (
             <div className="ability-panel animate-slide-up">
               <h3 className="ability-title">
                 <i className="fa-solid fa-wand-magic-sparkles"></i> KỸ NĂNG ĐẶC BIỆT
@@ -1078,10 +1098,18 @@ const RoleCheckResultView: React.FC<{
                         onChange={(e) => setAbilityContent(e.target.value)}
                         autoFocus
                       />
-                      <button className="use-ability-btn" onClick={handleUseAbility} disabled={isProcessing || !abilityContent.trim()}>
-                        {isProcessing ? 'ĐANG GỬI...' : 'SỬ DỤNG NGAY'}
-                      </button>
-                      <p className="ability-usage-note">* Bạn cũng có thể dùng kỹ năng này ở các vòng miêu tả sau.</p>
+                      <div className="ability-actions">
+                        <button className="use-ability-btn" onClick={handleUseAbility} disabled={isProcessing || !abilityContent.trim()}>
+                          {isProcessing ? 'ĐANG GỬI...' : 'SỬ DỤNG NGAY'}
+                        </button>
+                        <button className="dismiss-ability-btn" onClick={() => setGameState((prev: any) => ({
+                          ...prev,
+                          personal_role_check_result: { ...prev.personal_role_check_result, done_with_panel: true }
+                        }))}>
+                          ĐỂ SAU
+                        </button>
+                      </div>
+                      <p className="ability-usage-note">* Bạn có thể dùng kỹ năng này ở các vòng miêu tả sau tại ô của AI.</p>
                     </div>
                   ) : confirmedAbilityType === 'infection' ? (
                     <div className="ability-usage">
@@ -1103,11 +1131,6 @@ const RoleCheckResultView: React.FC<{
                       <button onClick={handleUseAbility} disabled={isProcessing || !selectedTarget} className="confirm-infect-btn">
                         {isProcessing ? 'ĐANG THỰC HIỆN...' : 'XÁC NHẬN THA HÓA'}
                       </button>
-                    </div>
-                  ) : confirmedAbilityType === 'none' ? (
-                    <div className="ability-usage-none">
-                      <p>Bạn đã chọn không sử dụng kỹ năng.</p>
-                      <button className="modal-close-btn" onClick={handleAcknowledgeResult}>ĐÓNG</button>
                     </div>
                   ) : null}
                 </div>
@@ -1131,7 +1154,7 @@ const RoleCheckResultView: React.FC<{
 
 
 // Sub-component for ROUND_RESULT phase
-const RoundResultView: React.FC<{ gameState: any }> = ({ gameState }) => {
+const RoundResultView: React.FC<{ gameState: any, user: any }> = ({ gameState, user }) => {
   const result = gameState.eliminated_result || gameState.eliminated_player;
   const name = result?.eliminated_display_name || result?.display_name;
   const color = name ? getPlayerColor(name, result?.color) : null;
@@ -1145,7 +1168,7 @@ const RoundResultView: React.FC<{ gameState: any }> = ({ gameState }) => {
             className="eliminated-name"
             style={color ? { color: color } : {}}
           >
-            {name} đã bị loại!
+            {gameState.players?.find((p: any) => String(p.user_id) === String(user?.user_id))?.display_name === name ? 'Tôi' : name} đã bị loại!
           </div>
           <p className="eliminated-hint">Vai trò của người này vẫn là một ẩn số...</p>
         </div>
@@ -1168,7 +1191,7 @@ const GameOverView: React.FC<{ gameState: any, navigate: any }> = ({ gameState, 
     <div className="game-over-container animate-pop-in">
       <h1 className="game-over-title">TRÒ CHƠI KẾT THÚC</h1>
       <div className={`winner-badge ${winner.includes('spy') ? 'spy' : 'civilian'}`}>
-        PHE THẮNG: {winner.includes('spy') ? 'GIÁN ĐIỆP' : 'DÂN THƯỜNG'}
+        {winner.includes('spy') ? 'GIÁN ĐIỆP' : 'DÂN THƯỜNG'} CHIẾN THẮNG
       </div>
 
       <div className="keywords-summary">
@@ -1197,7 +1220,7 @@ const GameOverView: React.FC<{ gameState: any, navigate: any }> = ({ gameState, 
           return (
             <div key={p.user_id} className="score-row">
               <span className="player-name">
-                {p.display_name}
+                {p.username || p.display_name}
                 {isActualSpy && <span className="spy-tag"> (PHE GIÁN ĐIỆP)</span>}
               </span>
               <span className={`player-role ${isActualSpy ? 'spy' : 'civilian'}`}>
@@ -1208,10 +1231,6 @@ const GameOverView: React.FC<{ gameState: any, navigate: any }> = ({ gameState, 
           );
         })}
       </div>
-
-      <button className="back-to-lobby-btn" onClick={() => navigate('/lobby')}>
-        QUAY LẠI PHÒNG CHỜ
-      </button>
     </div>
   );
 };
@@ -1219,12 +1238,13 @@ const GameOverView: React.FC<{ gameState: any, navigate: any }> = ({ gameState, 
 // Common Player Circle Component
 const PlayerCircle: React.FC<{
   players: any[],
+  user: any,
   currentTurnId?: any,
   isSpy?: boolean,
   selectedAbility?: string,
   onFakeMessageSubmit?: (content: string) => Promise<void>,
   matchId?: string
-}> = ({ players, currentTurnId, isSpy, selectedAbility, onFakeMessageSubmit, matchId }) => {
+}> = ({ players, user, currentTurnId, isSpy, selectedAbility, onFakeMessageSubmit, matchId }) => {
   const [fakeMsg, setFakeMsg] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -1243,7 +1263,7 @@ const PlayerCircle: React.FC<{
   };
 
   return (
-    <div className="players-circle">
+    <div className={`players-circle count-${players.length}`}>
       {players.map((p, idx) => {
         const color = getPlayerColor(p.display_name, p.color);
         const isActive = currentTurnId && p.user_id && String(currentTurnId) === String(p.user_id);
@@ -1271,7 +1291,9 @@ const PlayerCircle: React.FC<{
               />
               {isActive && <div className="active-indicator">ĐANG NÓI...</div>}
             </div>
-            <div className="player-name" style={color ? { color: color, textShadow: '0 0 10px rgba(0,0,0,0.8)' } : {}}>{p.display_name}</div>
+            <div className="player-name" style={color ? { color: color, textShadow: '0 0 10px rgba(0,0,0,0.8)' } : {}}>
+              {String(p.user_id) === String(user?.user_id) ? 'Tôi' : p.display_name}
+            </div>
 
             {/* Show description if exists, otherwise show status if active */}
             {p.description ? (

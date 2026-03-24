@@ -320,37 +320,121 @@
     border-top: 10px solid white;
 }
 
-/* Positions */
-.pos-0 {
+/* Dynamic Circle Positions (up to 8 slots) — scoped to .players-circle to avoid conflict with RoomLobby */
+/* ─── DEFAULT 6-PLAYER LAYOUT (Hexagon) — scoped to .players-circle to avoid conflict with RoomLobby ─── */
+.players-circle .pos-0 {
     top: 0;
     left: 50%;
     transform: translateX(-50%);
 }
 
-.pos-1 {
+.players-circle .pos-1 {
     top: 150px;
     right: 50px;
 }
 
-.pos-2 {
+.players-circle .pos-2 {
     bottom: 150px;
     right: 50px;
 }
 
-.pos-3 {
+.players-circle .pos-3 {
     bottom: 0;
     left: 50%;
     transform: translateX(-50%);
 }
 
-.pos-4 {
+.players-circle .pos-4 {
     bottom: 150px;
     left: 50px;
 }
 
-.pos-5 {
+.players-circle .pos-5 {
     top: 150px;
     left: 50px;
+}
+
+/* ─── 7-PLAYER LAYOUT (6 humans + 1 AI): equidistant heptagon ─── */
+.players-circle.count-7 .pos-0 {
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+.players-circle.count-7 .pos-1 {
+    top: 140px;
+    right: 10px;
+}
+
+.players-circle.count-7 .pos-2 {
+    top: 450px;
+    right: 10px;
+}
+
+.players-circle.count-7 .pos-3 {
+    bottom: 20px;
+    right: 100px;
+    transform: none;
+}
+
+.players-circle.count-7 .pos-4 {
+    bottom: 20px;
+    left: 200px;
+}
+
+.players-circle.count-7 .pos-5 {
+    top: 450px;
+    left: 10px;
+}
+
+.players-circle.count-7 .pos-6 {
+    top: 140px;
+    left: 10px;
+}
+
+/* ─── 8-PLAYER LAYOUT (even octagon): for future use ─── */
+.players-circle.count-8 .pos-0 {
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+.players-circle.count-8 .pos-1 {
+    top: 70px;
+    right: 70px;
+}
+
+.players-circle.count-8 .pos-2 {
+    top: 50%;
+    right: 0;
+    transform: translateY(-50%);
+}
+
+.players-circle.count-8 .pos-3 {
+    bottom: 70px;
+    right: 70px;
+}
+
+.players-circle.count-8 .pos-4 {
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+.players-circle.count-8 .pos-5 {
+    bottom: 70px;
+    left: 70px;
+}
+
+.players-circle.count-8 .pos-6 {
+    top: 50%;
+    left: 0;
+    transform: translateY(-50%);
+}
+
+.players-circle.count-8 .pos-7 {
+    top: 70px;
+    left: 70px;
 }
 
 /* ─── CHAT AREA IN DISCUSSION ─── */
@@ -683,7 +767,7 @@
     display: flex;
     gap: 10px;
     position: absolute;
-    bottom: 45%;
+    bottom: 53%;
     left: 50%;
     transform: translate(-50%, 50%);
     width: 500px;
@@ -933,8 +1017,8 @@
     overflow-y: auto;
     background: #222;
     border: 3px solid #FFCC00;
-    border-radius: 40px;
-    padding: 40px;
+    border-radius: 30px;
+    padding: 25px 30px;
     box-shadow: 0 0 50px rgba(255, 204, 0, 0.2);
 }
 
@@ -989,14 +1073,14 @@
 }
 
 .game-over-title {
-    font-size: 80px;
+    font-size: 30px;
     color: #FFCC00;
     text-shadow: 0 0 30px rgba(255, 204, 0, 0.5);
     margin-bottom: 20px;
 }
 
 .winner-badge {
-    font-size: 56px;
+    font-size: 40px;
     padding: 20px 60px;
     border-radius: 30px;
     margin-bottom: 50px;
@@ -1050,22 +1134,53 @@
 }
 
 .final-scores-table {
-    width: 800px;
+    width: 700px;
+    max-height: 480px;
+    overflow-y: auto;
     background: rgba(255, 255, 255, 0.05);
     border-radius: 30px;
-    padding: 30px;
+    padding: 0 30px 30px 30px;
     border: 2px solid rgba(255, 255, 255, 0.1);
     margin-bottom: 50px;
+    /* Custom Scrollbar for premium feel */
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255, 204, 0, 0.5) transparent;
+}
+
+.final-scores-table::-webkit-scrollbar {
+    width: 8px;
+}
+
+.final-scores-table::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.final-scores-table::-webkit-scrollbar-thumb {
+    background: rgba(255, 204, 0, 0.3);
+    border-radius: 10px;
+}
+
+.final-scores-table::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 204, 0, 0.6);
 }
 
 .score-header {
     display: grid;
     grid-template-columns: 2fr 1fr 1fr;
-    padding: 15px 25px;
+    padding: 25px 25px 15px 25px;
     font-size: 24px;
     font-weight: 800;
     color: #AAA;
     border-bottom: 2px solid rgba(255, 255, 255, 0.1);
+    position: sticky;
+    top: 0;
+    background: #111;
+    /* Solid background to hide rows behind it */
+    z-index: 10;
+    margin: 0 -30px 0 -30px;
+    /* Offset parent padding */
+    padding-left: 55px;
+    padding-right: 55px;
 }
 
 .score-row {
@@ -1172,21 +1287,21 @@
 
 /* ─── PERSONAL RESULT CARD ─── */
 .personal-result-card {
-    background: #2D2D2D;
-    padding: 40px;
-    border-radius: 30px;
+    background: rgba(167, 114, 83, 0.5);
+    padding: 25px 30px;
+    border-radius: 24px;
     border: 3px solid #FFCC00;
     box-shadow: 0 0 30px rgba(255, 204, 0, 0.2);
 }
 
 .result-status {
-    font-size: 48px;
+    font-size: 40px;
     font-weight: 800;
-    margin-bottom: 20px;
+    margin-bottom: 10px;
 }
 
 .result-status.correct {
-    color: #2ECC40;
+    color: #FFFA65;
 }
 
 .result-status.incorrect {
@@ -1197,13 +1312,18 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 12px;
+    gap: 10px;
     color: #FFFA65;
-    font-size: 48px;
+    font-size: 36px;
     font-weight: 900;
-    margin-top: 25px;
-    text-shadow: 0 0 20px rgba(255, 250, 101, 0.8);
+    margin-top: 15px;
+    text-shadow: 0 0 15px rgba(255, 250, 101, 0.8);
     animation: reward-bounce 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275) both;
+}
+
+.coins-reward-text.incorrect {
+    color: #FF4136;
+    text-shadow: 0 0 20px rgba(255, 65, 54, 0.8);
 }
 
 .coins-reward-text i {
@@ -1458,11 +1578,13 @@
     color: #000;
     border: none;
     padding: 20px 60px;
-    font-size: 32px;
+    font-size: 20px;
     font-weight: 800;
     border-radius: 50px;
     cursor: pointer;
     transition: all 0.3s;
+    font-family: 'Baloo Bhaijaan 2', 'Be Vietnam Pro', 'Noto Sans', 'Segoe UI', Tahoma, sans-serif;
+    font-weight: bold;
 }
 
 .role-assign-container.infected {
@@ -1501,8 +1623,8 @@
 }
 
 .ability-panel {
-    margin-top: 30px;
-    padding-top: 30px;
+    margin-top: 20px;
+    padding-top: 20px;
     border-top: 2px dashed rgba(255, 204, 0, 0.3);
     text-align: left;
 }
@@ -1522,47 +1644,75 @@
 
 .ability-intro-text {
     font-size: 20px;
-    color: #AAA;
-    margin-bottom: 20px;
+    color: rgba(255, 255, 255, 0.7);
+    margin-bottom: 25px;
     text-align: center;
+    font-style: italic;
 }
 
 .ability-cards-list {
     display: flex;
     flex-direction: column;
-    gap: 15px;
+    gap: 20px;
 }
 
 .ability-card {
-    background: rgba(255, 255, 255, 0.05);
+    background: rgba(255, 255, 255, 0.03);
+    backdrop-filter: blur(10px);
     border: 2px solid rgba(255, 255, 255, 0.1);
     border-radius: 20px;
-    padding: 20px;
+    padding: 15px 20px;
     display: flex;
     align-items: center;
     gap: 20px;
     cursor: pointer;
-    transition: all 0.3s;
+    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
     position: relative;
     overflow: hidden;
 }
 
+.ability-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(135deg, rgba(255, 204, 0, 0.1) 0%, transparent 100%);
+    opacity: 0;
+    transition: opacity 0.3s;
+}
+
 .ability-card:hover {
-    background: rgba(255, 204, 0, 0.1);
+    background: rgba(255, 255, 255, 0.08);
     border-color: #FFCC00;
-    transform: translateX(10px);
+    transform: scale(1.02) translateY(-5px);
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.4), 0 0 20px rgba(255, 204, 0, 0.1);
+}
+
+.ability-card:hover::before {
+    opacity: 1;
 }
 
 .ability-card-icon {
     width: 60px;
     height: 60px;
-    background: rgba(255, 204, 0, 0.2);
+    background: rgba(255, 204, 0, 0.15);
     border-radius: 15px;
     display: flex;
     align-items: center;
     justify-content: center;
     font-size: 28px;
     color: #FFCC00;
+    transition: all 0.3s;
+    box-shadow: inset 0 0 10px rgba(255, 204, 0, 0.1);
+}
+
+.ability-card:hover .ability-card-icon {
+    transform: rotate(-10deg) scale(1.1);
+    background: #FFCC00;
+    color: #000;
+    box-shadow: 0 0 25px rgba(255, 204, 0, 0.5);
 }
 
 .ability-card-info {
@@ -1570,31 +1720,54 @@
 }
 
 .ability-name {
-    font-size: 24px;
+    font-size: 20px;
     font-weight: 800;
     color: #FFF;
-    margin-bottom: 5px;
+    margin-bottom: 4px;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
 }
 
 .ability-desc {
-    font-size: 16px;
-    color: #AAA;
+    font-size: 14px;
+    color: rgba(255, 255, 255, 0.6);
     line-height: 1.4;
 }
 
 .ability-select-hint {
-    font-size: 14px;
-    font-weight: 800;
-    color: #FFCC00;
-    padding: 5px 12px;
-    border: 1px solid #FFCC00;
-    border-radius: 10px;
+    font-size: 15px;
+    font-weight: 900;
+    color: #000;
+    background: #FFCC00;
+    padding: 8px 18px;
+    border-radius: 12px;
     opacity: 0;
-    transition: opacity 0.3s;
+    transform: translateX(20px);
+    transition: all 0.3s;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
 }
 
 .ability-card:hover .ability-select-hint {
     opacity: 1;
+    transform: translateX(0);
+}
+
+.skip-card:hover {
+    border-color: #888;
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.4), 0 0 20px rgba(255, 255, 255, 0.05);
+}
+
+.skip-card .ability-card-icon {
+    background: rgba(255, 255, 255, 0.1);
+    color: #AAA;
+}
+
+.skip-card:hover .ability-card-icon {
+    background: #EEE;
+    color: #333;
+}
+
+.skip-card .ability-select-hint {
+    background: #EEE;
 }
 
 .skip-card .ability-card-icon {
@@ -1625,17 +1798,50 @@
     text-align: center;
 }
 
+.ability-actions {
+    display: flex;
+    gap: 15px;
+    margin-top: 20px;
+}
+
 .use-ability-btn {
-    width: 100%;
+    flex: 2;
     background: #FFCC00;
     color: #000;
-    font-size: 24px;
+    font-size: 22px;
     font-weight: 800;
-    padding: 15px;
-    border-radius: 15px;
+    padding: 12px;
+    border-radius: 12px;
     border: none;
     cursor: pointer;
-    margin-top: 10px;
+    transition: all 0.2s;
+    font-family: 'Baloo Bhaijaan 2', 'Be Vietnam Pro', 'Noto Sans', 'Segoe UI', Tahoma, sans-serif;
+    font-weight: bold;
+}
+
+.use-ability-btn:hover:not(:disabled) {
+    background: #FFF;
+    transform: scale(1.02);
+}
+
+.dismiss-ability-btn {
+    flex: 1;
+    background: rgba(255, 255, 255, 0.1);
+    color: black;
+    font-size: 18px;
+    font-weight: 800;
+    padding: 12px;
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    cursor: pointer;
+    transition: all 0.2s;
+    font-family: 'Baloo Bhaijaan 2', 'Be Vietnam Pro', 'Noto Sans', 'Segoe UI', Tahoma, sans-serif;
+    font-weight: bold;
+}
+
+.dismiss-ability-btn:hover {
+    background: rgba(255, 255, 255, 0.2);
+    border-color: #FFF;
 }
 
 .infect-btn {
