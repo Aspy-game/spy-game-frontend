@@ -47,11 +47,12 @@ const RoomLobby: React.FC = () => {
   const navigate = useNavigate();
   const { connect, disconnect, subscribe, sendMessage, connected } = useWebSocket();
   const setUser = useAuthStore(state => state.setUser);
-  
+
   const [roomInfo, setRoomInfo] = useState<any>(null);
   const [players, setPlayers] = useState<Player[]>([]);
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
   const [inputMessage, setInputMessage] = useState('');
+  const [selectedPlayerId, setSelectedPlayerId] = useState<number | null>(null);
   const chatEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -230,7 +231,7 @@ const RoomLobby: React.FC = () => {
   const isHost = String(roomInfo?.host_id) === String(user?.user_id);
 
   return (
-    <div 
+    <div
       className="room-lobby-container-new"
       style={{
         backgroundImage: `url(${bg})`,
@@ -263,7 +264,15 @@ const RoomLobby: React.FC = () => {
           const player = players[index];
           return (
             <div key={index} className={`player-avatar-slot pos-${index}`}>
-              <div className="player-avatar-circle">
+              <div
+                className="player-avatar-circle"
+                onClick={() => {
+                  if (isHost && player) {
+                    setSelectedPlayerId(prev => prev === player.user_id ? null : player.user_id);
+                  }
+                }}
+                style={{ cursor: isHost && player ? 'pointer' : 'default' }}
+              >
                 {player ? (
                   player.avatar_url ? (
                     <img src={player.avatar_url} alt={player.display_name} className="player-avatar-img" />
@@ -282,31 +291,31 @@ const RoomLobby: React.FC = () => {
                     {String(player.user_id) === String(user?.user_id) ? 'Tôi' : player.display_name}
                     {String(player.user_id) === String(roomInfo?.host_id) && ' 👑'}
                   </span>
-                  
+
                   {/* Host Actions: Chỉ hiển thị cho Host */}
-                  {isHost && (
+                  {isHost && selectedPlayerId === player.user_id && (
                     <div className="host-actions-overlay always-visible-host">
-                      <button 
-                        className="host-action-btn spy-select" 
-                        onClick={(e) => { e.stopPropagation(); handleSetSpy(player.user_id, player.display_name); }}
+                      <button
+                        className="host-action-btn spy-select"
+                        onClick={(e) => { e.stopPropagation(); handleSetSpy(player.user_id, player.display_name); setSelectedPlayerId(null); }}
                         title="Chọn làm Gián điệp (Host only)"
                       >
                         <i className="fa-solid fa-mask"></i>
                       </button>
-                      
+
                       {/* Các nút Kick và Transfer chỉ hiện cho người chơi KHÁC */}
                       {String(player.user_id) !== String(user?.user_id) && (
                         <>
-                          <button 
-                            className="host-action-btn kick" 
-                            onClick={(e) => { e.stopPropagation(); handleKickPlayer(player.user_id); }}
+                          <button
+                            className="host-action-btn kick"
+                            onClick={(e) => { e.stopPropagation(); handleKickPlayer(player.user_id); setSelectedPlayerId(null); }}
                             title="Kick người chơi"
                           >
                             <i className="fa-solid fa-user-minus"></i>
                           </button>
-                          <button 
-                            className="host-action-btn transfer" 
-                            onClick={(e) => { e.stopPropagation(); handleTransferHost(player.user_id); }}
+                          <button
+                            className="host-action-btn transfer"
+                            onClick={(e) => { e.stopPropagation(); handleTransferHost(player.user_id); setSelectedPlayerId(null); }}
                             title="Nhường quyền trưởng phòng"
                           >
                             <i className="fa-solid fa-crown"></i>
@@ -322,8 +331,8 @@ const RoomLobby: React.FC = () => {
         })}
 
         {/* ─── CENTER READY BUTTON ─── */}
-        <button 
-          className="center-ready-btn" 
+        <button
+          className="center-ready-btn"
           onClick={handleStartGame}
           disabled={roomInfo?.host_id !== user?.user_id && players.length < 3}
         >
@@ -343,9 +352,9 @@ const RoomLobby: React.FC = () => {
           <div ref={chatEndRef} />
         </div>
         <div className="chat-input-container-new">
-          <input 
-            type="text" 
-            placeholder="Nhập tin nhắn..." 
+          <input
+            type="text"
+            placeholder="Nhập tin nhắn..."
             className="chat-input-new"
             value={inputMessage}
             onChange={(e) => setInputMessage(e.target.value)}
