@@ -870,8 +870,8 @@ const VotingView: React.FC<{ matchId: string, gameState: any, user: any }> = ({ 
         })}
       </div>
       <p className="voting-hint">
-        {!isAlive 
-          ? 'Bạn đã bị loại, không thể tham gia bỏ phiếu.' 
+        {!isAlive
+          ? 'Bạn đã bị loại, không thể tham gia bỏ phiếu.'
           : (votedId ? 'Bạn đã bỏ phiếu cho người này. Đang chờ kết quả...' : 'Hãy chọn người bạn nghi ngờ nhất! AI cũng có thể là Gián điệp.')}
       </p>
     </div>
@@ -1154,11 +1154,11 @@ const RoleCheckResultView: React.FC<{
           )}
 
           {/* Nút đóng cho Civilian hoặc Spy đoán sai */}
-          {!hasAbilities && (
+          {/* {!hasAbilities && (
             <div className="modal-footer">
               <button className="modal-close-btn" onClick={handleAcknowledgeResult}>XÁC NHẬN</button>
             </div>
-          )}
+          )} */}
         </div>
       ) : (
         <p className="waiting-msg">Đang tổng hợp kết quả...</p>
