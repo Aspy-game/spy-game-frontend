@@ -1241,7 +1241,9 @@ const GameOverView: React.FC<{ gameState: any, navigate: any }> = ({ gameState, 
               <span className={`player-role ${isActualSpy ? 'spy' : 'civilian'}`}>
                 {isActualSpy ? (roleUpper === 'INFECTED' ? 'Bị tha hóa' : 'Gián điệp') : 'Dân thường'}
               </span>
-              <span className="player-score">+{p.score_gained || 0}</span>
+              <span className={`player-score ${(p.score_gained || 0) < 0 ? 'negative' : 'positive'}`} style={{ color: (p.score_gained || 0) < 0 ? '#ff4d4f' : '#34C759' }}>
+                {(p.score_gained || 0) > 0 ? `+${p.score_gained}` : (p.score_gained || 0)}
+              </span>
             </div>
           );
         })}
