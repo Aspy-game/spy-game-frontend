@@ -1171,7 +1171,7 @@ const RoleCheckResultView: React.FC<{
 // Sub-component for ROUND_RESULT phase
 const RoundResultView: React.FC<{ gameState: any, user: any }> = ({ gameState, user }) => {
   const result = gameState.eliminated_result || gameState.eliminated_player;
-  
+
   // Nếu phase là ROUND_RESULT nhưng chưa có kết quả nào (đang đợi)
   if (!result && gameState.phase === 'ROUND_RESULT') {
     return <div className="round-result-container"><p className="waiting-msg">Đang tổng hợp kết quả...</p></div>;

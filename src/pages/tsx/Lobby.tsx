@@ -35,6 +35,7 @@ const Lobby: React.FC = () => {
   const [showCreateRoom, setShowCreateRoom] = useState(false);
 
   const [isReceived, setIsReceived] = useState(false);
+  const [checkinStreak, setCheckinStreak] = useState(1);
   const [flyingCoins, setFlyingCoins] = useState<FlyingCoin[]>([]);
   const [isShaking, setIsShaking] = useState(false);
   const setUser = useAuthStore(state => state.setUser);
@@ -63,6 +64,7 @@ const Lobby: React.FC = () => {
       } else {
         setIsReceived(true);
       }
+      setCheckinStreak(res.data.streak || 1);
     } catch (error) {
       console.error('Lỗi khi kiểm tra trạng thái điểm danh:', error);
     }
@@ -140,7 +142,12 @@ const Lobby: React.FC = () => {
 
     try {
       // Gọi API điểm danh trước
-      await axiosInstance.post('/economy/daily-checkin');
+      const res = await axiosInstance.post('/economy/daily-checkin');
+      const { amount: receivedAmount, streak: newStreak } = res.data;
+      setCheckinStreak(newStreak);
+      setIsReceived(true);
+      // Có thể dùng receivedAmount từ BE thay vì amount từ component truyền lên
+      amount = receivedAmount || amount;
     } catch (error: any) {
       const errorMsg = error.response?.data?.error || 'Điểm danh thất bại.';
       alert(errorMsg);
@@ -292,6 +299,7 @@ const Lobby: React.FC = () => {
         <DailyAttendance 
           onClose={() => setShowAttendance(false)} 
           isReceived={isReceived}
+          streak={checkinStreak}
           onReceive={handleReceiveAttendance}
         />
       )}
