@@ -15,15 +15,18 @@
 
 .profile-modal {
   position: absolute;
-  left: 162px; /* (1440 - 1115) / 2 */
-  top: 202px;  /* (1080 - 675) / 2 */
+  left: 162px;
+  /* (1440 - 1115) / 2 */
+  top: 202px;
+  /* (1080 - 675) / 2 */
   width: 1115px;
   height: 675px;
   background: rgba(167, 114, 83, 0.3);
   border: 5px solid #66413B;
   border-radius: 75px;
   box-shadow: 0px 4px 4px rgba(0, 0, 0, 0.25);
-  padding: 40px;
+  padding: 20px 40px 40px 40px;
+  /* Giảm padding trên */
   display: flex;
   flex-direction: column;
   color: white;
@@ -32,18 +35,23 @@
 
 .profile-header-title {
   font-family: 'Baloo Bhaijaan 2', cursive;
-  font-size: 60px;
+  font-size: 50px;
+  /* Giảm kích thước font nhẹ */
   font-weight: 700;
   text-align: center;
-  margin-bottom: 20px;
+  margin-bottom: 0px;
+  /* Bỏ margin bottom */
   text-shadow: 0px 4px 4px rgba(0, 0, 0, 0.25);
 }
 
 .profile-content {
   display: flex;
-  justify-content: space-around;
-  align-items: center;
-  padding: 0 20px;
+  justify-content: center;
+  align-items: flex-start;
+  padding: 0 40px;
+  gap: 60px;
+  flex: 1;
+  /* Cho phép content chiếm hết không gian còn lại */
 }
 
 .profile-details {
@@ -110,9 +118,35 @@
   font-weight: 600;
 }
 
+.profile-left-col {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 30px;
+  flex-shrink: 0;
+}
+
+.id-display-group {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.copy-icon {
+  font-size: 20px;
+  color: rgba(255, 255, 255, 0.7);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.copy-icon:hover {
+  color: white;
+  transform: scale(1.2);
+}
+
 .profile-avatar-large {
-  width: 280px;
-  height: 280px;
+  width: 220px;
+  height: 220px;
   border-radius: 50%;
   background: #D9D9D9;
   border: 5px solid white;
@@ -213,4 +247,103 @@
 
 .btn-confirm-profile:active {
   transform: scale(0.95);
+}
+
+/* --- GAME HISTORY --- */
+.profile-history-section {
+  flex: 1;
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 20px;
+  padding: 15px;
+  height: 380px;
+  display: flex;
+  flex-direction: column;
+}
+
+.history-title {
+  font-family: 'Baloo Bhaijaan 2', cursive;
+  font-size: 24px;
+  margin-bottom: 10px;
+  border-bottom: 2px solid rgba(255, 255, 255, 0.1);
+  padding-bottom: 5px;
+  text-align: center;
+  margin-top: -5px;
+}
+
+.history-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  overflow-y: auto;
+  padding-right: 5px;
+}
+
+.history-list::-webkit-scrollbar {
+  width: 6px;
+}
+
+.history-list::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.1);
+  border-radius: 10px;
+}
+
+.history-list::-webkit-scrollbar-thumb {
+  background: #66413B;
+  border-radius: 10px;
+}
+
+.history-list::-webkit-scrollbar-thumb:hover {
+  background: #7a5249;
+}
+
+.history-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: rgba(255, 255, 255, 0.05);
+  padding: 10px 15px;
+  border-radius: 10px;
+  font-family: 'Baloo Bhaijaan 2', cursive;
+  font-size: 18px;
+}
+
+.history-role {
+  padding: 2px 8px;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 700;
+  text-transform: uppercase;
+  text-align: center;
+}
+
+.history-role.spy {
+  background: #E74C3C;
+  color: white;
+  text-align: center;
+}
+
+.history-role.civilian {
+  background: #3498DB;
+  color: white;
+  align-items: center;
+}
+
+.history-result.win {
+  color: #2ECC71;
+  font-weight: 700;
+}
+
+.history-result.lose {
+  color: #95A5A6;
+}
+
+.history-date {
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.no-history {
+  text-align: center;
+  color: rgba(255, 255, 255, 0.5);
+  margin-top: 50px;
 }

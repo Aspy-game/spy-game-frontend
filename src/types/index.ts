@@ -8,6 +8,17 @@ export interface User {
   avatar_url?: string;
   role?: Role;
   balance?: number;
+  stats?: UserStats;
+}
+
+export interface UserStats {
+  total_games: number;
+  wins_civilian: number;
+  wins_spy: number;
+  wins_infected: number;
+  times_as_spy: number;
+  times_infected: number;
+  correct_votes: number;
 }
 
 export type RoomStatus = 'waiting' | 'in_game' | 'finished';

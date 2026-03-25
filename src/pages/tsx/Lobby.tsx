@@ -39,17 +39,21 @@ const Lobby: React.FC = () => {
   const [flyingCoins, setFlyingCoins] = useState<FlyingCoin[]>([]);
   const [isShaking, setIsShaking] = useState(false);
   const setUser = useAuthStore(state => state.setUser);
-  
+
   const [rooms, setRooms] = useState<any[]>([]);
+  const [leaderboardType, setLeaderboardType] = useState('balance'); // 'balance', 'spy', 'civilian'
+  const [leaderboardData, setLeaderboardData] = useState<any[]>([]);
+  const [isSidebarExpanded, setIsSidebarExpanded] = useState(false);
   const [searchCode, setSearchCode] = useState('');
   const [isLoadingRooms, setIsLoadingRooms] = useState(false);
   const { connect, disconnect, subscribe, connected } = useWebSocket();
-  
+
   const coinBoxRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     fetchRooms();
     fetchUserProfile();
+    fetchLeaderboard('balance');
     checkCheckinStatus();
     connect();
     return () => disconnect();
@@ -85,16 +89,16 @@ const Lobby: React.FC = () => {
     if (connected) {
       subscribe('/topic/rooms/lobby', (event: any) => {
         const { type, room_id, room_code, current_players, max_players, status, is_private } = event;
-        
+
         setRooms(prevRooms => {
           if (type === 'ROOM_DELETED') {
             return prevRooms.filter(r => r.room_id !== room_id);
           }
-          
+
           if (type === 'ROOM_UPDATED') {
             const index = prevRooms.findIndex(r => r.room_id === room_id);
             const updatedRoom = { room_id, room_code, current_players, max_players, status, is_private };
-            
+
             if (index !== -1) {
               const newRooms = [...prevRooms];
               newRooms[index] = updatedRoom;
@@ -108,6 +112,21 @@ const Lobby: React.FC = () => {
       });
     }
   }, [connected, subscribe]);
+
+  const fetchLeaderboard = async (type: string) => {
+    try {
+      const response = await axiosInstance.get(`/economy/leaderboard?type=${type}`);
+      setLeaderboardData(response.data || []);
+    } catch (error) {
+      console.error('Lỗi khi tải bảng xếp hạng:', error);
+    }
+  };
+
+  useEffect(() => {
+    if (leaderboardType) {
+      fetchLeaderboard(leaderboardType);
+    }
+  }, [leaderboardType]);
 
   const fetchRooms = async () => {
     try {
@@ -235,17 +254,73 @@ const Lobby: React.FC = () => {
       {!isModalOpen && (
         <>
           {/* ─── SIDEBAR LEFT (LEADERBOARD) ─── */}
-          <aside className="lobby-sidebar-left-new">
-            {[1, 2, 3, 4, 5].map((rank) => (
-              <div key={rank} className="rank-item">
-                <div className="rank-avatar">
-                  {/* Avatar placeholder */}
-                </div>
-                {rank <= 3 && (
-                  <span className={`rank-num rank-${rank}-text`}>{rank}</span>
-                )}
+          <aside className={`lobby-sidebar-left-new ${isSidebarExpanded ? 'expanded' : ''}`}>
+            {/* TOGGLE BUTTON */}
+            <div className="sidebar-toggle-btn" onClick={() => setIsSidebarExpanded(!isSidebarExpanded)}>
+              <i className={`fa-solid ${isSidebarExpanded ? 'fa-chevron-left' : 'fa-chevron-right'}`}></i>
+            </div>
+
+            <div className="leaderboard-tabs">
+              <div 
+                className={`leaderboard-tab ${leaderboardType === 'balance' ? 'active' : ''}`}
+                onClick={() => setLeaderboardType('balance')}
+                title="Xếp hạng theo xu"
+              >
+                <i className="fa-solid fa-coins"></i>
+                {isSidebarExpanded && <span className="tab-label">Xu</span>}
               </div>
-            ))}
+              <div 
+                className={`leaderboard-tab ${leaderboardType === 'spy' ? 'active' : ''}`}
+                onClick={() => setLeaderboardType('spy')}
+                title="Xếp hạng theo ván thắng Spy"
+              >
+                <i className="fa-solid fa-user-secret"></i>
+                {isSidebarExpanded && <span className="tab-label">Spy</span>}
+              </div>
+              <div 
+                className={`leaderboard-tab ${leaderboardType === 'civilian' ? 'active' : ''}`}
+                onClick={() => setLeaderboardType('civilian')}
+                title="Xếp hạng theo ván thắng Dân thường"
+              >
+                <i className="fa-solid fa-users"></i>
+                {isSidebarExpanded && <span className="tab-label">Dân</span>}
+              </div>
+            </div>
+
+            <div className="leaderboard-list">
+              {leaderboardData.slice(0, 10).map((item, index) => (
+                <div key={index} className={`rank-item ${isSidebarExpanded ? 'expanded' : ''}`} title={`${item.display_name}: ${item.score}`}>
+                  <div className="rank-avatar-wrapper">
+                    <div className="rank-avatar">
+                      {item.avatar_url ? (
+                        <img src={item.avatar_url} alt="Avatar" />
+                      ) : (
+                        <span className="rank-avatar-placeholder">
+                          {item.display_name?.charAt(0) || '?'}
+                        </span>
+                      )}
+                    </div>
+                    {index < 3 && (
+                      <span className={`rank-num rank-${index + 1}-text`}>{index + 1}</span>
+                    )}
+                  </div>
+
+                  {isSidebarExpanded ? (
+                    <div className="rank-info-expanded">
+                      <span className="rank-name">{item.display_name}</span>
+                      <span className="rank-score-text">
+                        {item.score} {leaderboardType === 'balance' ? 'xu' : 'ván'}
+                      </span>
+                    </div>
+                  ) : (
+                    <span className="rank-score-minimal">{item.score}</span>
+                  )}
+                </div>
+              ))}
+              {leaderboardData.length === 0 && (
+                <p className="no-rank-data">Trống</p>
+              )}
+            </div>
           </aside>
 
           {/* ─── MAIN CONTENT AREA ─── */}
@@ -253,9 +328,9 @@ const Lobby: React.FC = () => {
             {/* SEARCH BAR */}
             <div className="lobby-search-bar-new">
               <span className="search-label-new">Tìm phòng:</span>
-              <input 
-                type="text" 
-                className="search-input-new" 
+              <input
+                type="text"
+                className="search-input-new"
                 placeholder="Nhập mã phòng..."
                 value={searchCode}
                 onChange={(e) => setSearchCode(e.target.value)}
@@ -292,29 +367,29 @@ const Lobby: React.FC = () => {
           </div>
         </>
       )}
- 
+
       {/* ─── PROFILE MODAL ─── */}
       {showProfile && <Profile onClose={() => setShowProfile(false)} />}
       {showAttendance && (
-        <DailyAttendance 
-          onClose={() => setShowAttendance(false)} 
+        <DailyAttendance
+          onClose={() => setShowAttendance(false)}
           isReceived={isReceived}
           streak={checkinStreak}
           onReceive={handleReceiveAttendance}
         />
       )}
       {showSettings && (
-        <Settings 
-          onClose={() => setShowSettings(false)} 
+        <Settings
+          onClose={() => setShowSettings(false)}
           onLogout={handleLogout}
           onChangePassword={() => {
             setShowSettings(false);
             setShowChangePassword(true);
-          }} 
+          }}
         />
       )}
       {showChangePassword && (
-        <ChangePassword 
+        <ChangePassword
           onClose={() => setShowChangePassword(false)}
           onSubmit={(oldP, newP) => {
             console.log('Change password:', oldP, newP);
@@ -323,7 +398,7 @@ const Lobby: React.FC = () => {
         />
       )}
       {showCreateRoom && (
-        <CreateRoom 
+        <CreateRoom
           onClose={() => setShowCreateRoom(false)}
           onConfirm={(data) => {
             console.log('Create room with:', data);
