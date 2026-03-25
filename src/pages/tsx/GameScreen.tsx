@@ -1171,19 +1171,26 @@ const RoleCheckResultView: React.FC<{
 // Sub-component for ROUND_RESULT phase
 const RoundResultView: React.FC<{ gameState: any, user: any }> = ({ gameState, user }) => {
   const result = gameState.eliminated_result || gameState.eliminated_player;
+
+  // Nếu phase là ROUND_RESULT nhưng chưa có kết quả nào (đang đợi)
+  if (!result && gameState.phase === 'ROUND_RESULT') {
+    return <div className="round-result-container"><p className="waiting-msg">Đang tổng hợp kết quả...</p></div>;
+  }
+
   const name = result?.eliminated_display_name || result?.display_name;
+  const isTie = !result?.eliminated_user_id && (result?.message?.includes('Hòa') || !name);
   const color = name ? getPlayerColor(name, result?.color) : null;
 
   return (
     <div className="round-result-container animate-pop-in">
-      {name ? (
+      {!isTie && name ? (
         <div className="eliminated-card">
           <p className="eliminated-text">Kết quả bỏ phiếu:</p>
           <div
             className="eliminated-name"
             style={color ? { color: color } : {}}
           >
-            {gameState.players?.find((p: any) => String(p.user_id) === String(user?.user_id))?.display_name === name ? 'Tôi' : name} đã bị loại!
+            {result.eliminated_user_id === user?.user_id ? 'Bạn' : name} đã bị loại!
           </div>
           <p className="eliminated-hint">Vai trò của người này vẫn là một ẩn số...</p>
         </div>
