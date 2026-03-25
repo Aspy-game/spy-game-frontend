@@ -8,14 +8,44 @@ export default function Forgot() {
   const [username, setUsername] = useState('')
   const [email, setEmail] = useState('')
   const [otp, setOtp] = useState('')
-  const { loading, error } = useAuth()
+  const { forgotPassword, verifyResetToken, loading, error: authError } = useAuth()
+  const [localError, setLocalError] = useState<string | null>(null)
   const navigate = useNavigate()
+
+  const handleGetOtp = async () => {
+    setLocalError(null)
+    if (!/^[a-zA-Z0-9_]{3,20}$/.test(username)) {
+      setLocalError('Tên tài khoản không hợp lệ.');
+      return;
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      setLocalError('Định dạng email không hợp lệ.');
+      return;
+    }
+    const result = await forgotPassword(username, email)
+    if (result.success) {
+      alert(result.message)
+    } else {
+      setLocalError(result.message)
+    }
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!username || !email || !otp) return
-    navigate('/reset')
+    setLocalError(null)
+    if (!username || !email || !otp) {
+      setLocalError('Vui lòng nhập đầy đủ thông tin.');
+      return;
+    }
+    const result = await verifyResetToken(username, email, otp)
+    if (result.success) {
+      navigate('/reset', { state: { username, email, otp } })
+    } else {
+      setLocalError(result.message)
+    }
   }
+
+  const error = localError || authError;
 
   return (
     <div
@@ -70,10 +100,11 @@ export default function Forgot() {
           <button
             type="button"
             className="forgot-otp-link"
-            onClick={() => {}}
+            onClick={handleGetOtp}
             aria-label="Nhận mã xác nhận"
+            disabled={loading}
           >
-            Nhận mã xác nhận
+            {loading ? 'Đang gửi...' : 'Nhận mã xác nhận'}
           </button>
 
           {error && <p className="forgot-error">{error}</p>}

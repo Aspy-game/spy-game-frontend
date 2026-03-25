@@ -3,25 +3,36 @@ import '../css/change-password.css';
 
 interface ChangePasswordProps {
   onClose: () => void;
-  onSubmit: (oldPwd: string, newPwd: string) => void;
+  onSubmit: (oldPwd: string, newPwd: string) => Promise<void>; // Make it async
+  loading: boolean;
+  error: string | null;
 }
 
-const ChangePassword: React.FC<ChangePasswordProps> = ({ onClose, onSubmit }) => {
+const ChangePassword: React.FC<ChangePasswordProps> = ({ onClose, onSubmit, loading, error }) => {
   const [oldPassword, setOldPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showOld, setShowOld] = useState(false);
   const [showNew, setShowNew] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
+  const [localError, setLocalError] = useState<string | null>(null);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    setLocalError(null);
+
+    if (oldPassword.length < 6 || newPassword.length < 6) {
+      setLocalError('Mật khẩu phải có ít nhất 6 ký tự.');
+      return;
+    }
     if (newPassword !== confirmPassword) {
-      alert('Mật khẩu mới không khớp!');
+      setLocalError('Mật khẩu mới không khớp!');
       return;
     }
     onSubmit(oldPassword, newPassword);
   };
+
+  const displayError = localError || error;
 
   return (
     <div className="change-password-panel">
@@ -77,8 +88,10 @@ const ChangePassword: React.FC<ChangePasswordProps> = ({ onClose, onSubmit }) =>
           </div>
         </div>
 
-        <button type="submit" className="cp-submit-btn">
-          Xác nhận
+        {displayError && <p className="cp-error">{displayError}</p>}
+
+        <button type="submit" className="cp-submit-btn" disabled={loading}>
+          {loading ? 'Đang xử lý...' : 'Xác nhận'}
         </button>
       </form>
     </div>

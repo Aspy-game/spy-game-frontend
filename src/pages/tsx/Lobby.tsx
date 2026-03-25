@@ -10,6 +10,7 @@ import ChangePassword from './ChangePassword';
 import CreateRoom from './CreateRoom';
 import axiosInstance from '../../api/axiosInstance';
 import { useWebSocket } from '../../hooks/useWebSocket';
+import { useAuth } from '../../hooks/useAuth';
 
 interface FlyingCoin {
   id: number;
@@ -26,6 +27,7 @@ interface FlyingCoin {
 const Lobby: React.FC = () => {
   const { user } = useAuthStore();
   const navigate = useNavigate();
+  const { changePassword, loading: authLoading, error: authError } = useAuth();
   const logoutStore = useAuthStore((state) => state.logout);
   // const { logout, loading } = useAuth();
   const [showProfile, setShowProfile] = useState(false);
@@ -391,10 +393,16 @@ const Lobby: React.FC = () => {
       {showChangePassword && (
         <ChangePassword
           onClose={() => setShowChangePassword(false)}
-          onSubmit={(oldP, newP) => {
-            console.log('Change password:', oldP, newP);
-            setShowChangePassword(false);
+          onSubmit={async (oldPassword, newPassword) => {
+            const result = await changePassword(oldPassword, newPassword);
+            if (result.success) {
+              alert(result.message || 'Đổi mật khẩu thành công!');
+              setShowChangePassword(false);
+            } 
+            // Error is handled by the component itself via props
           }}
+          loading={authLoading}
+          error={authError}
         />
       )}
       {showCreateRoom && (

@@ -125,3 +125,16 @@
 }
 .reset-button:hover:not(:disabled) { filter: brightness(1.08); }
 .reset-button:disabled { opacity: 1; filter: none; cursor: not-allowed; }
+
+.reset-error {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  top: 470px;
+  width: 564px;
+  font-family: 'Inter', sans-serif;
+  font-size: 22px;
+  color: #ffe0d0;
+  font-weight: 600;
+  text-align: center;
+}

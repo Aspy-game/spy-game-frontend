@@ -1,7 +1,7 @@
 import { useState, useCallback } from 'react';
 import axiosInstance from '../api/axiosInstance';
 import useAuthStore from '../store/authStore';
-import type { LoginResponse, RegisterResponse, Role, User } from '../types';
+import type { LoginResponse, RegisterResponse, Role, User, RegisterRequest } from '../types';
 
 // ─────────────────────────────────────────────────────────────
 //  ĐỔI THÀNH false KHI CÓ BACKEND THẬT
@@ -88,7 +88,7 @@ export const useAuth = () => {
     }
   }, [setAuth]);
 
-  const register = useCallback(async (data: { username: string; email: string; password: string; display_name: string }) => {
+  const register = useCallback(async (data: RegisterRequest) => {
     setLoading(true);
     setError(null);
     try {
@@ -126,7 +126,7 @@ export const useAuth = () => {
       setAuth(user, access_token, refresh_token);
       return true;
     } catch (err: any) {
-      const message = err.response?.data?.message || err.message || 'Đăng ký thất bại.';
+      const message = err.response?.data?.error || err.response?.data?.message || err.message || 'Đăng ký thất bại.';
 
       setError(message);
       return false;
@@ -149,5 +149,65 @@ export const useAuth = () => {
     }
   }, [logoutStore]);
 
-  return { login, register, logout, loading, error };
+  const forgotPassword = useCallback(async (username: string, email: string) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const response = await axiosInstance.post('/auth/forgot-password', { username, email });
+      return { success: true, message: response.data.message };
+    } catch (err: any) {
+      const message = err.response?.data?.error || err.response?.data?.message || 'Gửi mã thất bại.';
+      setError(message);
+      return { success: false, message };
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  const verifyResetToken = useCallback(async (username: string, email: string, token: string) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const response = await axiosInstance.post('/auth/verify-reset-token', { username, email, token });
+      return { success: true, message: response.data.message };
+    } catch (err: any) {
+      const message = err.response?.data?.error || err.response?.data?.message || 'Mã xác nhận sai.';
+      setError(message);
+      return { success: false, message };
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  const resetPassword = useCallback(async (username: string, email: string, token: string, newPassword: string) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const response = await axiosInstance.post('/auth/reset-password', { username, email, token, newPassword });
+      return { success: true, message: response.data.message };
+    } catch (err: any) {
+      const message = err.response?.data?.error || err.response?.data?.message || 'Đặt lại mật khẩu thất bại.';
+      setError(message);
+      return { success: false, message };
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  const changePassword = useCallback(async (oldPassword: string, newPassword: string) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const response = await axiosInstance.post('/auth/change-password', { oldPassword, newPassword });
+      return { success: true, message: response.data.message };
+    } catch (err: any) {
+      const message = err.response?.data?.error || err.response?.data?.message || 'Đổi mật khẩu thất bại.';
+      setError(message);
+      return { success: false, message };
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  return { login, register, logout, forgotPassword, verifyResetToken, resetPassword, changePassword, loading, error };
 };
