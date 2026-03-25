@@ -21,6 +21,22 @@ export interface RegisterResponse {
   expires_in: number;
 }
 
+export interface RegisterRequest {
+  username: string;
+  email: string;
+  password: string;
+  display_name: string;
+  confirm_password?: string;
+}
+
+export interface LoginResponse {
+  username: string;
+  email: string;
+  password: string;
+  display_name: string;
+  confirm_password?: string;
+}
+
 export interface LoginResponse {
   user_id: number;
   username: string;

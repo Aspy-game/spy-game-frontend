@@ -8,13 +8,27 @@ export default function Login() {
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [showPwd, setShowPwd] = useState(false)
-  const { login, loading, error } = useAuth()
+  const { login, loading, error: authError } = useAuth()
+  const [localError, setLocalError] = useState<string | null>(null)
   const navigate = useNavigate()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    setLocalError(null)
+
+    if (!/^[a-zA-Z0-9_]{3,20}$/.test(username)) {
+      setLocalError('Tên tài khoản không hợp lệ.');
+      return;
+    }
+    if (password.length < 6) {
+      setLocalError('Mật khẩu phải có ít nhất 6 ký tự.');
+      return;
+    }
+
     await login(username, password)
   }
+
+  const error = localError || authError;
 
   return (
       <div
