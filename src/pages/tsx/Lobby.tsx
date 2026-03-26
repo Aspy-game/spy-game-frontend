@@ -34,6 +34,7 @@ const Lobby: React.FC = () => {
   const [showAttendance, setShowAttendance] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [showChangePassword, setShowChangePassword] = useState(false);
+  const [cpSuccess, setCpSuccess] = useState<string | null>(null);
   const [showCreateRoom, setShowCreateRoom] = useState(false);
 
   const [isReceived, setIsReceived] = useState(false);
@@ -263,7 +264,7 @@ const Lobby: React.FC = () => {
             </div>
 
             <div className="leaderboard-tabs">
-              <div 
+              <div
                 className={`leaderboard-tab ${leaderboardType === 'balance' ? 'active' : ''}`}
                 onClick={() => setLeaderboardType('balance')}
                 title="Xếp hạng theo xu"
@@ -271,7 +272,7 @@ const Lobby: React.FC = () => {
                 <i className="fa-solid fa-coins"></i>
                 {isSidebarExpanded && <span className="tab-label">Xu</span>}
               </div>
-              <div 
+              <div
                 className={`leaderboard-tab ${leaderboardType === 'spy' ? 'active' : ''}`}
                 onClick={() => setLeaderboardType('spy')}
                 title="Xếp hạng theo ván thắng Spy"
@@ -279,7 +280,7 @@ const Lobby: React.FC = () => {
                 <i className="fa-solid fa-user-secret"></i>
                 {isSidebarExpanded && <span className="tab-label">Spy</span>}
               </div>
-              <div 
+              <div
                 className={`leaderboard-tab ${leaderboardType === 'civilian' ? 'active' : ''}`}
                 onClick={() => setLeaderboardType('civilian')}
                 title="Xếp hạng theo ván thắng Dân thường"
@@ -396,15 +397,20 @@ const Lobby: React.FC = () => {
           onSubmit={async (oldPassword, newPassword) => {
             const result = await changePassword(oldPassword, newPassword);
             if (result.success) {
-              alert(result.message || 'Đổi mật khẩu thành công!');
-              setShowChangePassword(false);
-            } 
+              setCpSuccess(result.message || 'Đổi mật khẩu thành công!');
+              setTimeout(() => {
+                setShowChangePassword(false);
+                setCpSuccess(null);
+              }, 2000);
+            }
             // Error is handled by the component itself via props
           }}
           loading={authLoading}
           error={authError}
+          success={cpSuccess}
         />
       )}
+
       {showCreateRoom && (
         <CreateRoom
           onClose={() => setShowCreateRoom(false)}

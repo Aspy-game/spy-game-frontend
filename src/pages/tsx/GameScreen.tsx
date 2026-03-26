@@ -159,7 +159,26 @@ const GameScreen: React.FC = () => {
         state.timer = Math.max(0, Math.floor((endTime - now) / 1000));
       }
 
-      setGameState(state);
+      setGameState((prev: any) => {
+        if (!prev) return state;
+        const mergedState = { ...state };
+        
+        // Cần giữ lại các local state (như done_with_panel, acknowledged) 
+        // để không bị bung modal ra lặp lại khi fetch đè state
+        if (prev.personal_role_check_result) {
+           mergedState.personal_role_check_result = {
+             ...(state.personal_role_check_result || {}),
+             ...prev.personal_role_check_result
+           };
+        }
+        
+        // Giữ lại messages nếu server ko trả về mảng chat
+        if (!mergedState.messages && prev.messages) {
+          mergedState.messages = prev.messages;
+        }
+        
+        return mergedState;
+      });
       setLoading(false);
     } catch (err: any) {
       console.error('Lỗi khi tải trạng thái game:', err);
@@ -485,8 +504,8 @@ const GameScreen: React.FC = () => {
         return <RoleCheckView matchId={matchId!} gameState={gameState} user={user} />;
       case 'ROLE_CHECK_RESULT':
       case 'ROLE_RESULT':
-        // Vẫn render phase này nếu server đang ở đây
-        return <RoleCheckResultView matchId={matchId!} gameState={gameState} user={user} setGameState={setGameState} isModal={false} />;
+        // Render nền chờ trong khi modal kết quả hiển thị đè lên trên
+        return <div className="phase-placeholder">Đang chuẩn bị vòng tiếp theo...</div>;
       case 'ROUND_RESULT':
         return <RoundResultView gameState={gameState} user={user} />;
       case 'GAME_OVER':
@@ -496,14 +515,17 @@ const GameScreen: React.FC = () => {
     }
   };
 
-  // Hiển thị Modal nếu:
-  // 1. Đã từng hoặc đang ở phase kết quả (hasEnteredResultPhase)
-  // 2. Chưa đánh dấu là đã xem xong (result.acknowledged)
-  // 3. CHỈ hiện Modal nếu phase hiện tại đã chuyển sang phase khác (không còn là ROLE_CHECK_RESULT hoặc ROLE_RESULT)
+  // Hiển thị Modal Result nếu:
+  // 1. Đang ở phase kết quả và chưa xác nhận (tất cả mọi người)
+  // HOẶC
+  // 2. Đã qua phase kết quả NHƯNG là Spy (có kỹ năng) và chưa chọn xong kỹ năng
   const currentPhaseUpper = (gameState?.phase || gameState?.status || '').toUpperCase();
   const isInResultPhase = currentPhaseUpper === 'ROLE_CHECK_RESULT' || currentPhaseUpper === 'ROLE_RESULT';
   const hasAbilitiesToSelect = result?.abilities_available && result.abilities_available.length > 0;
-  const showRoleResultModal = hasEnteredResultPhase && !result?.acknowledged && !isInResultPhase && hasAbilitiesToSelect;
+  
+  const showRoleResultModal = 
+    (isInResultPhase && !result?.acknowledged) || 
+    (hasEnteredResultPhase && !result?.acknowledged && hasAbilitiesToSelect);
 
   // Modal cho người bị Tha Hóa (Infected)
   const showInfectionModal = gameState?.role?.toLowerCase() === 'infected' && !gameState?.infected_acknowledged;
@@ -974,7 +996,7 @@ const RoleCheckResultView: React.FC<{
             ...prev.personal_role_check_result,
             confirmed_ability: abilityType,
             acknowledged: true, // Đánh dấu đã xem xong (Spy có skill)
-            done_with_panel: abilityType === 'none' // Nếu "None" thì ẩn luôn panel chính
+            done_with_panel: true // Thay vì abilityType === 'none', đóng luôn panel
           }
         }));
         if (abilityType === 'none') {
@@ -1044,9 +1066,9 @@ const RoleCheckResultView: React.FC<{
     : '';
 
   return (
-    <div className={`role-check-result-container animate-pop-in ${actualRole}`}>
+    <>
       {result ? (
-        <div className={`personal-result-card ${actualRole}`}>
+        <div className={`personal-result-card animate-pop-in ${actualRole}`} style={{ maxHeight: '90vh', overflowY: 'auto' }}>
           <p className={`result-status ${result.correct ? 'correct' : 'incorrect'}`}>
             {result.correct ? 'CHÍNH XÁC!' : 'SAI RỒI!'}
           </p>
@@ -1076,7 +1098,11 @@ const RoleCheckResultView: React.FC<{
                 <div className="ability-selection">
                   <p className="ability-intro-text">Hãy chọn 1 kỹ năng để sử dụng trong trận đấu:</p>
                   <div className="ability-cards-list">
-                    {abilities.map((ability: any) => (
+                    {abilities
+                      .filter((v: any, i: number, a: any[]) => a.findIndex(t => t.type === v.type) === i)
+                      .map((ability: any) => (
+                      /* Tạm thời ẩn kỹ năng Tha Hóa theo yêu cầu */
+                      ability.type === 'infection' ? null : (
                       <div key={ability.type} className="ability-card" onClick={() => handleConfirmAbility(ability.type)}>
                         <div className="ability-card-icon">
                           <i className={`fa-solid ${ability.type === 'fake_message' ? 'fa-robot' : 'fa-virus'}`}></i>
@@ -1087,6 +1113,7 @@ const RoleCheckResultView: React.FC<{
                         </div>
                         <div className="ability-select-hint">CHỌN</div>
                       </div>
+                      )
                     ))}
                     <div className="ability-card skip-card" onClick={() => handleConfirmAbility('none')}>
                       <div className="ability-card-icon">
@@ -1100,7 +1127,7 @@ const RoleCheckResultView: React.FC<{
                     </div>
                   </div>
                 </div>
-              ) : (
+              ) : null /* (
                 <div className="ability-usage-form">
                   {confirmedAbilityType === 'fake_message' ? (
                     <div className="ability-usage">
@@ -1149,7 +1176,7 @@ const RoleCheckResultView: React.FC<{
                     </div>
                   ) : null}
                 </div>
-              )}
+              ) */}
             </div>
           )}
 
@@ -1161,9 +1188,9 @@ const RoleCheckResultView: React.FC<{
           )} */}
         </div>
       ) : (
-        <p className="waiting-msg">Đang tổng hợp kết quả...</p>
+        <p className="waiting-msg animate-pop-in">Đang tổng hợp kết quả...</p>
       )}
-    </div>
+    </>
   );
 };
 

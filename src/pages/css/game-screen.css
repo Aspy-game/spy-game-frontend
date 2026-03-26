@@ -1241,6 +1241,7 @@
 .result-msg {
     font-size: 32px;
     margin-bottom: 40px;
+    text-align: center;
 }
 
 .role-check-actions,
@@ -1298,6 +1299,7 @@
     font-size: 40px;
     font-weight: 800;
     margin-bottom: 10px;
+    text-align: center;
 }
 
 .result-status.correct {
