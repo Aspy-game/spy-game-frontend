@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import useAuthStore from '../../store/authStore';
 import { gameApi } from '../../api/gameApi';
+import axiosInstance from '../../api/axiosInstance';
 import { useWebSocket } from '../../hooks/useWebSocket';
 import bg from '../../../img/Gemini_Generated_Image_fkpdh6fkpdh6fkpd.png';
 import '../css/game-screen.css';
@@ -192,6 +193,12 @@ const GameScreen: React.FC = () => {
     connect();
     return () => disconnect();
   }, [matchId]);
+
+  useEffect(() => {
+    if (gameState) {
+      console.log('[AFK-DEBUG] Current GameState:', gameState);
+    }
+  }, [gameState]);
 
   // Local timer countdown
   useEffect(() => {
@@ -548,13 +555,36 @@ const GameScreen: React.FC = () => {
   const isSpy = gameState?.role?.toLowerCase() === 'spy' || gameState?.role?.toLowerCase() === 'infected';
   const selectedAbility = gameState?.selected_ability || gameState?.personal_role_check_result?.confirmed_ability;
 
+  const handleLeave = async () => {
+    console.log('[AFK-DEBUG] handleLeave clicked');
+    const isGameOver = gameState?.phase === 'GAME_OVER';
+    if (!isGameOver) {
+      const confirmed = window.confirm('Bạn có chắc muốn thoát ván đấu đang diễn ra? Bạn sẽ bị tính là AFK.');
+      if (!confirmed) return;
+    }
+
+    try {
+      if (gameState?.room_id) {
+        const leaveUrl = `/rooms/${gameState.room_id}/leave`;
+        console.log('[AFK-DEBUG] Calling leave API:', leaveUrl);
+        await axiosInstance.post(leaveUrl);
+      } else {
+        console.warn('[AFK-DEBUG] Cannot leave room: room_id is missing in gameState', gameState);
+      }
+      navigate('/lobby');
+    } catch (err) {
+      console.error('Lỗi khi rời phòng:', err);
+      navigate('/lobby'); // Vẫn chuyển hướng nếu lỗi
+    }
+  };
+
   return (
     <div
       className={`game-screen-container ${gameState?.role?.toLowerCase() === 'infected' ? 'infected-theme' : ''}`}
       style={{ backgroundImage: `url(${bg})`, backgroundSize: 'cover', backgroundPosition: 'center' }}
     >
       <div className="game-top-bar">
-        <button className="room-lobby-back-btn" onClick={() => navigate('/lobby')}>
+        <button className="room-lobby-back-btn" onClick={handleLeave}>
           <i className="fa-solid fa-arrow-left"></i>
         </button>
       </div>

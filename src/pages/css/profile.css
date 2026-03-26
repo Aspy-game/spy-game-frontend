@@ -325,7 +325,11 @@
 .history-role.civilian {
   background: #3498DB;
   color: white;
-  align-items: center;
+}
+
+.history-role.infected {
+  background: #9B59B6;
+  color: white;
 }
 
 .history-result.win {
@@ -335,6 +339,11 @@
 
 .history-result.lose {
   color: #95A5A6;
+}
+
+.history-result.afk {
+  color: #F39C12;
+  font-weight: 700;
 }
 
 .history-date {
