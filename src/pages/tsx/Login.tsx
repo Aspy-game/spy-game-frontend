@@ -31,65 +31,65 @@ export default function Login() {
   const error = localError || authError;
 
   return (
-      <div
-        className="page page-login"
-        style={{
-          backgroundImage: `url(${bg})`,
-          backgroundRepeat: 'no-repeat',
-          backgroundSize: '100% 100%',
-        }}
-      >
-        <h1 className="login-title">ĐĂNG NHẬP</h1>
+    <div
+      className="page page-login"
+      style={{
+        backgroundImage: `url(${bg})`,
+        backgroundRepeat: 'no-repeat',
+        backgroundSize: '100% 100%',
+      }}
+    >
+      <h1 className="login-title">ĐĂNG NHẬP</h1>
 
-        <div className="login-panel">
-          <button className="close" aria-label="Đóng" onClick={() => navigate('/')}>
-            <span aria-hidden="true">×</span>
-          </button>
+      <div className="login-panel">
+        <button className="close" aria-label="Đóng" onClick={() => navigate('/')}>
+          <span aria-hidden="true">×</span>
+        </button>
 
-          <form onSubmit={handleSubmit}>
-            <div className="login-field" style={{ top: 135 }}>
-              <input
-                type="text"
-                className={`login-input${error ? ' login-input--error' : ''}`}
-                placeholder="Tên tài khoản"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
-                required
-              />
-            </div>
+        <form onSubmit={handleSubmit}>
+          <div className="login-field" style={{ top: 135 }}>
+            <input
+              type="text"
+              className={`login-input${error ? ' login-input--error' : ''}`}
+              placeholder="Tên tài khoản"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              required
+            />
+          </div>
 
-            <div className="login-field" style={{ top: 272 }}>
-              <input
-                type={showPwd ? 'text' : 'password'}
-                className={`login-input${error ? ' login-input--error' : ''}`}
-                placeholder="Mật khẩu"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-              />
-              <button
-                type="button"
-                className="eye-btn"
-                aria-label={showPwd ? 'Ẩn mật khẩu' : 'Hiện mật khẩu'}
-                onClick={() => setShowPwd(!showPwd)}
-              >
-                <i className={showPwd ? 'fa-regular fa-eye-slash' : 'fa-regular fa-eye'}></i>
-              </button>
-            </div>
-
-            {error && <p className="login-error">{error}</p>}
-
-            <button type="submit" className="login-button" disabled={loading}>
-              {loading ? 'Đang xử lý...' : 'Đăng nhập'}
+          <div className="login-field" style={{ top: 272 }}>
+            <input
+              type={showPwd ? 'text' : 'password'}
+              className={`login-input${error ? ' login-input--error' : ''}`}
+              placeholder="Mật khẩu"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+            />
+            <button
+              type="button"
+              className="eye-btn"
+              aria-label={showPwd ? 'Ẩn mật khẩu' : 'Hiện mật khẩu'}
+              onClick={() => setShowPwd(!showPwd)}
+            >
+              <i className={showPwd ? 'fa-regular fa-eye-slash' : 'fa-regular fa-eye'}></i>
             </button>
-          </form>
-        </div>
+          </div>
 
-        <Link className="forgot-link" to="/forgot">Quên mật khẩu?</Link>
+          {error && <p className="login-error">{error}</p>}
 
-        <p className="login-switch">
-          Chưa có tài khoản? <Link to="/register">Đăng ký ngay</Link>
-        </p>
+          <button type="submit" className="login-button" disabled={loading}>
+            {loading ? 'Đang xử lý...' : 'Đăng nhập'}
+          </button>
+        </form>
       </div>
+
+      <Link className="forgot-link" to="/forgot">Quên mật khẩu?</Link>
+
+      <p className="login-switch">
+        Chưa có tài khoản? <Link to="/register">Đăng ký ngay</Link>
+      </p>
+    </div>
   )
 }
