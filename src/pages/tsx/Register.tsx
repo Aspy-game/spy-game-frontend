@@ -47,7 +47,7 @@ export default function Register() {
 
     const result = await register(formData);
     if (result) {
-      navigate('/lobby');
+      navigate('/login');
     }
   }
 
@@ -73,10 +73,10 @@ export default function Register() {
           </button>
 
           <form onSubmit={handleSubmit}>
-            <div className="register-field" style={{ top: 80 }}>
+            <div className="register-field" style={{ top: 100 }}>
               <input
                 type="text"
-                className="register-input"
+                className={`register-input${error ? ' register-input--error' : ''}`}
                 placeholder="Tên hiển thị"
                 value={formData.display_name}
                 onChange={set('display_name')}
@@ -84,10 +84,10 @@ export default function Register() {
               />
             </div>
 
-            <div className="register-field" style={{ top: 192 }}>
+            <div className="register-field" style={{ top: 200 }}>
               <input
                 type="text"
-                className="register-input"
+                className={`register-input${error ? ' register-input--error' : ''}`}
                 placeholder="Tên tài khoản"
                 value={formData.username}
                 onChange={set('username')}
@@ -95,10 +95,10 @@ export default function Register() {
               />
             </div>
 
-            <div className="register-field" style={{ top: 304 }}>
+            <div className="register-field" style={{ top: 300 }}>
               <input
                 type="email"
-                className="register-input"
+                className={`register-input${error ? ' register-input--error' : ''}`}
                 placeholder="Email"
                 value={formData.email}
                 onChange={set('email')}
@@ -106,10 +106,10 @@ export default function Register() {
               />
             </div>
 
-            <div className="register-field" style={{ top: 416 }}>
+            <div className="register-field" style={{ top: 400 }}>
               <input
                 type={showPwd ? 'text' : 'password'}
-                className="register-input"
+                className={`register-input${error ? ' register-input--error' : ''}`}
                 placeholder="Mật khẩu"
                 value={formData.password}
                 onChange={set('password')}
@@ -125,10 +125,10 @@ export default function Register() {
               </button>
             </div>
 
-            <div className="register-field" style={{ top: 528 }}>
+            <div className="register-field" style={{ top: 500 }}>
               <input
                 type={showConfirmPwd ? 'text' : 'password'}
-                className="register-input"
+                className={`register-input${error ? ' register-input--error' : ''}`}
                 placeholder="Xác nhận mật khẩu"
                 value={formData.confirm_password}
                 onChange={set('confirm_password')}

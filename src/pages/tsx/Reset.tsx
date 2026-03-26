@@ -11,6 +11,7 @@ export default function Reset() {
   const [showConfirm, setShowConfirm] = useState(false)
   const { resetPassword, loading, error: authError } = useAuth()
   const [localError, setLocalError] = useState<string | null>(null)
+  const [success, setSuccess] = useState<string | null>(null)
   const navigate = useNavigate()
   const location = useLocation()
 
@@ -37,8 +38,10 @@ export default function Reset() {
 
     const result = await resetPassword(username, email, otp, password)
     if (result.success) {
-      alert(result.message || 'Đặt lại mật khẩu thành công!')
-      navigate('/login')
+      setSuccess(result.message || 'Đặt lại mật khẩu thành công!')
+      setTimeout(() => {
+        navigate('/login')
+      }, 2000)
     } else {
       setLocalError(result.message)
     }
@@ -102,6 +105,7 @@ export default function Reset() {
           </div>
 
           {error && <p className="reset-error">{error}</p>}
+          {success && <p className="reset-success">{success}</p>}
 
           <button
             type="submit"

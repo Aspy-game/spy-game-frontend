@@ -182,9 +182,11 @@ const Profile: React.FC<ProfileProps> = ({ onClose }) => {
                 {history.length > 0 ? (
                   history.map((match, idx) => (
                     <div key={idx} className="history-item">
-                      <span className={`history-role ${match.role}`}>{match.role === 'spy' ? 'Spy' : 'Dân'}</span>
-                      <span className={`history-result ${match.did_win ? 'win' : 'lose'}`}>
-                        {match.did_win ? 'Thắng' : 'Thua'}
+                      <span className={`history-role ${match.role}`}>
+                        {match.role === 'spy' ? 'Spy' : match.role === 'infected' ? 'Bị tha hóa' : 'Dân'}
+                      </span>
+                      <span className={`history-result ${(match.status || (match.did_win ? 'WIN' : 'LOSE')).toLowerCase()}`}>
+                        {match.status === 'AFK' ? 'AFK' : (match.did_win ? 'Thắng' : 'Thua')}
                       </span>
                       <span className="history-date">
                         {match.started_at ? new Date(match.started_at).toLocaleDateString('vi-VN') : '---'}

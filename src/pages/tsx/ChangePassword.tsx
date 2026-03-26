@@ -6,9 +6,10 @@ interface ChangePasswordProps {
   onSubmit: (oldPwd: string, newPwd: string) => Promise<void>; // Make it async
   loading: boolean;
   error: string | null;
+  success: string | null;
 }
 
-const ChangePassword: React.FC<ChangePasswordProps> = ({ onClose, onSubmit, loading, error }) => {
+const ChangePassword: React.FC<ChangePasswordProps> = ({ onClose, onSubmit, loading, error, success }) => {
   const [oldPassword, setOldPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -89,6 +90,7 @@ const ChangePassword: React.FC<ChangePasswordProps> = ({ onClose, onSubmit, load
         </div>
 
         {displayError && <p className="cp-error">{displayError}</p>}
+        {success && <p className="cp-success">{success}</p>}
 
         <button type="submit" className="cp-submit-btn" disabled={loading}>
           {loading ? 'Đang xử lý...' : 'Xác nhận'}

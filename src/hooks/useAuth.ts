@@ -102,7 +102,7 @@ export const useAuth = () => {
           display_name: data.display_name,
           role: 'ROLE_USER' as Role
         };
-        setAuth(user, 'mock-access-token-new', 'mock-refresh-token-new');
+        // setAuth(user, 'mock-access-token-new', 'mock-refresh-token-new');
         return true;
       }
 
@@ -123,7 +123,7 @@ export const useAuth = () => {
         role: normalizedRole
       };
 
-      setAuth(user, access_token, refresh_token);
+      // setAuth(user, access_token, refresh_token);
       return true;
     } catch (err: any) {
       const message = err.response?.data?.error || err.response?.data?.message || err.message || 'Đăng ký thất bại.';
