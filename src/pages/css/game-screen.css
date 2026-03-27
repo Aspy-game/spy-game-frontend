@@ -170,8 +170,8 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    z-index: 500;
-    /* Tăng z-index để không bị đè */
+    z-index: 3000;
+    /* Cao hơn modal */
 }
 
 .game-leave-btn {
@@ -211,7 +211,8 @@
     border-radius: 10px;
     color: #FFF;
     border: 1px solid rgba(255, 255, 255, 0.2);
-    z-index: 100;
+    z-index: 3000;
+    /* Cao hơn modal */
 }
 
 .game-timer {
@@ -225,7 +226,8 @@
     gap: 12px;
     font-weight: 800;
     text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
-    z-index: 500;
+    z-index: 3000;
+    /* Cao hơn modal */
 }
 
 /* ─── PLAYER CIRCLE ─── */
@@ -934,6 +936,68 @@
     border-radius: 15px;
 }
 
+.voting-sent-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.85);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    backdrop-filter: blur(10px);
+    border-radius: 40px;
+}
+
+.sent-content {
+    text-align: center;
+    color: #fff;
+    animation: scaleIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.sent-content i {
+    font-size: 100px;
+    color: #34C759;
+    margin-bottom: 30px;
+    text-shadow: 0 0 20px rgba(52, 199, 89, 0.5);
+}
+
+.sent-content h3 {
+    font-size: 48px;
+    margin-bottom: 10px;
+    font-weight: 800;
+}
+
+.sent-content p {
+    font-size: 24px;
+    color: #aaa;
+    margin-bottom: 40px;
+}
+
+.change-vote-btn {
+    background: transparent;
+    border: 2px solid #fff;
+    color: #fff;
+    padding: 12px 30px;
+    border-radius: 20px;
+    font-size: 20px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.change-vote-btn:hover {
+    background: #fff;
+    color: #000;
+}
+
+@keyframes scaleIn {
+    from { transform: scale(0.8); opacity: 0; }
+    to { transform: scale(1); opacity: 1; }
+}
+
 /* ─── ROUND RESULT ─── */
 .round-result-container {
     width: 100%;
@@ -1000,13 +1064,13 @@
     left: 0;
     width: 100%;
     height: 100%;
-    background: rgba(0, 0, 0, 0.85);
+    background: rgba(0, 0, 0, 0.6);
     display: flex;
     align-items: center;
     justify-content: center;
     z-index: 2000;
     /* Đảm bảo phủ lên trên tất cả */
-    backdrop-filter: blur(10px);
+    backdrop-filter: blur(3px);
     animation: fadeIn 0.3s ease;
 }
 
@@ -1220,14 +1284,18 @@
 /* ─── ROLE CHECK VIEW ─── */
 .role-check-container,
 .role-check-result-container {
+    position: absolute;
+    top: 0;
+    left: 0;
     width: 100%;
     height: 100%;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    background: rgba(0, 0, 0, 0.8);
+    background: rgba(0, 0, 0, 0.6);
     text-align: center;
+    z-index: 100;
 }
 
 .role-check-title,

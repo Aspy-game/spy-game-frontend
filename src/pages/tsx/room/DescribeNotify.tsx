@@ -6,7 +6,7 @@
 //   cố định suốt ván chơi.
 // =============================================
 
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useMemo, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import bgImage from '../../../assets/room/bg.jpg';
 import '../../css/room/describe-notify.css';
@@ -69,10 +69,18 @@ const DescribeNotify: React.FC = () => {
 
         if (roomData) {
           setKeyword(roomData.keyword || '');
-          const mappedPlayers = roomData.players.map(p => ({
+          
+          // Trưởng phòng (host) luôn ở trên cùng (index 0 trong AVATAR_POSITIONS)
+          const sortedPlayers = [...roomData.players].sort((a: any, b: any) => {
+            if (a.isHost) return -1;
+            if (b.isHost) return 1;
+            return 0;
+          });
+
+          const mappedPlayers = sortedPlayers.map(p => ({
             ...p,
             isMe: p.id === user?.user_id || p.displayName === (user?.display_name ?? 'Tôi'),
-            role: p.id === user?.user_id ? 'unknown' : p.role, // Vòng 1 ẩn vai trò
+            role: p.id === user?.user_id ? p.role : 'unknown', // Chỉ hiện vai trò của mình, ẩn người khác
             isTyping: false
           }));
           setPlayers(mappedPlayers);
@@ -102,10 +110,8 @@ const DescribeNotify: React.FC = () => {
       // Subscribe to messages
       const msgSub = subscribe(`/topic/room/${roomId}/messages`, (msg: ChatMessage) => {
         setMessages(prev => {
-          // Tránh duplicate tin nhắn của chính mình vừa gửi qua API
-          if (msg.senderName === 'Tôi:' || msg.senderName === (user?.display_name + ':')) {
-             if (prev.some(p => p.id === msg.id)) return prev;
-          }
+          // Tránh duplicate tất cả các tin nhắn theo ID
+          if (prev.some(p => p.id === msg.id)) return prev;
           return [...prev, msg];
         });
       });
@@ -151,6 +157,32 @@ const DescribeNotify: React.FC = () => {
   const handleChatKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') handleChatSend();
   };
+
+  // ── Filter AI messages ──
+  const isAiMessage = useCallback((msg: ChatMessage) => {
+    const senderNameClean = msg.senderName.replace(':', '').trim();
+    return players.some(p => p.isAI && (p.displayName === senderNameClean || p.displayName + ':' === msg.senderName));
+  }, [players]);
+
+  const filteredMessages = useMemo(() => {
+    return messages.filter((msg, index, self) => {
+      const isAI = isAiMessage(msg);
+
+      // 1. Ở vòng thảo luận không cần AI chat
+      if (currentPhase === 'DISCUSSING' && isAI) {
+        return false;
+      }
+
+      // 2. Ở vòng miêu tả thì chỉ được chat 1 lần
+      if (currentPhase === 'DESCRIBING' && isAI) {
+        // Tìm xem trước đó AI này đã chat chưa trong danh sách tin nhắn hiện tại
+        const firstMsgIndex = self.findIndex(m => m.senderName === msg.senderName);
+        return firstMsgIndex === index;
+      }
+
+      return true;
+    });
+  }, [messages, currentPhase, isAiMessage]);
 
   const handleDescribeSend = (text: string) => {
     setPlayers(prev => prev.map(p => p.isMe ? { ...p, description: text } : p));
@@ -267,7 +299,7 @@ const DescribeNotify: React.FC = () => {
             )}
           </button>
           <div className="dn-chat__messages">
-            {messages.map(msg => (
+            {filteredMessages.map(msg => (
               <div key={msg.id} className="dn-chat-row">
                 <span className={`dn-chat-name dn-chat-name--${msg.nameClass}`}>{msg.senderName}</span>
                 {msg.text && <span className="dn-chat-msg">{msg.text}</span>}

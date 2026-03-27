@@ -37,7 +37,7 @@ const GuessCorrectNotify: React.FC<Props> = ({ result, onDone, autoAdvanceMs = 3
   }, [onDone]);
 
   const getAbilityText = () => {
-    if (result?.abilityAvailable === 'manipulate_ai') return 'Bạn sẽ được khả năng thao túng AI';
+    if (result?.abilityAvailable === 'manipulate_ai') return 'Bạn sẽ được khả năng thao túng KeywordSpy';
     if (result?.abilityAvailable === 'infection') return 'Bạn sẽ được khả năng tha hóa người khác';
     return 'Bạn đã nhận được phần thưởng';
   };

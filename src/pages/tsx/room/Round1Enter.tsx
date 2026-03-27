@@ -56,7 +56,14 @@ const Round1Enter: React.FC = () => {
           return;
         }
 
-        const mappedPlayers = roomData.players.map(p => ({
+        const sortedPlayers = roomData.players.sort((a: any, b: any) => {
+          // Trưởng phòng (host) luôn ở trên cùng (index 0 trong AVATAR_POSITIONS)
+          if (a.isHost) return -1;
+          if (b.isHost) return 1;
+          return 0;
+        });
+
+        const mappedPlayers = sortedPlayers.map(p => ({
           ...p,
           isMe: p.id === user?.user_id || p.displayName === (user?.display_name ?? 'Tôi'),
           role: p.id === user?.user_id ? 'unknown' : p.role // Vòng 1 ẩn vai trò

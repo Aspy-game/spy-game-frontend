@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import useAuthStore from '../../store/authStore';
 import { gameApi } from '../../api/gameApi';
@@ -183,7 +183,24 @@ const GameScreen: React.FC = () => {
       setLoading(false);
     } catch (err: any) {
       console.error('Lỗi khi tải trạng thái game:', err);
-      setError(err.response?.data?.message || 'Không thể tải trạng thái game.');
+      
+      // Nếu đã có gameState rồi thì không hiển thị màn hình lỗi cứng
+      if (gameStateRef.current) {
+        console.warn('Sử dụng dữ liệu game hiện tại do lỗi fetch mới.');
+        // Nếu lỗi 404 hoặc 403 sau khi ván đấu đã bắt đầu, có thể ván đấu đã kết thúc
+        if (err.response?.status === 404 || err.response?.status === 403) {
+          setGameState((prev: any) => prev ? { ...prev, phase: 'GAME_OVER' } : prev);
+        }
+        setLoading(false);
+        return;
+      }
+
+      // Nếu lỗi 404/403 ở lần fetch đầu tiên, có thể do match đã kết thúc hoặc không tồn tại
+      if (err.response?.status === 404 || err.response?.status === 403) {
+        setError('Ván chơi đã kết thúc hoặc bạn không có quyền truy cập.');
+      } else {
+        setError(err.response?.data?.message || 'Không thể tải trạng thái game.');
+      }
       setLoading(false);
     }
   };
@@ -374,6 +391,13 @@ const GameScreen: React.FC = () => {
         console.log('[WS-CHAT-UPDATE]:', chatMsg);
         setGameState((prev: any) => {
           if (!prev) return prev;
+          // Tránh duplicate tin nhắn theo ID hoặc nội dung + sender nếu không có ID
+          const isDuplicate = prev.messages?.some((m: any) => 
+            (m.id && m.id === chatMsg.id) || 
+            (m.content === chatMsg.content && m.sender_id === chatMsg.sender_id && Math.abs(m.timestamp - chatMsg.timestamp) < 1000)
+          );
+          if (isDuplicate) return prev;
+          
           const newMessages = [...(prev.messages || []), chatMsg];
           return { ...prev, messages: newMessages };
         });
@@ -508,11 +532,29 @@ const GameScreen: React.FC = () => {
       case 'VOTE_TIE':
         return <RoundResultView gameState={gameState} user={user} />;
       case 'ROLE_CHECK':
-        return <RoleCheckView matchId={matchId!} gameState={gameState} user={user} />;
+        return (
+          <>
+            <PlayerCircle
+              players={gameState.players}
+              user={user}
+              isSpy={isSpy}
+              selectedAbility={selectedAbility}
+              matchId={matchId!}
+            />
+            <RoleCheckView matchId={matchId!} gameState={gameState} user={user} />
+          </>
+        );
       case 'ROLE_CHECK_RESULT':
       case 'ROLE_RESULT':
-        // Render nền chờ trong khi modal kết quả hiển thị đè lên trên
-        return <div className="phase-placeholder">Đang chuẩn bị vòng tiếp theo...</div>;
+        return (
+          <PlayerCircle
+            players={gameState.players}
+            user={user}
+            isSpy={isSpy}
+            selectedAbility={selectedAbility}
+            matchId={matchId!}
+          />
+        );
       case 'ROUND_RESULT':
         return <RoundResultView gameState={gameState} user={user} />;
       case 'GAME_OVER':
@@ -547,7 +589,7 @@ const GameScreen: React.FC = () => {
       await gameApi.useAbility(matchId, content);
       // Optional: Show success toast
     } catch (err: any) {
-      alert(err.response?.data?.message || 'Lỗi khi gửi thao túng AI.');
+      alert(err.response?.data?.message || 'Lỗi khi gửi thao túng.');
       throw err;
     }
   };
@@ -722,6 +764,7 @@ const DescribingView: React.FC<{
         isSpy={isSpy}
         selectedAbility={selectedAbility}
         onFakeMessageSubmit={onFakeMessageSubmit}
+        matchId={matchId}
       />
 
       {!isAlive ? (
@@ -805,6 +848,7 @@ const DiscussingView: React.FC<{
         isSpy={isSpy}
         selectedAbility={selectedAbility}
         onFakeMessageSubmit={onFakeMessageSubmit}
+        matchId={matchId}
       />
 
       <div className={`discussion-panel ${isChatExpanded ? 'expanded' : 'minimized'}`}>
@@ -818,11 +862,15 @@ const DiscussingView: React.FC<{
 
         {isChatExpanded && (
           <div className="chat-area">
-            {gameState.messages?.map((msg: any, idx: number) => {
-              const senderPlayer = gameState.players?.find((p: any) => p.user_id === msg.sender_id);
+            {gameState.messages?.filter((msg: any) => {
+              const senderPlayer = gameState.players?.find((p: any) => String(p.user_id) === String(msg.sender_id));
+              const isAi = senderPlayer && String(senderPlayer.user_id).startsWith('ai_');
+              return !isAi; // Filter out AI messages in discussion phase
+            }).map((msg: any, idx: number) => {
+              const senderPlayer = gameState.players?.find((p: any) => String(p.user_id) === String(msg.sender_id));
               const color = senderPlayer ? getPlayerColor(senderPlayer.display_name, senderPlayer.color) : null;
               return (
-                <div key={idx} className={`chat-bubble ${msg.sender_id === user?.user_id ? 'mine' : ''}`}>
+                <div key={idx} className={`chat-bubble ${String(msg.sender_id) === String(user?.user_id) ? 'mine' : ''}`}>
                   <span className="sender" style={color ? { color: color } : {}}>
                     {String(msg.sender_id) === String(user?.user_id) ? 'Tôi' : (msg.sender_name || 'Người chơi')}:
                   </span>
@@ -864,6 +912,22 @@ const VotingView: React.FC<{ matchId: string, gameState: any, user: any }> = ({ 
     setVotedId(null);
   }, [gameState.phase, gameState.round]);
 
+  // Xáo trộn danh sách người chơi để vote cho nhất quán với PlayerCircle
+  const votingPlayers = useMemo(() => {
+    if (!gameState.players) return [];
+    
+    const aliveOthers = gameState.players.filter((p: any) => p.user_id !== user?.user_id && p.is_alive);
+    
+    // Sử dụng matchId làm seed để xáo trộn tương tự PlayerCircle
+    const seed = matchId ? matchId.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0) : 0;
+    
+    return [...aliveOthers].sort((a, b) => {
+      const hashA = (String(a.user_id).split('').reduce((acc, char) => acc + char.charCodeAt(0), 0) + seed) % 100;
+      const hashB = (String(b.user_id).split('').reduce((acc, char) => acc + char.charCodeAt(0), 0) + seed) % 100;
+      return hashA - hashB;
+    });
+  }, [gameState.players, matchId, user?.user_id]);
+
   const handleVote = async (targetUserId: string) => {
     if (!isAlive || votedId || targetUserId === user?.user_id) return;
     try {
@@ -877,8 +941,22 @@ const VotingView: React.FC<{ matchId: string, gameState: any, user: any }> = ({ 
   return (
     <div className="voting-container">
       <h2 className="voting-title">{gameState.phase === 'VOTE_TIE' ? 'HÒA PHIẾU! HÃY BẦU LẠI' : 'AI LÀ GIÁN ĐIỆP?'}</h2>
+      
+      {votedId && (
+        <div className="voting-sent-overlay animate-pop-in">
+          <div className="sent-content">
+            <i className="fa-solid fa-circle-check"></i>
+            <h3>ĐÃ GỬI BÌNH CHỌN</h3>
+            <p>Đang chờ những người chơi khác...</p>
+            <button className="change-vote-btn" onClick={() => setVotedId(null)}>
+              ĐỔI LỰA CHỌN
+            </button>
+          </div>
+        </div>
+      )}
+
       <div className="voting-players">
-        {gameState.players.filter((p: any) => p.user_id !== user?.user_id && p.is_alive).map((p: any) => {
+        {votingPlayers.map((p: any) => {
           const color = getPlayerColor(p.display_name, p.color);
           const isAI = String(p.user_id).startsWith('ai_');
           // Show checkmark if user has voted for someone, or if server says this user has voted
@@ -888,7 +966,7 @@ const VotingView: React.FC<{ matchId: string, gameState: any, user: any }> = ({ 
           return (
             <div
               key={p.user_id}
-              className={`voting-card ${votedId === p.user_id ? 'voted' : ''} ${isAI ? 'ai-card' : ''} ${!isAlive ? 'disabled' : ''}`}
+              className={`voting-card ${votedId === p.user_id ? 'voted' : ''} ${!isAlive ? 'disabled' : ''}`}
               onClick={() => handleVote(p.user_id)}
               style={!isAlive ? { cursor: 'not-allowed', opacity: 0.7 } : {}}
             >
@@ -900,23 +978,16 @@ const VotingView: React.FC<{ matchId: string, gameState: any, user: any }> = ({ 
                 } : {}}
               >
                 <img
-                  src={getPlayerAvatarByColor(p.display_name, p.color) || avatarMap[p.user_id % 6]}
+                  src={getPlayerAvatarByColor(p.display_name, p.color) || avatarMap[(p.seat_index || 0) % 8]}
                   alt={p.display_name}
                   style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }}
                 />
               </div>
               <div className="player-name" style={color ? { color: color, textShadow: '0 0 10px rgba(0,0,0,0.8)' } : {}}>
-                {p.display_name} {isAI && <span className="ai-tag">(AI)</span>}
+                {p.display_name}
               </div>
 
               {votedId === p.user_id && <div className="voted-badge">ĐÃ CHỌN</div>}
-
-              {/* If server sends data, it means someone voted. In hide mode, we just show a generic "Voted" indicator */}
-              {playerHasVoted && (
-                <div className="vote-status-indicator">
-                  <i className="fa-solid fa-check-to-slot"></i> Đã vote
-                </div>
-              )}
             </div>
           );
         })}
@@ -924,7 +995,7 @@ const VotingView: React.FC<{ matchId: string, gameState: any, user: any }> = ({ 
       <p className="voting-hint">
         {!isAlive
           ? 'Bạn đã bị loại, không thể tham gia bỏ phiếu.'
-          : (votedId ? 'Bạn đã bỏ phiếu cho người này. Đang chờ kết quả...' : 'Hãy chọn người bạn nghi ngờ nhất! AI cũng có thể là Gián điệp.')}
+          : (votedId ? 'Bạn đã chọn người này. Bạn có thể chọn người khác nếu muốn đổi ý.' : 'Hãy chọn người bạn nghi ngờ nhất!')}
       </p>
     </div>
   );
@@ -1059,7 +1130,7 @@ const RoleCheckResultView: React.FC<{
       if (confirmedAbilityType === 'fake_message') {
         if (!abilityContent.trim()) return;
         await gameApi.useAbility(matchId, abilityContent);
-        alert('Đã gửi tin nhắn giả mạo AI!');
+        alert('Đã gửi tin nhắn thao túng!');
       } else if (confirmedAbilityType === 'infection') {
         if (!selectedTarget) return;
         await gameApi.infectPlayer(matchId, selectedTarget);
@@ -1161,11 +1232,11 @@ const RoleCheckResultView: React.FC<{
                 <div className="ability-usage-form">
                   {confirmedAbilityType === 'fake_message' ? (
                     <div className="ability-usage">
-                      <p className="ability-usage-title">Kỹ năng: Thao túng AI</p>
-                      <p className="ability-usage-desc">Bạn có thể nhập nội dung để AI KeywordSpy nói thay bạn.</p>
+                      <p className="ability-usage-title">Kỹ năng: Thao túng</p>
+                      <p className="ability-usage-desc">Bạn có thể nhập nội dung để KeywordSpy nói thay bạn.</p>
                       <input
                         type="text"
-                        placeholder="Nhập nội dung AI sẽ nói..."
+                        placeholder="Nhập nội dung muốn nói..."
                         value={abilityContent}
                         onChange={(e) => setAbilityContent(e.target.value)}
                         autoFocus
@@ -1181,7 +1252,7 @@ const RoleCheckResultView: React.FC<{
                           ĐỂ SAU
                         </button>
                       </div>
-                      <p className="ability-usage-note">* Bạn có thể dùng kỹ năng này ở các vòng miêu tả sau tại ô của AI.</p>
+                      <p className="ability-usage-note">* Bạn có thể dùng kỹ năng này ở các vòng miêu tả sau tại ô của KeywordSpy.</p>
                     </div>
                   ) : confirmedAbilityType === 'infection' ? (
                     <div className="ability-usage">
@@ -1329,6 +1400,21 @@ const PlayerCircle: React.FC<{
   const [fakeMsg, setFakeMsg] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  // Xáo trộn vị trí hiển thị ngẫu nhiên dựa trên matchId để đảm bảo vị trí cố định trong suốt trận nhưng khác với Lobby
+  const randomizedPlayers = useMemo(() => {
+    if (!players || players.length === 0) return [];
+    
+    // Sử dụng matchId làm seed đơn giản để xáo trộn
+    const seed = matchId ? matchId.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0) : 0;
+    
+    return [...players].sort((a, b) => {
+      // Kết hợp user_id và seed để tạo ra một giá trị "ngẫu nhiên" nhưng nhất quán cho matchId này
+      const hashA = (String(a.user_id).split('').reduce((acc, char) => acc + char.charCodeAt(0), 0) + seed) % 100;
+      const hashB = (String(b.user_id).split('').reduce((acc, char) => acc + char.charCodeAt(0), 0) + seed) % 100;
+      return hashA - hashB;
+    });
+  }, [players, matchId]);
+
   const handleFakeSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!fakeMsg.trim() || isSubmitting || !onFakeMessageSubmit) return;
@@ -1344,8 +1430,8 @@ const PlayerCircle: React.FC<{
   };
 
   return (
-    <div className={`players-circle count-${players.length}`}>
-      {players.map((p, idx) => {
+    <div className={`players-circle count-${randomizedPlayers.length}`}>
+      {randomizedPlayers.map((p, idx) => {
         const color = getPlayerColor(p.display_name, p.color);
         const isActive = currentTurnId && p.user_id && String(currentTurnId) === String(p.user_id);
         const roleUpper = p.role?.toUpperCase();
@@ -1380,8 +1466,8 @@ const PlayerCircle: React.FC<{
             {p.description ? (
               <div className="player-bubble">{p.description}</div>
             ) : isActive ? (
-              <div className={`player-bubble status ${isAi ? 'ai-thinking' : ''}`}>
-                {isAi ? 'AI đang suy nghĩ...' : 'Đang mô tả...'}
+              <div className="player-bubble status">
+                Đang mô tả...
               </div>
             ) : null}
 
@@ -1391,7 +1477,7 @@ const PlayerCircle: React.FC<{
                 <form onSubmit={handleFakeSubmit}>
                   <input
                     type="text"
-                    placeholder="Thao túng AI nói..."
+                    placeholder="Nhập nội dung KeywordSpy nói..."
                     value={fakeMsg}
                     onChange={(e) => setFakeMsg(e.target.value)}
                     disabled={isSubmitting}
