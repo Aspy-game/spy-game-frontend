@@ -14,7 +14,7 @@ const ManipulationView: React.FC<Props> = ({ onChoice }) => {
     <div className="rf-prompt-overlay">
       <div className="rf-prompt-box" style={{ width: '800px', background: 'rgba(167, 114, 83, 0.9)', borderRadius: '30px', padding: '50px' }}>
         <h2 className="rf-prompt-title" style={{ fontSize: '40px', marginBottom: '40px', color: '#800000', fontWeight: 'bold' }}>
-          BẠN CÓ MUỐN SỬ DỤNG AI KHÔNG?
+          BẠN CÓ MUỐN SỬ DỤNG KỸ NĂNG THAO TÚNG KHÔNG?
         </h2>
         
         <div className="rf-prompt-actions" style={{ display: 'flex', gap: '30px', justifyContent: 'center' }}>

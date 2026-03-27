@@ -61,9 +61,13 @@ const ResultMostVoted: React.FC<Props> = ({
         } else {
           setError('Không có dữ liệu người bị loại.');
         }
-      } catch (err) {
+      } catch (err: any) {
         console.error('Failed to fetch most voted result', err);
-        setError('Không thể tải kết quả bình chọn.');
+        if (err.response?.status === 404 || err.response?.status === 403) {
+          setError('Kết quả ván chơi đã thay đổi hoặc bạn không có quyền xem.');
+        } else {
+          setError('Không thể tải kết quả bình chọn.');
+        }
       } finally {
         setIsLoading(false);
       }

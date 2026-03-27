@@ -33,7 +33,7 @@ const NotifyView = () => (
   </div>
 );
 
-const SentView = () => (
+const SentView: React.FC<{ onBack: () => void }> = ({ onBack }) => (
   <div className="vf-center">
     <div className="vf-check-circle">
       <svg viewBox="0 0 120 120" fill="none">
@@ -46,6 +46,18 @@ const SentView = () => (
     <div className="vf-loading-bar">
       <div className="vf-loading-bar__fill"></div>
     </div>
+    <button className="vf-change-btn" onClick={onBack} style={{
+      marginTop: '20px',
+      padding: '10px 20px',
+      background: 'rgba(255,255,255,0.2)',
+      border: '1px solid #fff',
+      color: '#fff',
+      borderRadius: '8px',
+      cursor: 'pointer',
+      fontFamily: "'Baloo Bhaijaan 2', cursive"
+    }}>
+      Đổi lựa chọn
+    </button>
   </div>
 );
 
@@ -130,17 +142,10 @@ const VoteFlow: React.FC = () => {
       // Subscribe to messages
       const msgSub = subscribe(`/topic/room/${roomId}/messages`, (msg: ChatMessage) => {
         setMessages(prev => {
-          if (msg.senderName === 'Tôi:' || msg.senderName === (user?.display_name + ':')) {
-             if (prev.some(p => p.id === msg.id)) return prev;
-          }
+          // Tránh duplicate tất cả các tin nhắn theo ID
+          if (prev.some(p => p.id === msg.id)) return prev;
           return [...prev, msg];
         });
-      });
-
-      // Subscribe to votes (giả sử server gửi event khi có ai đó vote)
-      const voteSub = subscribe(`/topic/room/${roomId}/votes`, (data: { voterId: number }) => {
-        console.log(`[WS] Player ${data.voterId} has voted`);
-        setPlayers(prev => prev.map(p => p.id === data.voterId ? { ...p, hasVoted: true } : p));
       });
 
       // Subscribe to room state (để tự động chuyển sang kết quả khi hết giờ)
@@ -152,7 +157,6 @@ const VoteFlow: React.FC = () => {
 
       return () => {
         msgSub?.unsubscribe();
-        voteSub?.unsubscribe();
         stateSub?.unsubscribe();
       };
     }
@@ -253,7 +257,6 @@ const VoteFlow: React.FC = () => {
                       isVoted                           ? 'vf-avatar--voted'    : '',
                       isSelected && !isVoted            ? 'vf-avatar--selected' : '',
                       !isMe && !isSelected && !hasVoted ? 'vf-avatar--hoverable': '',
-                      isAI                              ? 'vf-avatar--ai'       : '',
                     ].filter(Boolean).join(' ')}
                     style={{
                       top: pos.top, left: pos.left,
@@ -268,12 +271,8 @@ const VoteFlow: React.FC = () => {
                     }
 
                     <div className="vf-player-name-tag">
-                      {player.isMe ? `${idx + 1}. Tôi` : `${idx + 1}. ${player.displayName} ${isAI ? '(AI)' : ''}`}
+                      {player.isMe ? `${idx + 1}. Tôi` : `${idx + 1}. ${player.displayName}`}
                     </div>
-
-                    {playerHasVoted && (
-                      <div className="vf-has-voted-badge" title="Đã vote">🗳️</div>
-                    )}
 
                     {isVoted && (
                       <div className="vf-selected-check vf-voted-check">
@@ -314,7 +313,14 @@ const VoteFlow: React.FC = () => {
         );
 
       case 'sent':
-        return <SentView />;
+        return (
+          <SentView
+            onBack={() => {
+              setVoteStatus('select');
+              setVotedPlayerId(null);
+            }}
+          />
+        );
 
       case 'timeout':
         return <TimeoutView />;

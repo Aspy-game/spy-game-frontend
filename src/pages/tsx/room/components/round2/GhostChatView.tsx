@@ -9,7 +9,7 @@
 //   canUseAI=false, !corrupted  → 1 badge VÀNG  + civilian keyword
 // =============================================
 
-import React, { useState, useEffect, useRef, useMemo } from 'react';
+import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import useAuthStore from '../../../../../store/authStore';
 import bgImage from '../../../../../assets/room/bg.jpg';
 import '../../../../css/room/describe-notify.css';
@@ -135,11 +135,11 @@ const GhostChatView: React.FC<Props> = ({
   // WebSocket subscriptions
   useEffect(() => {
     if (connected && roomId) {
+      // Subscribe to messages
       const msgSub = subscribe(`/topic/room/${roomId}/messages`, (msg: ChatMessage) => {
         setMessages(prev => {
-          if (msg.senderName === 'Tôi:' || msg.senderName === (user?.display_name + ':')) {
-             if (prev.some(p => p.id === msg.id)) return prev;
-          }
+          // Tránh duplicate tất cả các tin nhắn theo ID
+          if (prev.some(p => p.id === msg.id)) return prev;
           return [...prev, msg];
         });
       });
@@ -195,6 +195,32 @@ const GhostChatView: React.FC<Props> = ({
       console.error('Failed to send message', err);
     }
   };
+
+  // ── Filter AI messages ──
+  const isAiMessage = useCallback((msg: ChatMessage) => {
+    const senderNameClean = msg.senderName.replace(':', '').trim();
+    return players.some(p => p.isAI && (p.displayName === senderNameClean || p.displayName + ':' === msg.senderName));
+  }, [players]);
+
+  const filteredMessages = useMemo(() => {
+    return messages.filter((msg, index, self) => {
+      const isAI = isAiMessage(msg);
+
+      // 1. Ở vòng thảo luận không cần AI chat
+      if (currentPhase === 'DISCUSSING' && isAI) {
+        return false;
+      }
+
+      // 2. Ở vòng miêu tả thì chỉ được chat 1 lần
+      if (currentPhase === 'DESCRIBING' && isAI) {
+        // Tìm xem trước đó AI này đã chat chưa trong danh sách tin nhắn hiện tại
+        const firstMsgIndex = self.findIndex(m => m.senderName === msg.senderName);
+        return firstMsgIndex === index;
+      }
+
+      return true;
+    });
+  }, [messages, currentPhase, isAiMessage]);
 
   const handleDescSubmit = (text: string) => {
     setPlayers(prev => prev.map(p => p.isMe ? { ...p, description: text } : p));
@@ -362,7 +388,7 @@ const GhostChatView: React.FC<Props> = ({
                       color: 'white', border: 'none', borderRadius: '12px',
                       padding: '6px 12px', fontSize: '13px', fontWeight: 'bold',
                       cursor: 'pointer', whiteSpace: 'nowrap',
-                    }}>Trò chuyện giùm</button>
+                    }}>Thao túng</button>
                     <button onClick={() => setActiveTab('MANUAL')} style={{
                       background: activeTab === 'MANUAL' ? '#5B4133' : 'rgba(0,0,0,0.5)',
                       color: 'white', border: 'none', borderRadius: '12px',
@@ -378,7 +404,7 @@ const GhostChatView: React.FC<Props> = ({
                       display: 'flex', alignItems: 'center', justifyContent: 'center',
                       fontSize: '12px', fontWeight: 'bold',
                       border: '2px solid white', zIndex: 101,
-                    }}>AI</div>
+                    }}>🎭</div>
                   )}
                 </>
               )}
@@ -429,7 +455,7 @@ const GhostChatView: React.FC<Props> = ({
             )}
           </button>
           <div className="dn-chat__messages">
-            {messages.map(msg => (
+            {filteredMessages.map(msg => (
               <div key={msg.id} className="dn-chat-row">
                 <span className={`dn-chat-name dn-chat-name--${msg.nameClass}`}>{msg.senderName}</span>
                 {msg.text && <span className="dn-chat-msg">{msg.text}</span>}
