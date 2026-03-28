@@ -15,6 +15,7 @@ import DescribeDiscussionFlow from './components/common/DescribeDiscussionFlow';
 import { PlayerBubble } from './components/common/DescribeDiscussionFlow';
 import { gameService } from '../../../services';
 import { useWebSocket } from '../../../hooks/useWebSocket';
+
 import type { Player, ChatMessage, GameFlowPhase } from '../../../types/models';
 
 // Vị trí avatar theo seatIndex (0-5)
@@ -50,6 +51,8 @@ const DescribeNotify: React.FC = () => {
   const { connect, disconnect, subscribe, connected } = useWebSocket();
 
   const [keyword, setKeyword] = useState<string>('');
+  const [description, setDescription] = useState<string>('');
+  const [isSpecialRound, setIsSpecialRound] = useState(false);
 
   // Fetch initial data
   useEffect(() => {
@@ -68,21 +71,32 @@ const DescribeNotify: React.FC = () => {
         ]);
 
         if (roomData) {
-          setKeyword(roomData.keyword || '');
+          // Lấy keyword từ yourKeyword nếu có, nếu không thì lấy từ keyword chung
+          const currentKeyword = roomData.yourKeyword || (roomData as any).yourKeyword || roomData.keyword || '';
+          setKeyword(currentKeyword);
           
-          // Trưởng phòng (host) luôn ở trên cùng (index 0 trong AVATAR_POSITIONS)
-          const sortedPlayers = [...roomData.players].sort((a: any, b: any) => {
-            if (a.isHost) return -1;
-            if (b.isHost) return 1;
-            return 0;
-          });
+          const currentDescription = roomData.yourDescription || (roomData as any).yourDescription || (roomData as any).description || '';
+          setDescription(currentDescription);
+          
+          const specialRoundActive = !!(roomData.isSpecialRound || (roomData as any).is_special_round);
+          setIsSpecialRound(specialRoundActive);
+          
+          // Sắp xếp người chơi theo seatIndex từ BE
+          const sortedPlayers = [...roomData.players].sort((a, b) => (a.seatIndex || 0) - (b.seatIndex || 0));
 
-          const mappedPlayers = sortedPlayers.map(p => ({
-            ...p,
-            isMe: p.id === user?.user_id || p.displayName === (user?.display_name ?? 'Tôi'),
-            role: p.id === user?.user_id ? p.role : 'unknown', // Chỉ hiện vai trò của mình, ẩn người khác
-            isTyping: false
-          }));
+          const mappedPlayers = sortedPlayers.map(p => {
+            const pUserId = (p as any).user_id || p.id || p.id;
+            const isMe = String(pUserId) === String(user?.user_id) || 
+                         p.displayName === (user?.display_name ?? 'Tôi') ||
+                         p.displayName === (user?.display_name ?? 'Tôi');
+            
+            return {
+              ...p,
+              isMe,
+              role: isMe ? p.role : 'unknown', // Chỉ hiện vai trò của mình, ẩn người khác
+              isTyping: false
+            };
+          });
           setPlayers(mappedPlayers);
         }
 
@@ -224,8 +238,21 @@ const DescribeNotify: React.FC = () => {
         <div className="dn-round-badge">
           <span className="dn-round-badge__text">Vòng 1</span>
         </div>
-        <div className="dn-keyword-badge">
-          <span className="dn-keyword-badge__text">{keyword}</span>
+        {/* ── Keyword badge ── */}
+        <div className={`dn-keyword-badge animate-pop-in ${isSpecialRound ? 'special-round' : ''}`}>
+          {!isSpecialRound ? (
+            <>
+              <div className="dn-keyword-label">Từ khóa của bạn</div>
+              <div className="dn-keyword-value">{keyword || '???'}</div>
+            </>
+          ) : (
+            <div className="dn-special-desc-container animate-fade-in">
+              <div className="dn-keyword-label">Mô tả đặc biệt</div>
+              <div className="dn-keyword-value" style={{ fontSize: '24px', fontStyle: 'italic' }}>
+                {description}
+              </div>
+            </div>
+          )}
         </div>
         <div className="dn-room-badge">
           <span className="dn-room-badge__text">Phòng: {roomId}</span>

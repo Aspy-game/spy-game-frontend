@@ -5,6 +5,9 @@ export const gameApi = {
   startGame: (roomId: string) => 
     axiosInstance.post(`/rooms/${roomId}/start`),
 
+  createSpecialRoom: (data?: { is_private?: boolean, room_code?: string }) =>
+    axiosInstance.post('/rooms/create-special', data),
+
   getGameState: (matchId: string) => 
     axiosInstance.get(`/game/${matchId}/state`),
 
@@ -42,4 +45,18 @@ export const gameApi = {
 
   setSpy: (roomId: string, userId: string) => 
     axiosInstance.post(`/rooms/${roomId}/admin/set-spy`, { user_id: userId }),
+
+  // SECTION 6: SHOP & INVENTORY
+  buySkill: (skillId: string) => 
+    axiosInstance.post(`/shop/buy`, null, { params: { skillId } }),
+
+  getInventory: () => 
+    axiosInstance.get(`/shop/inventory`),
+
+  // SECTION 7: SKILLS USAGE
+  useSpecialRound: (roomId: string) => 
+    axiosInstance.post(`/skill/special-round`, null, { params: { roomId } }),
+
+  useAnonymousVote: (matchId: string) => 
+    axiosInstance.post(`/skill/anonymous-vote`, null, { params: { matchId } }),
 };

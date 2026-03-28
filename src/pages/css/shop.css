@@ -1,0 +1,280 @@
+.shop-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.85);
+    backdrop-filter: blur(10px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 5000;
+}
+
+.shop-modal {
+    width: 900px;
+    height: 700px;
+    background: linear-gradient(135deg, #5B4133, #3D2B22);
+    border: 8px solid #CF9325;
+    border-radius: 50px;
+    position: relative;
+    padding: 40px;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+}
+
+.shop-close-btn {
+    position: absolute;
+    top: 20px;
+    right: 30px;
+    background: none;
+    border: none;
+    color: white;
+    font-size: 50px;
+    cursor: pointer;
+    line-height: 1;
+}
+
+.shop-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 30px;
+}
+
+.shop-title {
+    font-family: 'Baloo Bhaijaan 2', cursive;
+    font-size: 48px;
+    color: #FFCC00;
+    margin: 0;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+}
+
+.shop-user-balance {
+    background: rgba(0, 0, 0, 0.4);
+    padding: 10px 25px;
+    border-radius: 20px;
+    border: 2px solid #FFCC00;
+    color: #FFCC00;
+    font-family: 'Baloo Bhaijaan 2', cursive;
+    font-size: 24px;
+    font-weight: 800;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.shop-tabs {
+    display: flex;
+    gap: 15px;
+    margin-bottom: 30px;
+}
+
+.shop-tab {
+    padding: 12px 30px;
+    border-radius: 15px;
+    border: none;
+    background: rgba(0, 0, 0, 0.3);
+    color: #aaa;
+    font-family: 'Baloo Bhaijaan 2', cursive;
+    font-size: 20px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.shop-tab.active {
+    background: #CF9325;
+    color: white;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+}
+
+.shop-content {
+    flex: 1;
+    overflow-y: auto;
+    padding-right: 10px;
+}
+
+/* Shop Grid */
+.shop-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 25px;
+}
+
+.skill-card {
+    background: rgba(255, 255, 255, 0.05);
+    border: 2px solid rgba(255, 255, 255, 0.1);
+    border-radius: 25px;
+    padding: 25px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    transition: all 0.3s;
+}
+
+.skill-card:hover {
+    background: rgba(255, 255, 255, 0.1);
+    transform: translateY(-5px);
+    border-color: #CF9325;
+}
+
+.skill-icon-wrap {
+    width: 80px;
+    height: 80px;
+    background: linear-gradient(135deg, #CF9325, #8B6B1D);
+    border-radius: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 40px;
+    color: white;
+    margin-bottom: 15px;
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
+}
+
+.skill-name {
+    font-family: 'Baloo Bhaijaan 2', cursive;
+    font-size: 24px;
+    color: white;
+    margin: 0 0 10px 0;
+}
+
+.skill-desc {
+    font-size: 16px;
+    color: #ddd;
+    margin-bottom: 20px;
+    line-height: 1.4;
+    flex: 1;
+}
+
+.skill-footer {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.skill-price {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: #FFCC00;
+    font-weight: 800;
+    font-size: 20px;
+}
+
+.skill-buy-btn {
+    background: #34C759;
+    color: white;
+    border: none;
+    padding: 10px 25px;
+    border-radius: 12px;
+    font-weight: 800;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.skill-buy-btn:hover {
+    background: #28a745;
+    transform: scale(1.05);
+}
+
+.skill-buy-btn:disabled {
+    background: #666;
+    cursor: not-allowed;
+}
+
+/* Inventory List */
+.inventory-list {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.inventory-item {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 20px;
+    padding: 20px;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.inv-icon-wrap {
+    width: 60px;
+    height: 60px;
+    background: #CF9325;
+    border-radius: 15px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 28px;
+    color: white;
+}
+
+.inv-info {
+    flex: 1;
+}
+
+.inv-name {
+    font-size: 20px;
+    font-weight: 700;
+    margin: 0 0 5px 0;
+}
+
+.inv-desc {
+    font-size: 14px;
+    color: #aaa;
+    margin: 0;
+}
+
+.inv-quantity {
+    font-size: 18px;
+    color: #aaa;
+}
+
+.inv-quantity span {
+    color: #FFCC00;
+    font-weight: 800;
+    font-size: 24px;
+}
+
+.empty-inventory {
+    text-align: center;
+    padding: 100px 0;
+    color: #666;
+}
+
+.empty-inventory i {
+    font-size: 100px;
+    margin-bottom: 20px;
+}
+
+.empty-inventory p {
+    font-size: 24px;
+    font-family: 'Baloo Bhaijaan 2', cursive;
+}
+
+/* Animations */
+.animate-fade-in {
+    animation: fadeIn 0.3s ease-out;
+}
+
+.animate-pop-in {
+    animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes popIn {
+    from { transform: scale(0.8); opacity: 0; }
+    to { transform: scale(1); opacity: 1; }
+}

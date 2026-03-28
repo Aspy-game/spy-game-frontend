@@ -62,9 +62,9 @@ const getPlayerColor = (displayName: string, colorCode?: string) => {
 
   // Legacy regex check
   const match = displayName?.match(/Người chơi (\w+)/i);
-  if (match) return colors[match[1].toLowerCase()];
+  if (match && colors[match[1].toLowerCase()]) return colors[match[1].toLowerCase()];
 
-  return null;
+  return undefined;
 };
 
 const getPlayerAvatarByColor = (displayName: string, colorCode?: string) => {
@@ -129,6 +129,14 @@ const GameScreen: React.FC = () => {
   const fetchState = async () => {
     if (!matchId) return;
 
+    // Fetch inventory
+    try {
+      const invResponse = await gameApi.getInventory();
+      setGameState((prev: any) => ({ ...prev, inventory: invResponse.data }));
+    } catch (err) {
+      console.error('Failed to fetch inventory:', err);
+    }
+
     // Stop fetching if game is already over
     const currentPhase = gameStateRef.current?.phase || gameStateRef.current?.status;
     if (currentPhase === 'GAME_OVER') {
@@ -141,14 +149,19 @@ const GameScreen: React.FC = () => {
       console.log('[GET-GAME-STATE]:', response.data);
       const state = response.data;
 
-      // Map your_keyword từ API sang state.keyword nếu có
-      if (state.your_keyword) {
-        state.keyword = state.your_keyword;
-      }
+      // Map your_keyword & your_description từ API
+      state.keyword = state.your_keyword || state.yourKeyword || state.keyword;
+      state.description = state.your_description || state.yourDescription || state.description;
 
       // Map your_role sang state.role nếu có
-      if (state.your_role) {
-        state.role = state.your_role;
+      state.role = state.your_role || state.yourRole || state.role;
+
+      // Map is_special_round & is_anonymous_voting
+      if (state.is_special_round !== undefined) {
+        state.isSpecialRound = state.is_special_round;
+      }
+      if (state.is_anonymous_voting !== undefined) {
+        state.isAnonymousVoting = state.is_anonymous_voting;
       }
 
       // Ưu tiên dùng remaining_seconds từ BE (Mới)
@@ -287,7 +300,13 @@ const GameScreen: React.FC = () => {
       // Chỉ lắng nghe topic gốc, không lắng nghe sub-topics để tránh nhận dữ liệu rác (votes, chat)
       subscribe(`/topic/match/${matchId}`, (update: any) => {
         console.log('[WS-GAME-UPDATE]:', update);
-        if (update.your_keyword) update.keyword = update.your_keyword;
+        update.keyword = update.your_keyword || update.yourKeyword || update.keyword;
+        update.description = update.your_description || update.yourDescription || update.description;
+        update.role = update.your_role || update.yourRole || update.role;
+
+        // Cập nhật is_special_round & is_anonymous_voting từ WS
+        if (update.is_special_round !== undefined) update.isSpecialRound = update.is_special_round;
+        if (update.is_anonymous_voting !== undefined) update.isAnonymousVoting = update.is_anonymous_voting;
 
         // Dùng remaining_seconds hoặc phase_end_at từ Server
         if (update.remaining_seconds !== undefined) {
@@ -301,14 +320,25 @@ const GameScreen: React.FC = () => {
         setGameState((prev: any) => ({ ...prev, ...update }));
       });
 
+      // 1b. Subscribe to Skill activation events
+      subscribe(`/topic/match/${matchId}/skills`, (event: any) => {
+        console.log('[WS-SKILL-EVENT]:', event);
+        if (event.type === 'ANONYMOUS_VOTING_ENABLED') {
+          setGameState((prev: any) => ({ ...prev, isAnonymousVoting: true }));
+          setPhaseMessage('Kỹ năng Ẩn danh đã được kích hoạt!');
+          setTimeout(() => setPhaseMessage(null), 3000);
+        }
+      });
+
       // 2. Subscribe to private role information
       subscribe(`/user/queue/role`, (roleInfo: any) => {
         console.log('[WS-PRIVATE-ROLE]:', roleInfo);
-        // roleInfo structure: { role: 'SPY'|'CIVILIAN', keyword: '...' }
+        // roleInfo structure: { role: 'SPY'|'CIVILIAN', keyword: '...', description: '...' }
         setGameState((prev: any) => ({
           ...prev,
-          role: roleInfo.role,
-          keyword: roleInfo.keyword || roleInfo.your_keyword
+          role: roleInfo.role || roleInfo.your_role || roleInfo.yourRole,
+          keyword: roleInfo.keyword || roleInfo.your_keyword || roleInfo.yourKeyword,
+          description: roleInfo.description || roleInfo.your_description || roleInfo.yourDescription
         }));
       });
 
@@ -678,12 +708,14 @@ const GameScreen: React.FC = () => {
 const RoleAssignView: React.FC<{ gameState: any, user: any }> = ({ gameState, user }) => {
   const me = gameState.players?.find((p: any) => String(p.user_id) === String(user?.user_id));
   const keyword = me?.keyword || gameState.keyword || '???';
+  const description = me?.description || gameState.description;
   const timer = gameState.timer || 0;
   const isInfected = me?.role?.toLowerCase() === 'infected' || gameState.role?.toLowerCase() === 'infected';
+  const isSpecialRound = gameState.isSpecialRound;
 
   return (
     <div className={`role-assign-container ${isInfected ? 'infected' : ''}`}>
-      <div className={`role-assign-card animate-pop-in ${isInfected ? 'infected' : ''}`}>
+      <div className={`role-assign-card animate-pop-in ${isInfected ? 'infected' : ''} ${isSpecialRound ? 'special-round' : ''}`}>
         <h2 className="role-assign-title">
           {isInfected ? 'BẠN ĐÃ BỊ THA HÓA' : 'HÃY MÔ TẢ TỪ KHÓA'}
         </h2>
@@ -693,14 +725,25 @@ const RoleAssignView: React.FC<{ gameState: any, user: any }> = ({ gameState, us
         </div>
 
         <div className="keyword-section">
-          <p className="keyword-label">Từ khóa của bạn là:</p>
-          <div className="keyword-box">{keyword}</div>
+          {!isSpecialRound ? (
+            <>
+              <p className="keyword-label">Từ khóa của bạn là:</p>
+              <div className="keyword-box">{keyword}</div>
+            </>
+          ) : description && (
+            <div className="description-section animate-fade-in">
+              <p className="description-label">Mô tả đặc biệt của bạn:</p>
+              <div className="description-box">{description}</div>
+            </div>
+          )}
         </div>
 
         <p className="role-assign-hint">
-          {isInfected
-            ? 'Bạn hiện thuộc phe Gián điệp. Hãy giúp Gián điệp chiến thắng!'
-            : 'Hãy mô tả từ khóa của bạn khéo léo. Vai trò thực sự sẽ được tiết lộ sau!'}
+          {isSpecialRound 
+            ? 'Bạn đang trong vòng đặc biệt. Hãy sử dụng mô tả trên để diễn đạt khéo léo!'
+            : isInfected
+              ? 'Bạn hiện thuộc phe Gián điệp. Hãy giúp Gián điệp chiến thắng!'
+              : 'Hãy mô tả từ khóa của bạn khéo léo. Vai trò thực sự sẽ được tiết lộ sau!'}
         </p>
 
         <div className="timer-section">
@@ -753,9 +796,20 @@ const DescribingView: React.FC<{
 
   return (
     <div className="describing-container">
-      <div className="my-keyword-badge animate-pop-in">
-        <i className="fa-solid fa-key"></i>
-        <span>Từ khóa: {gameState.keyword || '???'}</span>
+      <div className={`my-keyword-badge animate-pop-in ${gameState.isSpecialRound ? 'special-round' : ''}`}>
+        {!gameState.isSpecialRound ? (
+          <div className="keyword-info">
+            <i className="fa-solid fa-key"></i>
+            <span>Từ khóa: </span>
+            <span className="keyword-value">{gameState.keyword || '???'}</span>
+          </div>
+        ) : gameState.description && (
+          <div className="special-description animate-fade-in">
+            <i className="fa-solid fa-file-lines"></i>
+            <span>Mô tả: </span>
+            <span className="description-value">{gameState.description}</span>
+          </div>
+        )}
       </div>
       <PlayerCircle
         players={gameState.players}
@@ -765,6 +819,7 @@ const DescribingView: React.FC<{
         selectedAbility={selectedAbility}
         onFakeMessageSubmit={onFakeMessageSubmit}
         matchId={matchId}
+        isAnonymousVoting={gameState.isAnonymousVoting}
       />
 
       {!isAlive ? (
@@ -836,11 +891,24 @@ const DiscussingView: React.FC<{
     }
   };
 
+  const handleUseAnonymousVote = async () => {
+    if (!window.confirm('Bạn có muốn sử dụng kỹ năng Ẩn danh Bỏ phiếu? (Tiêu tốn 1 kỹ năng trong kho đồ)')) return;
+    try {
+      await gameApi.useAnonymousVote(matchId);
+      // WS will update the state
+    } catch (err: any) {
+      alert(err.response?.data?.message || 'Lỗi khi sử dụng kỹ năng ẩn danh.');
+    }
+  };
+
+  const hasAnonymousSkill = gameState.inventory && gameState.inventory['ANONYMOUS_VOTE'] > 0;
+
   return (
     <div className="discussing-container">
-      <div className="my-keyword-badge animate-pop-in">
+      <div className={`my-keyword-badge animate-pop-in ${gameState.isSpecialRound ? 'special-round' : ''}`}>
         <i className="fa-solid fa-key"></i>
-        <span>Từ khóa: {gameState.keyword || '???'}</span>
+        <span>{gameState.isSpecialRound ? 'Mô tả đặc biệt: ' : 'Từ khóa: '}</span>
+        <span className="keyword-value">{gameState.keyword || '???'}</span>
       </div>
       <PlayerCircle
         players={gameState.players || []}
@@ -849,7 +917,14 @@ const DiscussingView: React.FC<{
         selectedAbility={selectedAbility}
         onFakeMessageSubmit={onFakeMessageSubmit}
         matchId={matchId}
+        isAnonymousVoting={gameState.isAnonymousVoting}
       />
+
+      {isAlive && hasAnonymousSkill && !gameState.isAnonymousVoting && (
+        <button className="use-skill-btn anonymous-vote-btn animate-pop-in" onClick={handleUseAnonymousVote}>
+          <i className="fa-solid fa-mask"></i> ẨN DANH BỎ PHIẾU ({gameState.inventory['ANONYMOUS_VOTE']})
+        </button>
+      )}
 
       <div className={`discussion-panel ${isChatExpanded ? 'expanded' : 'minimized'}`}>
         <button
@@ -957,16 +1032,17 @@ const VotingView: React.FC<{ matchId: string, gameState: any, user: any }> = ({ 
 
       <div className="voting-players">
         {votingPlayers.map((p: any) => {
-          const color = getPlayerColor(p.display_name, p.color);
+          const color = gameState.isAnonymousVoting ? '#808080' : getPlayerColor(p.display_name, p.color);
           const isAI = String(p.user_id).startsWith('ai_');
           // Show checkmark if user has voted for someone, or if server says this user has voted
           // In hide mode, voteCounts only indicates who has voted
           const playerHasVoted = gameState.voteCounts && !!gameState.voteCounts[p.user_id];
+          const displayName = gameState.isAnonymousVoting ? 'Người chơi bí ẩn' : p.display_name;
 
           return (
             <div
               key={p.user_id}
-              className={`voting-card ${votedId === p.user_id ? 'voted' : ''} ${!isAlive ? 'disabled' : ''}`}
+              className={`voting-card ${votedId === p.user_id ? 'voted' : ''} ${!isAlive ? 'disabled' : ''} ${gameState.isAnonymousVoting ? 'anonymous' : ''}`}
               onClick={() => handleVote(p.user_id)}
               style={!isAlive ? { cursor: 'not-allowed', opacity: 0.7 } : {}}
             >
@@ -974,17 +1050,18 @@ const VotingView: React.FC<{ matchId: string, gameState: any, user: any }> = ({ 
                 className="avatar-circle"
                 style={color ? {
                   borderColor: '#FFF',
-                  boxShadow: `0 0 15px ${color}`,
+                  boxShadow: gameState.isAnonymousVoting ? 'none' : `0 0 15px ${color}`,
+                  filter: gameState.isAnonymousVoting ? 'grayscale(100%)' : 'none'
                 } : {}}
               >
                 <img
                   src={getPlayerAvatarByColor(p.display_name, p.color) || avatarMap[(p.seat_index || 0) % 8]}
-                  alt={p.display_name}
+                  alt={displayName}
                   style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }}
                 />
               </div>
               <div className="player-name" style={color ? { color: color, textShadow: '0 0 10px rgba(0,0,0,0.8)' } : {}}>
-                {p.display_name}
+                {displayName}
               </div>
 
               {votedId === p.user_id && <div className="voted-badge">ĐÃ CHỌN</div>}
@@ -1348,10 +1425,16 @@ const GameOverView: React.FC<{ gameState: any, navigate: any }> = ({ gameState, 
         <div className="keyword-item civilian">
           <span className="label">Từ khóa Dân thường:</span>
           <span className="value">{gameState.civilian_keyword}</span>
+          {(gameState.isSpecialRound || gameState.is_special_round) && gameState.civilian_description && (
+            <div className="description-value-box">{gameState.civilian_description}</div>
+          )}
         </div>
         <div className="keyword-item spy">
           <span className="label">Từ khóa Gián điệp:</span>
           <span className="value">{gameState.spy_keyword}</span>
+          {(gameState.isSpecialRound || gameState.is_special_round) && gameState.spy_description && (
+            <div className="description-value-box">{gameState.spy_description}</div>
+          )}
         </div>
       </div>
 
@@ -1395,8 +1478,9 @@ const PlayerCircle: React.FC<{
   isSpy?: boolean,
   selectedAbility?: string,
   onFakeMessageSubmit?: (content: string) => Promise<void>,
-  matchId?: string
-}> = ({ players, user, currentTurnId, isSpy, selectedAbility, onFakeMessageSubmit, matchId }) => {
+  matchId?: string,
+  isAnonymousVoting?: boolean
+}> = ({ players, user, currentTurnId, isSpy, selectedAbility, onFakeMessageSubmit, matchId, isAnonymousVoting }) => {
   const [fakeMsg, setFakeMsg] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -1430,9 +1514,12 @@ const PlayerCircle: React.FC<{
   };
 
   return (
-    <div className={`players-circle count-${randomizedPlayers.length}`}>
+    <div className={`players-circle count-${randomizedPlayers.length} ${isAnonymousVoting ? 'anonymous-mode' : ''}`}>
       {randomizedPlayers.map((p, idx) => {
-        const color = getPlayerColor(p.display_name, p.color);
+        const isMe = String(p.user_id) === String(user?.user_id);
+        const displayName = isAnonymousVoting ? (isMe ? 'Tôi (Bí ẩn)' : 'Người chơi bí ẩn') : p.display_name;
+        const color = isAnonymousVoting ? '#808080' : getPlayerColor(p.display_name, p.color);
+        
         const isActive = currentTurnId && p.user_id && String(currentTurnId) === String(p.user_id);
         const roleUpper = p.role?.toUpperCase();
         const isInfected = roleUpper === 'INFECTED' || roleUpper === 'SPY_ALLY';
@@ -1445,21 +1532,22 @@ const PlayerCircle: React.FC<{
           >
             <div
               className="avatar-circle"
-              style={color ? {
-                borderColor: isInfected ? '#FF3B30' : '#FFF',
-                boxShadow: isInfected ? '0 0 20px #FF3B30' : `0 0 20px ${color}`,
-                backgroundColor: 'rgba(0,0,0,0.3)' // Darker background behind image
-              } : {}}
+              style={{
+                borderColor: isAnonymousVoting ? '#666' : (isInfected ? '#FF3B30' : '#FFF'),
+                boxShadow: isAnonymousVoting ? 'none' : (isInfected ? '0 0 20px #FF3B30' : `0 0 20px ${color}`),
+                backgroundColor: 'rgba(0,0,0,0.3)',
+                filter: isAnonymousVoting ? 'grayscale(100%)' : 'none'
+              }}
             >
               <img
-                src={getPlayerAvatarByColor(p.display_name, p.color) || avatarMap[p.seat_index % 6]}
-                alt={p.display_name}
+                src={getPlayerAvatarByColor(p.display_name, p.color) || avatarMap[(p.seat_index || 0) % 8]}
+                alt={displayName}
                 style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }}
               />
               {isActive && <div className="active-indicator">ĐANG NÓI...</div>}
             </div>
-            <div className="player-name" style={color ? { color: color, textShadow: '0 0 10px rgba(0,0,0,0.8)' } : {}}>
-              {String(p.user_id) === String(user?.user_id) ? 'Tôi' : p.display_name}
+            <div className="player-name" style={{ color: color, textShadow: '0 0 10px rgba(0,0,0,0.8)' }}>
+              {isMe && !isAnonymousVoting ? 'Tôi' : displayName}
             </div>
 
             {/* Show description if exists, otherwise show status if active */}
@@ -1472,7 +1560,7 @@ const PlayerCircle: React.FC<{
             ) : null}
 
             {/* AI Manipulation Input for Spy */}
-            {isAi && isSpy && selectedAbility === 'fake_message' && (
+            {isAi && isSpy && selectedAbility === 'fake_message' && !isAnonymousVoting && (
               <div className="ai-manipulation-input animate-pop-in">
                 <form onSubmit={handleFakeSubmit}>
                   <input

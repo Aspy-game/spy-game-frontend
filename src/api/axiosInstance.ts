@@ -11,6 +11,9 @@ const axiosInstance = axios.create({
 // Thêm interceptor để gắn token vào request nếu có
 axiosInstance.interceptors.request.use(
   (config) => {
+    // Luôn đảm bảo có header ngrok để bypass warning
+    config.headers['ngrok-skip-browser-warning'] = 'true';
+
     const storage = localStorage.getItem('auth-storage');
     if (storage) {
       const { state } = JSON.parse(storage);

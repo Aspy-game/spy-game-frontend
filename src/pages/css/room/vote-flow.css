@@ -39,6 +39,12 @@
   transition: all 0.15s ease;
 }
 
+.vf-avatar.anonymous {
+  filter: grayscale(100%);
+  background: #808080 !important;
+  border-color: #666 !important;
+}
+
 .vf-player-name-tag {
   position: absolute;
   bottom: -38px; left: 50%; transform: translateX(-50%);

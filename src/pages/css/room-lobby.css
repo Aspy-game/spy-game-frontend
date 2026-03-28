@@ -143,7 +143,58 @@
     transform: translate(-50%, -55%);
 }
 
-/* ─── CHAT BOX ─── */
+.center-ready-btn:active {
+    transform: translate(-50%, -50%) scale(0.95);
+}
+
+.lobby-center-actions {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+}
+
+.lobby-skill-btn {
+    background: linear-gradient(135deg, #FFD700, #DAA520);
+    color: #5B4133;
+    border: 2px solid white;
+    padding: 10px 20px;
+    border-radius: 15px;
+    font-size: 18px;
+    font-weight: 800;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+    transition: all 0.2s;
+    font-family: 'Baloo Bhaijaan 2', cursive;
+}
+
+.lobby-skill-btn:hover {
+    transform: scale(1.05);
+    box-shadow: 0 6px 15px rgba(255, 215, 0, 0.4);
+}
+
+.special-round-indicator {
+    background: rgba(52, 199, 89, 0.9);
+    color: white;
+    padding: 8px 16px;
+    border-radius: 10px;
+    font-size: 16px;
+    font-weight: 800;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    border: 1px solid white;
+    font-family: 'Baloo Bhaijaan 2', cursive;
+}
+
+/* ─── BOTTOM LEFT CHAT ─── */
 .room-lobby-chat-new {
     position: absolute;
     left: 0px;

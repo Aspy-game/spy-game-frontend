@@ -8,6 +8,7 @@ export interface User {
   avatar_url?: string;
   role?: Role;
   balance?: number;
+  inventory?: Record<string, number>;
   stats?: UserStats;
 }
 
