@@ -339,6 +339,7 @@
 }
 
 .lobby-create-btn-new {
+    display: block;
     width: 500px;
     height: 110px;
     background: linear-gradient(180deg, #A57153 0%, #66413B 100%);
@@ -353,6 +354,33 @@
 .lobby-create-btn-new:active {
     transform: translateY(5px);
     box-shadow: 0 5px 0px rgba(0,0,0,0.2);
+}
+
+.lobby-create-btn-new.special {
+    background: linear-gradient(180deg, #FFD700 0%, #B8860B 100%);
+    position: relative;
+    height: 120px;
+    margin-top: 10px;
+}
+
+.lobby-create-btn-new.special .create-text-new {
+    font-size: 55px;
+    display: block;
+    margin-top: -10px;
+}
+
+.special-badge {
+    position: absolute;
+    bottom: 10px;
+    right: 20px;
+    background: #FF3B30;
+    color: white;
+    padding: 2px 12px;
+    border-radius: 12px;
+    font-family: 'Luckiest Guy', cursive;
+    font-size: 20px;
+    border: 2px solid white;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.3);
 }
 
 .create-text-new {

@@ -8,9 +8,11 @@ import DailyAttendance from './DailyAttendance';
 import Settings from './Settings';
 import ChangePassword from './ChangePassword';
 import CreateRoom from './CreateRoom';
+import Shop from './Shop';
 import axiosInstance from '../../api/axiosInstance';
 import { useWebSocket } from '../../hooks/useWebSocket';
 import { useAuth } from '../../hooks/useAuth';
+import { gameApi } from '../../api/gameApi';
 
 interface FlyingCoin {
   id: number;
@@ -36,6 +38,7 @@ const Lobby: React.FC = () => {
   const [showChangePassword, setShowChangePassword] = useState(false);
   const [cpSuccess, setCpSuccess] = useState<string | null>(null);
   const [showCreateRoom, setShowCreateRoom] = useState(false);
+  const [showShop, setShowShop] = useState(false);
 
   const [isReceived, setIsReceived] = useState(false);
   const [checkinStreak, setCheckinStreak] = useState(1);
@@ -159,6 +162,25 @@ const Lobby: React.FC = () => {
     handleJoinRoom(searchCode.trim().toUpperCase());
   };
 
+  const handleCreateSpecialRoom = async () => {
+    if ((user?.balance || 0) < 500) {
+      alert('Số dư không đủ (Cần 500 xu để tạo phòng đặc biệt)');
+      return;
+    }
+
+    if (!window.confirm('Bạn có muốn tạo Phòng Đặc Biệt với giá 500 xu?')) return;
+
+    try {
+      const response = await gameApi.createSpecialRoom();
+      const { room_id } = response.data;
+      alert('Tạo phòng đặc biệt thành công!');
+      navigate(`/room/${room_id}`);
+    } catch (error: any) {
+      const errorMsg = error.response?.data?.error || 'Không thể tạo phòng đặc biệt.';
+      alert(errorMsg);
+    }
+  };
+
   const handleReceiveAttendance = async (amount: number, event: React.MouseEvent) => {
     if (!coinBoxRef.current) return;
 
@@ -241,6 +263,9 @@ const Lobby: React.FC = () => {
         {/* <div className="nav-icon-btn" onClick={() => setShowFriends(true)} style={{ cursor: 'pointer' }}>
           <i className="fa-solid fa-user-group"></i>
         </div> */}
+        <div className="nav-icon-btn" onClick={() => setShowShop(true)} style={{ cursor: 'pointer' }} title="Cửa hàng kỹ năng">
+          <i className="fa-solid fa-shop"></i>
+        </div>
         <div className="nav-icon-btn" onClick={() => setShowAttendance(true)} style={{ cursor: 'pointer' }}>
           <i className="fa-regular fa-calendar-days"></i>
         </div>
@@ -347,6 +372,12 @@ const Lobby: React.FC = () => {
               <span className="create-text-new">Tạo phòng</span>
             </button>
 
+            {/* CREATE SPECIAL ROOM BUTTON */}
+            <button className="lobby-create-btn-new special" onClick={handleCreateSpecialRoom}>
+              <span className="create-text-new">Tạo phòng đặc biệt</span>
+              <div className="special-badge">500 xu</div>
+            </button>
+
             {/* ROOM LIST BOX */}
             <div className="lobby-room-box-new">
               {isLoadingRooms ? (
@@ -373,6 +404,7 @@ const Lobby: React.FC = () => {
 
       {/* ─── PROFILE MODAL ─── */}
       {showProfile && <Profile onClose={() => setShowProfile(false)} />}
+      {showShop && <Shop onClose={() => setShowShop(false)} />}
       {showAttendance && (
         <DailyAttendance
           onClose={() => setShowAttendance(false)}

@@ -6,6 +6,7 @@ export interface Player {
   emoji: string;
   bgColor: string;
   isMe?: boolean;
+  isHost?: boolean;
   avatarUrl?: string | null;
   seatIndex: number;
   isTyping?: boolean;
@@ -13,6 +14,7 @@ export interface Player {
   role?: 'SPY' | 'CIVILIAN' | 'unknown';
   hasVoted?: boolean;
   isAI?: boolean;
+  keyword?: string;
 }
 
 export interface RoleCheckResult {
@@ -35,8 +37,12 @@ export interface GameRoom {
   hasAI: boolean;
   keyword?: string;
   civilianKeyword?: string;
+  yourDescription?: string;
+  yourKeyword?: string;
   players: Player[];
   corruptedPlayerId?: number | null;
+  isAnonymousVoting?: boolean;
+  isSpecialRound?: boolean;
 }
 
 export interface MostVotedResult {

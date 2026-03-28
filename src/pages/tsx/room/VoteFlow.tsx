@@ -84,6 +84,7 @@ const VoteFlow: React.FC = () => {
   const [selectedPlayerId, setSelectedPlayerId] = useState<number | null>(null);
   const [votedPlayerId, setVotedPlayerId] = useState<number | null>(null);
   const [countdown, setCountdown] = useState(10);
+  const [isAnonymousVoting, setIsAnonymousVoting] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -111,6 +112,7 @@ const VoteFlow: React.FC = () => {
         ]);
 
         if (roomData && roomData.players) {
+          setIsAnonymousVoting(!!roomData.isAnonymousVoting);
           const mappedPlayers = roomData.players.map(p => ({
             ...p,
             isMe: p.id === user?.user_id || p.displayName === (user?.display_name ?? 'Tôi')
@@ -148,9 +150,11 @@ const VoteFlow: React.FC = () => {
         });
       });
 
-      // Subscribe to room state (để tự động chuyển sang kết quả khi hết giờ)
+      // Subscribe to room state
       const stateSub = subscribe(`/topic/room/${roomId}/state`, (message: any) => {
-        if (message.state === 'VOTE_RESULT' || message === 'VOTE_RESULT') {
+        if (message.type === 'ANONYMOUS_VOTING_ENABLED' || message === 'ANONYMOUS_VOTING_ENABLED') {
+          setIsAnonymousVoting(true);
+        } else if (message.state === 'VOTE_RESULT' || message === 'VOTE_RESULT') {
           navigate(`/game/${roomId}/result/vote`);
         }
       });
@@ -257,21 +261,26 @@ const VoteFlow: React.FC = () => {
                       isVoted                           ? 'vf-avatar--voted'    : '',
                       isSelected && !isVoted            ? 'vf-avatar--selected' : '',
                       !isMe && !isSelected && !hasVoted ? 'vf-avatar--hoverable': '',
+                      isAnonymousVoting                 ? 'anonymous'           : '',
                     ].filter(Boolean).join(' ')}
                     style={{
                       top: pos.top, left: pos.left,
-                      background: player.bgColor,
+                      background: isAnonymousVoting ? '#808080' : player.bgColor,
                       cursor: isMe || hasVoted ? 'default' : 'pointer',
+                      filter: isAnonymousVoting ? 'grayscale(100%)' : 'none'
                     }}
                     onClick={() => !isMe && !hasVoted && setSelectedPlayerId(player.id)}
                   >
-                    {player.avatarUrl
-                      ? <img src={player.avatarUrl} alt={player.displayName} style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '16px' }} />
-                      : <span style={{ fontSize: 72 }}>{player.emoji}</span>
-                    }
+                    {isAnonymousVoting ? (
+                      <span style={{ fontSize: 72 }}>👤</span>
+                    ) : player.avatarUrl ? (
+                      <img src={player.avatarUrl} alt={player.displayName} style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '16px' }} />
+                    ) : (
+                      <span style={{ fontSize: 72 }}>{player.emoji}</span>
+                    )}
 
                     <div className="vf-player-name-tag">
-                      {player.isMe ? `${idx + 1}. Tôi` : `${idx + 1}. ${player.displayName}`}
+                      {isAnonymousVoting ? (player.isMe ? 'Tôi (Bí ẩn)' : 'Người chơi bí ẩn') : (player.isMe ? `${idx + 1}. Tôi` : `${idx + 1}. ${player.displayName}`)}
                     </div>
 
                     {isVoted && (

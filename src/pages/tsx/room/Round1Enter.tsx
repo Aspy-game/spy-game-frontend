@@ -37,6 +37,7 @@ const Round1Enter: React.FC = () => {
   const [players, setPlayers] = useState<Player[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isSpecialRound, setIsSpecialRound] = useState(false);
 
   const { connect, disconnect, subscribe, connected } = useWebSocket();
 
@@ -56,6 +57,9 @@ const Round1Enter: React.FC = () => {
           return;
         }
 
+        const specialRoundActive = !!(roomData.isSpecialRound || (roomData as any).is_special_round);
+        setIsSpecialRound(specialRoundActive);
+
         const sortedPlayers = roomData.players.sort((a: any, b: any) => {
           // Trưởng phòng (host) luôn ở trên cùng (index 0 trong AVATAR_POSITIONS)
           if (a.isHost) return -1;
@@ -63,11 +67,20 @@ const Round1Enter: React.FC = () => {
           return 0;
         });
 
-        const mappedPlayers = sortedPlayers.map(p => ({
-          ...p,
-          isMe: p.id === user?.user_id || p.displayName === (user?.display_name ?? 'Tôi'),
-          role: p.id === user?.user_id ? 'unknown' : p.role // Vòng 1 ẩn vai trò
-        }));
+        const mappedPlayers = sortedPlayers.map(p => {
+          const isMe = p.id === user?.user_id || 
+                       (p as any).user_id === user?.user_id ||
+                       p.displayName === (user?.display_name ?? 'Tôi') ||
+                       (p as any).display_name === (user?.display_name ?? 'Tôi');
+          
+          return {
+            ...p,
+            isMe,
+            role: isMe ? 'unknown' : p.role, // Vòng 1 ẩn vai trò
+            keyword: isMe ? (roomData.yourKeyword || (roomData as any).yourKeyword || roomData.keyword) : undefined,
+            description: isMe ? (roomData.yourDescription || (roomData as any).yourDescription || p.description) : undefined
+          };
+        });
         setPlayers(mappedPlayers);
       } catch (err) {
         console.error('Failed to fetch players', err);
@@ -201,6 +214,23 @@ const Round1Enter: React.FC = () => {
       {/* ── VÒNG 1 BANNER ── */}
       <div className="r1-vong1-box">
         <span className="r1-vong1-text">Vòng 1</span>
+      </div>
+
+      {/* ── My keyword ── */}
+      <div className={`r1-my-keyword animate-pop-in ${isSpecialRound ? 'special-round' : ''}`}>
+        {!isSpecialRound ? (
+          <>
+            <div className="r1-keyword-label">Từ khóa của bạn</div>
+            <div className="r1-keyword-value">{players.find(p => p.isMe)?.keyword || '???'}</div>
+          </>
+        ) : (
+          <div className="r1-special-desc-container animate-fade-in">
+            <div className="r1-keyword-label">Mô tả đặc biệt</div>
+            <div className="r1-keyword-value" style={{ fontSize: '24px', fontStyle: 'italic' }}>
+              {players.find(p => p.isMe)?.description}
+            </div>
+          </div>
+        )}
       </div>
 
     </div>

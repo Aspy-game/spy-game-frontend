@@ -15,6 +15,7 @@ import avatar5 from '../../../img/Gemini_Generated_Image_8nnqwq8nnqwq8nnq.png';
 import avatar6 from '../../../img/Gemini_Generated_Image_59nsf059nsf059ns.png';
 
 import '../../pages/css/room-lobby.css';
+import { gameApi } from '../../api/gameApi';
 
 interface Player {
   user_id: number;
@@ -77,6 +78,9 @@ const RoomLobby: React.FC = () => {
 
         if (['PLAYER_JOIN', 'PLAYER_LEAVE', 'ROOM_UPDATE', 'JOIN', 'waiting'].includes(type)) {
           fetchRoomDetail();
+        } else if (type === 'SPECIAL_ROUND_ENABLED') {
+          setRoomInfo((prev: any) => ({ ...prev, is_special_round: true }));
+          alert('Trưởng phòng đã kích hoạt Vòng chơi Đặc biệt! Bạn sẽ nhận được mô tả thay vì từ khóa.');
         } else if (type === 'PLAYER_KICKED') {
           if (update.target_user_id === user?.user_id) {
             alert('Bạn đã bị mời ra khỏi phòng!');
@@ -148,9 +152,12 @@ const RoomLobby: React.FC = () => {
 
   const fetchUserProfile = async () => {
     try {
-      const response = await axiosInstance.get('/auth/me'); // Hoặc endpoint profile của bạn
-      if (response.data) {
-        setUser(response.data); // Cập nhật store với balance mới
+      const [profileRes, invRes] = await Promise.all([
+        axiosInstance.get('/auth/me'),
+        gameApi.getInventory()
+      ]);
+      if (profileRes.data) {
+        setUser({ ...profileRes.data, inventory: invRes.data });
       }
     } catch (error) {
       console.error('Lỗi khi tải thông tin người dùng:', error);
@@ -221,6 +228,18 @@ const RoomLobby: React.FC = () => {
       }
     }
   };
+
+  const handleUseSpecialRound = async () => {
+    if (!window.confirm('Bạn có muốn kích hoạt Vòng chơi Đặc biệt cho trận này? (Tiêu tốn 1 kỹ năng trong kho đồ)')) return;
+    try {
+      await gameApi.useSpecialRound(roomId!);
+      // WS will update
+    } catch (error: any) {
+      alert(error.response?.data?.message || 'Lỗi khi kích hoạt vòng đặc biệt.');
+    }
+  };
+
+  const hasSpecialRoundSkill = user?.inventory && user.inventory['SPECIAL_ROUND'] > 0;
 
   const handleSendMessage = () => {
     if (!inputMessage.trim()) return;
@@ -331,13 +350,25 @@ const RoomLobby: React.FC = () => {
         })}
 
         {/* ─── CENTER READY BUTTON ─── */}
-        <button
-          className="center-ready-btn"
-          onClick={handleStartGame}
-          disabled={roomInfo?.host_id !== user?.user_id && players.length < 3}
-        >
-          {roomInfo?.host_id === user?.user_id ? 'Bắt đầu' : 'Chờ...'}
-        </button>
+        <div className="lobby-center-actions">
+          {isHost && hasSpecialRoundSkill && !roomInfo?.is_special_round && (
+            <button className="lobby-skill-btn special-round-btn animate-pop-in" onClick={handleUseSpecialRound}>
+              <i className="fa-solid fa-star"></i> VÒNG ĐẶC BIỆT ({user?.inventory?.['SPECIAL_ROUND']})
+            </button>
+          )}
+          {roomInfo?.is_special_round && (
+            <div className="special-round-indicator animate-pop-in">
+              <i className="fa-solid fa-circle-check"></i> ĐÃ BẬT VÒNG ĐẶC BIỆT
+            </div>
+          )}
+          <button
+            className="center-ready-btn"
+            onClick={handleStartGame}
+            disabled={roomInfo?.host_id !== user?.user_id && players.length < 3}
+          >
+            {roomInfo?.host_id === user?.user_id ? 'Bắt đầu' : 'Chờ...'}
+          </button>
+        </div>
       </div>
 
       {/* ─── BOTTOM LEFT CHAT ─── */}

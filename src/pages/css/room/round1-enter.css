@@ -147,6 +147,35 @@
   user-select: none;
 }
 
+.r1-my-keyword.special-round {
+  height: auto;
+  min-height: 82px;
+  max-width: 800px;
+  flex-direction: column;
+  padding: 15px 40px;
+  gap: 5px;
+}
+
+.r1-keyword-label {
+  font-size: 18px;
+  color: rgba(255, 255, 255, 0.8);
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.r1-keyword-value {
+  font-family: 'Jaini Purva', cursive;
+  font-size: 48px;
+  color: var(--r1-white);
+  line-height: 1.2;
+  text-align: center;
+}
+
+.r1-my-keyword.special-round .r1-keyword-value {
+  font-size: 24px;
+  font-style: italic;
+}
+
 /* ---------- Animations ---------- */
 @keyframes r1-fadeDown  { from { opacity:0; transform:translateY(-18px); } to { opacity:1; transform:translateY(0); } }
 @keyframes r1-fadeUp    { from { opacity:0; transform:translateY(20px);  } to { opacity:1; transform:translateY(0); } }
