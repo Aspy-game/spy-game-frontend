@@ -811,7 +811,7 @@ const DescribingView: React.FC<{
       await gameApi.submitDescription(matchId, description);
       setDescription('');
     } catch (err: any) {
-      alert(err.response?.data?.message || 'Lỗi khi gửi mô tả.');
+    alert(err.response?.data?.error || err.response?.data?.message || 'Lỗi khi gửi mô tả.');
     } finally {
       setIsSubmitting(false);
     }
@@ -929,9 +929,19 @@ const DiscussingView: React.FC<{
   return (
     <div className="discussing-container">
       <div className={`my-keyword-badge animate-pop-in ${gameState.isSpecialRound ? 'special-round' : ''}`}>
-        <i className="fa-solid fa-key"></i>
-        <span>{gameState.isSpecialRound ? 'Mô tả đặc biệt: ' : 'Từ khóa: '}</span>
-        <span className="keyword-value">{gameState.keyword || '???'}</span>
+              {!gameState.isSpecialRound ? (
+          <div className="keyword-info">
+            <i className="fa-solid fa-key"></i>
+            <span>Từ khóa: </span>
+            <span className="keyword-value">{gameState.keyword || '???'}</span>
+          </div>
+        ) : gameState.description && (
+          <div className="special-description animate-fade-in">
+            <i className="fa-solid fa-file-lines"></i>
+            <span>Mô tả: </span>
+            <span className="description-value">{gameState.description}</span>
+          </div>
+        )}
       </div>
       <PlayerCircle
         players={gameState.players || []}
