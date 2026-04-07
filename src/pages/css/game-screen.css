@@ -1675,20 +1675,40 @@
 /* ─── AI MANIPULATION INPUT ─── */
 .ai-manipulation-input {
     position: absolute;
-    bottom: -80px;
+    bottom: -90px; /* Di chuyển xuống dưới avatar */
     left: 50%;
     transform: translateX(-50%);
     width: 250px;
-    z-index: 100;
+    z-index: 1000;
+    background: #1a1a1a;
+    border: 2px solid #FFCC00;
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.6), 0 0 15px rgba(255, 204, 0, 0.3);
+    padding: 3px;
+    animation: pop-in 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.ai-manipulation-input::before {
+    content: 'THAO TÚNG AI';
+    position: absolute;
+    top: -20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #FFCC00;
+    color: #000;
+    font-size: 11px;
+    font-weight: 900;
+    padding: 2px 8px;
+    border-radius: 4px;
+    white-space: nowrap;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.3);
 }
 
 .ai-manipulation-input form {
     display: flex;
     background: #333;
-    border: 2px solid #FFCC00;
-    border-radius: 15px;
+    border-radius: 8px;
     overflow: hidden;
-    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
 }
 
 .ai-manipulation-input input {
@@ -1696,18 +1716,19 @@
     background: transparent;
     border: none;
     color: white;
-    padding: 8px 12px;
-    font-size: 14px;
+    padding: 10px 15px;
+    font-size: 16px;
     outline: none;
 }
 
 .ai-manipulation-input button {
     background: #FFCC00;
     border: none;
-    padding: 8px 12px;
+    padding: 10px 20px;
     color: #000;
     cursor: pointer;
-    transition: background 0.2s;
+    font-weight: 800;
+    transition: all 0.2s;
 }
 
 .ai-manipulation-input button:hover {

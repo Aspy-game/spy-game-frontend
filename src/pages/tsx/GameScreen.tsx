@@ -300,9 +300,17 @@ const GameScreen: React.FC = () => {
       // Chỉ lắng nghe topic gốc, không lắng nghe sub-topics để tránh nhận dữ liệu rác (votes, chat)
       subscribe(`/topic/match/${matchId}`, (update: any) => {
         console.log('[WS-GAME-UPDATE]:', update);
-        update.keyword = update.your_keyword || update.yourKeyword || update.keyword;
-        update.description = update.your_description || update.yourDescription || update.description;
-        update.role = update.your_role || update.yourRole || update.role;
+        
+        // ONLY map personal fields if they exist in the broadcast — NEVER overwrite with undefined
+        if (update.your_keyword || update.yourKeyword) {
+          update.keyword = update.your_keyword || update.yourKeyword;
+        }
+        if (update.your_description || update.yourDescription) {
+          update.description = update.your_description || update.yourDescription;
+        }
+        if (update.your_role || update.yourRole) {
+          update.role = update.your_role || update.yourRole;
+        }
 
         // Cập nhật is_special_round & is_anonymous_voting từ WS
         if (update.is_special_round !== undefined) update.isSpecialRound = update.is_special_round;
@@ -317,7 +325,20 @@ const GameScreen: React.FC = () => {
           update.timer = Math.max(0, Math.floor((endTime - now) / 1000));
         }
 
-        setGameState((prev: any) => ({ ...prev, ...update }));
+        // Remove undefined keys to prevent overwriting personal state
+        const cleanUpdate = Object.fromEntries(
+          Object.entries(update).filter(([_, v]) => v !== undefined)
+        );
+
+        setGameState((prev: any) => ({
+          ...prev,
+          ...cleanUpdate,
+          // ALWAYS preserve personal fields from previous state if broadcast doesn't provide them
+          role: cleanUpdate.role || prev?.role,
+          keyword: cleanUpdate.keyword || prev?.keyword,
+          description: cleanUpdate.description || prev?.description,
+          selected_ability: cleanUpdate.selected_ability || prev?.selected_ability,
+        }));
       });
 
       // 1b. Subscribe to Skill activation events
@@ -385,11 +406,13 @@ const GameScreen: React.FC = () => {
       // 2.2.2 Subscribe to role check result
       const handleRoleResult = (result: any) => {
         console.log('[WS-ROLE-RESULT]:', result);
-        // result: { type: "ROLE_CHECK_RESULT", correct: boolean, actual_role: string, reward_coins: boolean, abilities_available: [...] }
+        // result: { type: "ROLE_CHECK_RESULT", correct: boolean, actual_role: string, reward_coins: boolean, abilities_available: [...], confirmed_ability, selected_ability }
         setGameState((prev: any) => ({
           ...prev,
           role: result.actual_role || prev.role,
           personal_role_check_result: result,
+          // CRITICAL: persist selected_ability so AI manipulation input becomes visible
+          selected_ability: result.confirmed_ability || result.selected_ability || prev.selected_ability,
           // Nếu bị tha hóa, cập nhật luôn trạng thái infected
           is_infected: result.actual_role === 'infected' || prev.is_infected
         }));
@@ -529,6 +552,9 @@ const GameScreen: React.FC = () => {
   if (error) return <div className="game-error">Lỗi: {error}</div>;
   if (!gameState) return <div className="game-error">Không tìm thấy ván chơi.</div>;
 
+  const isSpy = gameState?.role?.toLowerCase() === 'spy' || gameState?.role?.toLowerCase() === 'infected';
+  const selectedAbility = gameState?.selected_ability || gameState?.personal_role_check_result?.confirmed_ability;
+
   const renderPhase = () => {
     const phase = (gameState.phase || gameState.status || '').toUpperCase();
 
@@ -623,9 +649,6 @@ const GameScreen: React.FC = () => {
       throw err;
     }
   };
-
-  const isSpy = gameState?.role?.toLowerCase() === 'spy' || gameState?.role?.toLowerCase() === 'infected';
-  const selectedAbility = gameState?.selected_ability || gameState?.personal_role_check_result?.confirmed_ability;
 
   const handleLeave = async () => {
     console.log('[AFK-DEBUG] handleLeave clicked');
@@ -788,7 +811,7 @@ const DescribingView: React.FC<{
       await gameApi.submitDescription(matchId, description);
       setDescription('');
     } catch (err: any) {
-      alert(err.response?.data?.message || 'Lỗi khi gửi mô tả.');
+    alert(err.response?.data?.error || err.response?.data?.message || 'Lỗi khi gửi mô tả.');
     } finally {
       setIsSubmitting(false);
     }
@@ -906,9 +929,19 @@ const DiscussingView: React.FC<{
   return (
     <div className="discussing-container">
       <div className={`my-keyword-badge animate-pop-in ${gameState.isSpecialRound ? 'special-round' : ''}`}>
-        <i className="fa-solid fa-key"></i>
-        <span>{gameState.isSpecialRound ? 'Mô tả đặc biệt: ' : 'Từ khóa: '}</span>
-        <span className="keyword-value">{gameState.keyword || '???'}</span>
+              {!gameState.isSpecialRound ? (
+          <div className="keyword-info">
+            <i className="fa-solid fa-key"></i>
+            <span>Từ khóa: </span>
+            <span className="keyword-value">{gameState.keyword || '???'}</span>
+          </div>
+        ) : gameState.description && (
+          <div className="special-description animate-fade-in">
+            <i className="fa-solid fa-file-lines"></i>
+            <span>Mô tả: </span>
+            <span className="description-value">{gameState.description}</span>
+          </div>
+        )}
       </div>
       <PlayerCircle
         players={gameState.players || []}

@@ -14,7 +14,17 @@ export const useWebSocket = () => {
       clientRef.current = null;
     }
 
-    const SOCKET_URL = import.meta.env.VITE_WS_URL || 'ws://localhost:8080/ws';
+    const SOCKET_URL = import.meta.env.VITE_WS_URL || 'ws://localhost:3000/ws';
+
+    // Read token from same storage key as axiosInstance
+    let token = '';
+    try {
+      const storage = localStorage.getItem('auth-storage');
+      if (storage) {
+        const { state } = JSON.parse(storage);
+        token = state?.accessToken || '';
+      }
+    } catch (_) {}
 
     const client = new Client({
       webSocketFactory: () => new WebSocket(SOCKET_URL),
@@ -22,6 +32,10 @@ export const useWebSocket = () => {
       reconnectDelay: 5000,
       heartbeatIncoming: 4000,
       heartbeatOutgoing: 4000,
+      connectHeaders: {
+        login: token,
+        passcode: 'none',
+      },
     });
 
     // ✅ Gán trước khi activate để subscribe() dùng được ngay
